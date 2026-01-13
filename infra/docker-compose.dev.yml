@@ -1,0 +1,48 @@
+services:
+  db:
+    image: postgres:16
+    container_name: hospitalinsights-db
+    environment:
+      POSTGRES_DB: hospitalinsights
+      POSTGRES_USER: hospitalinsights
+      POSTGRES_PASSWORD: hospitalinsights_pw
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  metabase:
+    image: metabase/metabase:latest
+    container_name: hospitalinsights-metabase
+    depends_on:
+      - db
+    ports:
+      - "3001:3000"
+    volumes:
+      - metabase_data:/metabase.db
+
+  app:
+    build:
+      context: ../app
+      dockerfile: Dockerfile.dev
+    container_name: hospitalinsights-app
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "postgresql://hospitalinsights:hospitalinsights_pw@db:5432/hospitalinsights?schema=public"
+      NEXTAUTH_URL: "http://localhost:3000"
+      NEXTAUTH_SECRET: "dev_secret_change_me"
+      METABASE_SITE_URL: "http://metabase:3000"
+      METABASE_EMBED_SECRET: "dev_metabase_embed_secret_change_me"
+      WATCHPACK_POLLING: "true"
+    volumes:
+      - ../app:/app
+      - app_node_modules:/app/node_modules
+    command: npm run dev
+
+volumes:
+  pg_data:
+  app_node_modules:
+  metabase_data:

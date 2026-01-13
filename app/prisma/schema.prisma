@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      Role     @default(VIEWER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Hospital {
+  id        String   @id @default(cuid())
+  name      String
+  city      String?
+  state     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  facts     FactValue[]
+}
+
+model Period {
+  id        String   @id @default(cuid())
+  year      Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  facts     FactValue[]
+
+  @@unique([year])
+}
+
+enum StatementType {
+  BALANCE_ASSET
+  BALANCE_LIAB
+  INCOME_STATEMENT
+  CASHFLOW
+}
+
+model LineItem {
+  code          String        @id
+  label         String
+  statementType StatementType
+  parentCode    String?
+  sortOrder     Int           @default(0)
+}
+
+model ImportRun {
+  id          String   @id @default(cuid())
+  uploadedBy  String?
+  filename    String
+  status      String   @default("PENDING") // PENDING, SUCCESS, FAILED
+  createdAt   DateTime @default(now())
+  finishedAt  DateTime?
+  errors      ImportError[]
+}
+
+model ImportError {
+  id         String   @id @default(cuid())
+  importRunId String
+  message    String
+  rowInfo    String?
+  createdAt  DateTime @default(now())
+
+  importRun  ImportRun @relation(fields: [importRunId], references: [id], onDelete: Cascade)
+}
+
+model FactValue {
+  id          String   @id @default(cuid())
+  hospitalId  String
+  periodId    String
+  lineItemCode String
+  value       Decimal  @db.Decimal(18, 2)
+
+  version     Int      @default(1)
+  createdAt   DateTime @default(now())
+
+  hospital    Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  period      Period   @relation(fields: [periodId], references: [id], onDelete: Cascade)
+
+  @@index([hospitalId, periodId])
+  @@index([lineItemCode])
+  @@unique([hospitalId, periodId, lineItemCode, version])
+}
