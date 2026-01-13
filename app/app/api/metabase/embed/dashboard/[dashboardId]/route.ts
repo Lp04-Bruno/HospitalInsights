@@ -3,9 +3,10 @@ import jwt from "jsonwebtoken";
 
 export async function GET(
     _req: NextRequest,
-    { params }: { params: { dashboardId: string } }
+    { params }: { params: { dashboardId: string } | Promise<{ dashboardId: string }> }
 ) {
-    const dashboardId = Number(params.dashboardId);
+    const resolvedParams = await Promise.resolve(params);
+    const dashboardId = Number(resolvedParams.dashboardId);
     if (!Number.isFinite(dashboardId)) {
         return NextResponse.json({ error: "Invalid dashboard id" }, { status: 400 });
     }
