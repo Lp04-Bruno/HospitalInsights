@@ -18,6 +18,12 @@ HospitalInsights ist eine lokale Dev-Umgebung für ein Next.js (App Router) + Pr
 
 Im Repo-Root:
 
+1) Env-Datei anlegen:
+
+```bash
+cp infra/.env.example infra/.env
+```
+
 ```bash
 docker compose -f infra/docker-compose.dev.yml up -d --build
 ```
@@ -62,7 +68,7 @@ Default Admin:
 4. Admin Settings → Embedding
    - Enable embedding ✅
    - Enable signed embedding ✅
-   - Secret: `METABASE_EMBED_SECRET` (gesetzt in `infra/docker-compose.dev.yml`)
+   - Secret: `METABASE_EMBED_SECRET` (gesetzt in `.env`)
 
 Dashboard-ID merken und ggf. die ID in `app/app/page.tsx` anpassen.
 

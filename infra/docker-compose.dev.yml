@@ -3,9 +3,9 @@ services:
     image: postgres:16
     container_name: hospitalinsights-db
     environment:
-      POSTGRES_DB: hospitalinsights
-      POSTGRES_USER: hospitalinsights
-      POSTGRES_PASSWORD: hospitalinsights_pw
+      POSTGRES_DB: ${POSTGRES_DB:-hospitalinsights}
+      POSTGRES_USER: ${POSTGRES_USER:-hospitalinsights}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hospitalinsights_pw}
     ports:
       - "5432:5432"
     volumes:
@@ -31,12 +31,12 @@ services:
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: "postgresql://hospitalinsights:hospitalinsights_pw@db:5432/hospitalinsights?schema=public"
-      NEXTAUTH_URL: "http://localhost:3000"
-      NEXTAUTH_SECRET: "dev_secret_change_me"
-      METABASE_SITE_URL: "http://metabase:3000"
-      METABASE_EMBED_SECRET: "dev_metabase_embed_secret_change_me"
-      WATCHPACK_POLLING: "true"
+      DATABASE_URL: ${DATABASE_URL:-postgresql://hospitalinsights:hospitalinsights_pw@db:5432/hospitalinsights?schema=public}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      METABASE_SITE_URL: ${METABASE_SITE_URL:-http://metabase:3000}
+      METABASE_EMBED_SECRET: ${METABASE_EMBED_SECRET}
+      WATCHPACK_POLLING: ${WATCHPACK_POLLING:-true}
     volumes:
       - ../app:/app
       - app_node_modules:/app/node_modules
