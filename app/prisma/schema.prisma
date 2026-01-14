@@ -48,8 +48,15 @@ model Period {
 enum StatementType {
   BALANCE_ASSET
   BALANCE_LIAB
-  INCOME_STATEMENT
+  INCOME_STATEMENT_UKV
+  INCOME_STATEMENT_GKV
   CASHFLOW
+}
+
+enum Unit {
+  EUR
+  PERCENT
+  COUNT
 }
 
 model LineItem {
@@ -58,6 +65,9 @@ model LineItem {
   statementType StatementType
   parentCode    String?
   sortOrder     Int           @default(0)
+
+  unit          Unit          @default(EUR)
+  isInput       Boolean       @default(true)
 }
 
 model ImportRun {
@@ -85,9 +95,7 @@ model FactValue {
   hospitalId  String
   periodId    String
   lineItemCode String
-  value       Decimal  @db.Decimal(18, 2)
-
-  version     Int      @default(1)
+  value       Decimal? @db.Decimal(18, 2)
   createdAt   DateTime @default(now())
 
   hospital    Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
@@ -95,5 +103,5 @@ model FactValue {
 
   @@index([hospitalId, periodId])
   @@index([lineItemCode])
-  @@unique([hospitalId, periodId, lineItemCode, version])
+  @@unique([hospitalId, periodId, lineItemCode])
 }

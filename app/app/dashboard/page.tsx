@@ -25,6 +25,9 @@ export default async function DashboardPage() {
       </div>
 
       <div className={styles.actions}>
+        <Link href="/dashboard/data" className={styles.link}>
+          Eingabe verwalten
+        </Link>
         <Link href="/" className={styles.link}>
           Öffentliche Startseite
         </Link>
