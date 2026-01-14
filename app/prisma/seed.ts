@@ -20,6 +20,10 @@ function shortHash(input: string) {
     return crypto.createHash("md5").update(input).digest("hex").slice(0, 8);
 }
 
+function seedCode(prefix: string, label: string) {
+    return `${prefix}_${stableSlug(label)}_${shortHash(`${prefix}:${label}`)}`;
+}
+
 function parseGermanNumber(raw: string): number | null {
     const trimmed = raw.trim();
     if (!trimmed) return null;
@@ -255,8 +259,18 @@ async function seedFromCsv() {
 
         sortOrder += 1;
         const prefix = prefixForStatementType(currentStatementType);
-        const code = `${prefix}_${String(sortOrder).padStart(4, "0")}_${stableSlug(label)}_${shortHash(label)}`;
         const parentCode = level > 0 ? stack[level - 1] ?? null : null;
+
+        const existingLineItem = await prisma.lineItem.findFirst({
+            where: {
+                statementType: currentStatementType,
+                label,
+                parentCode,
+            },
+            select: { code: true },
+        });
+
+        const code = existingLineItem?.code ?? seedCode(prefix, label);
 
         await prisma.lineItem.upsert({
             where: { code },
