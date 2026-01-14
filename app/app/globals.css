@@ -11,6 +11,12 @@
   --hi-bg: #f6f7ff;
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

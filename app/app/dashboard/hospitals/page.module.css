@@ -28,6 +28,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+  min-width: 0;
 }
 
 .card {
@@ -35,6 +36,7 @@
   background: #fff;
   border-radius: 16px;
   padding: 16px;
+  min-width: 0;
 }
 
 .cardTitle {
@@ -63,6 +65,7 @@
 
 .input {
   width: 100%;
+  max-width: 100%;
   padding: 10px 12px;
   border-radius: 12px;
   border: 1px solid #e4e4e7;
@@ -71,8 +74,8 @@
 }
 
 .input:focus {
-  border-color: #18181b;
-  box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.12);
+  border-color: var(--hi-accent);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.18);
 }
 
 .actions {
@@ -86,8 +89,8 @@
   justify-content: center;
   padding: 10px 12px;
   border-radius: 12px;
-  border: 1px solid #18181b;
-  background: #18181b;
+  border: 1px solid var(--hi-accent);
+  background: linear-gradient(135deg, var(--hi-accent) 0%, #6d28d9 55%, #0ea5e9 100%);
   color: #fff;
   font-size: 14px;
   font-weight: 800;
@@ -95,7 +98,7 @@
 }
 
 .button:hover {
-  background: #27272a;
+  filter: brightness(1.02);
 }
 
 .empty {

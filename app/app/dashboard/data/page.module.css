@@ -95,12 +95,47 @@
   gap: 10px;
 }
 
+.tabs {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid #e4e4e7;
+  background: rgba(255, 255, 255, 0.9);
+  color: #18181b;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.tab:hover {
+  background: #fff;
+}
+
+.tabActive {
+  border-color: rgba(79, 70, 229, 0.5);
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.14) 0%, rgba(6, 182, 212, 0.10) 100%);
+}
+
+.tableWrap {
+  border: 1px solid #f4f4f5;
+  border-radius: 14px;
+  overflow: auto;
+  max-height: 68vh;
+  background: #fff;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
-  border: 1px solid #f4f4f5;
-  border-radius: 14px;
-  overflow: hidden;
+  table-layout: fixed;
 }
 
 .th {
@@ -110,12 +145,47 @@
   padding: 8px;
   border-bottom: 1px solid #e4e4e7;
   background: #fafafa;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.thLabel {
+  width: 64%;
+}
+
+.thUnit {
+  width: 12%;
+}
+
+.thValue {
+  width: 24%;
 }
 
 .td {
   padding: 8px;
   border-bottom: 1px solid #f4f4f5;
   vertical-align: top;
+}
+
+.row:nth-child(even) .td {
+  background: #fcfcfd;
+}
+
+.row:hover .td {
+  background: rgba(79, 70, 229, 0.04);
+}
+
+.groupRow .td {
+  background: rgba(79, 70, 229, 0.06);
+}
+
+.groupRow .itemLabel {
+  font-weight: 850;
+}
+
+.readonlyRow .itemLabel {
+  color: #27272a;
 }
 
 .itemLabel {
@@ -137,11 +207,38 @@
   border: 1px solid #e4e4e7;
   font-size: 14px;
   outline: none;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .valueInput:focus {
   border-color: var(--hi-accent);
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.18);
+}
+
+.readonlyValue {
+  padding: 9px 10px;
+  border-radius: 12px;
+  border: 1px solid #f4f4f5;
+  background: #fafafa;
+  color: #18181b;
+  font-size: 14px;
+  font-weight: 750;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.unitPill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid #e4e4e7;
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+  font-weight: 850;
+  color: #3f3f46;
 }
 
 .saveRow {

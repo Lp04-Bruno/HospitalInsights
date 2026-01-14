@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import type { ReactElement } from "react";
 import { prisma } from "@/lib/prisma";
 import { getServerAuthSession } from "@/lib/auth";
@@ -52,6 +53,21 @@ function parseUserNumber(raw: string, unit: Unit): number | null {
   return num;
 }
 
+function formatNumberDE(value: number, unit: Unit): string {
+  const maximumFractionDigits = unit === Unit.COUNT ? 0 : 1;
+  return new Intl.NumberFormat("de-DE", {
+    maximumFractionDigits,
+    minimumFractionDigits: unit === Unit.COUNT ? 0 : 0,
+  }).format(value);
+}
+
+function displayValue(raw: string | undefined, unit: Unit): string {
+  if (!raw) return "";
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return raw;
+  return formatNumberDE(n, unit);
+}
+
 async function createPeriod(formData: FormData) {
   "use server";
   const yearRaw = String(formData.get("year") ?? "").trim();
@@ -87,12 +103,12 @@ async function saveFacts(formData: FormData) {
 
   if (!hospitalId || !periodId || !statementType) redirect("/dashboard/data");
 
-  const lineItems = await prisma.lineItem.findMany({
-    where: { statementType },
+  const inputItems = await prisma.lineItem.findMany({
+    where: { statementType, isInput: true },
     orderBy: { sortOrder: "asc" },
   });
 
-  for (const item of lineItems) {
+  for (const item of inputItems) {
     const key = `v:${item.code}`;
     const raw = String(formData.get(key) ?? "");
     const parsed = parseUserNumber(raw, item.unit);
@@ -223,7 +239,6 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
     factMap.set(f.lineItemCode, String(f.value));
   }
 
-  // Build a tree for indentation
   const childrenByParent = new Map<string, string[]>();
   const rootCodes: string[] = [];
   for (const li of lineItems) {
@@ -243,27 +258,34 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
 
     const paddingLeft = 8 + depth * 18;
     const valueKey = `v:${item.code}`;
-    const defaultValue = factMap.get(item.code) ?? "";
+    const rawValue = factMap.get(item.code) ?? "";
+    const prettyValue = displayValue(rawValue, item.unit);
+    const rowClass = `${styles.row} ${
+      depth === 0 ? styles.groupRow : ""
+    } ${!item.isInput ? styles.readonlyRow : ""}`;
 
     const rows: ReactElement[] = [
-      <tr key={item.code}>
+      <tr key={item.code} className={rowClass}>
         <td className={styles.td}>
           <div className={styles.itemLabel} style={{ paddingLeft }}>
             {item.label}
           </div>
-          <span className={styles.itemMeta} style={{ paddingLeft }}>
-            {unitSuffix(item.unit)}
-          </span>
         </td>
         <td className={styles.td}>
-          <input
-            name={valueKey}
-            className={styles.valueInput}
-            defaultValue={defaultValue}
-            placeholder={item.unit === Unit.PERCENT ? "z.B. 39" : ""}
-            inputMode={item.unit === Unit.COUNT ? "numeric" : "decimal"}
-            disabled={!item.isInput}
-          />
+          <span className={styles.unitPill}>{unitSuffix(item.unit)}</span>
+        </td>
+        <td className={styles.td}>
+          {item.isInput ? (
+            <input
+              name={valueKey}
+              className={styles.valueInput}
+              defaultValue={prettyValue}
+              placeholder={item.unit === Unit.PERCENT ? "z.B. 39" : ""}
+              inputMode={item.unit === Unit.COUNT ? "numeric" : "decimal"}
+            />
+          ) : (
+            <div className={styles.readonlyValue}>{prettyValue || "—"}</div>
+          )}
         </td>
       </tr>,
     ];
@@ -347,6 +369,27 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
           </form>
         )}
 
+        {selectedHospitalId ? (
+          <div className={styles.tabs}>
+            {Object.values(StatementType).map((st) => {
+              const qs = new URLSearchParams();
+              qs.set("hospitalId", selectedHospitalId);
+              if (selectedYear) qs.set("year", String(selectedYear));
+              qs.set("statementType", st);
+              const active = st === selectedStatementType;
+              return (
+                <Link
+                  key={st}
+                  href={`/dashboard/data?${qs.toString()}`}
+                  className={`${styles.tab} ${active ? styles.tabActive : ""}`}
+                >
+                  {statementLabel(st)}
+                </Link>
+              );
+            })}
+          </div>
+        ) : null}
+
         {selectedHospitalId && (
           <form action={createPeriod} className={styles.createYear}>
             <input type="hidden" name="hospitalId" value={selectedHospitalId} />
@@ -386,15 +429,18 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
             <input type="hidden" name="periodId" value={selectedPeriod.id} />
             <input type="hidden" name="statementType" value={selectedStatementType} />
 
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th className={styles.th}>Position</th>
-                  <th className={styles.th}>Wert</th>
-                </tr>
-              </thead>
-              <tbody>{rootCodes.flatMap((code) => renderRows(code, 0))}</tbody>
-            </table>
+            <div className={styles.tableWrap}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th className={`${styles.th} ${styles.thLabel}`}>Position</th>
+                    <th className={`${styles.th} ${styles.thUnit}`}>Einheit</th>
+                    <th className={`${styles.th} ${styles.thValue}`}>Wert</th>
+                  </tr>
+                </thead>
+                <tbody>{rootCodes.flatMap((code) => renderRows(code, 0))}</tbody>
+              </table>
+            </div>
 
             <div className={styles.saveRow}>
               <button className={styles.button} type="submit">
