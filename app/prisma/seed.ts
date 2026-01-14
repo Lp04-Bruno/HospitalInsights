@@ -245,7 +245,6 @@ async function seedFromCsv() {
         if (!label) continue;
 
         if (/B\s*I\s*L\s*A\s*N\s*Z\s*\s*:/i.test(label)) continue;
-        if (/G\s*E\s*W\s*I\s*N\s*N/i.test(label) && /V\s*E\s*R\s*L\s*U\s*S\s*T/i.test(label)) continue;
 
         const valueCells = cols.slice(3);
         if (valueCells.length === 0) continue;

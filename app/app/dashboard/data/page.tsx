@@ -88,6 +88,17 @@ function isSectionLabel(label: string): boolean {
     return /\(Summe\)/i.test(t) || /^(Bilanz|GuV|Cashflow)\b/i.test(t) || /^[A-Z]\./.test(t);
 }
 
+type LabelKind = "top" | "roman" | "numeric" | "davon" | "other";
+
+function labelKind(label: string): LabelKind {
+    const t = label.trim();
+    if (/\(Summe\)/i.test(t) || /^(Bilanz|GuV|Cashflow)\b/i.test(t) || /^[A-Z]\./.test(t)) return "top";
+    if (/^(I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)\./.test(t)) return "roman";
+    if (/^\d+\./.test(t)) return "numeric";
+    if (/^davon\b/i.test(t)) return "davon";
+    return "other";
+}
+
 async function createPeriod(formData: FormData) {
     "use server";
     const yearRaw = String(formData.get("year") ?? "").trim();
@@ -475,15 +486,21 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
 
     const provisional: Array<Omit<FlatRow, "hasChildren">> = [];
     const stackCodes: Array<string | undefined> = [];
+    const stackKinds: Array<LabelKind | undefined> = [];
     const isIncomeStatement =
         selectedStatementType === StatementType.INCOME_STATEMENT_UKV ||
         selectedStatementType === StatementType.INCOME_STATEMENT_GKV;
 
     for (const li of lineItems) {
         const nominal = nominalLevelFromLabel(li.label);
+        const kind = labelKind(li.label);
         let level = nominal;
 
         if (isIncomeStatement && nominal === 2) level = 0;
+
+        const hasRomanLayer = stackKinds[1] === "roman";
+        if (kind === "numeric" && !hasRomanLayer && level === 2) level = 1;
+        if (kind === "davon" && !hasRomanLayer && level === 3) level = 2;
 
         while (level > 0 && !stackCodes[level - 1]) level -= 1;
 
@@ -500,6 +517,9 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
 
         stackCodes.length = level;
         stackCodes[level] = li.code;
+
+        stackKinds.length = level;
+        stackKinds[level] = kind;
     }
 
     const flatRows: FlatRow[] = provisional.map((r, idx) => {
