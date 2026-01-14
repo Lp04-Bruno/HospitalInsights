@@ -25,6 +25,7 @@ Dev-Stack:
 
 **Wichtige URLs (Dev)**
 - App (Portal): `http://localhost:3000`
+- Dashboard (geschützt): `http://localhost:3000/dashboard`
 - Metabase UI (Admin/BI): `http://localhost:3001`
 - Postgres (Host-Port): `localhost:5432`
 - Embed API (Next.js): `http://localhost:3000/api/metabase/embed/dashboard/:dashboardId`
@@ -47,6 +48,9 @@ Dev-Stack:
 **Default Admin (NextAuth Credentials)**
 - Email: `admin@hospitalinsights.local`
 - Passwort: `admin1234`
+
+**Rollen & Zugriff (Dev)**
+- `/dashboard` ist geschützt: nur `ADMIN` und `EDITOR` dürfen sich einloggen.
 
 **Entwickler-Workflow (Start/Stop/Restart)**
 - Start/Rebuild: `docker compose -f infra/docker-compose.dev.yml up -d --build`
