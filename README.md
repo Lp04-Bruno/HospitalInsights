@@ -25,9 +25,15 @@ Dev-Stack:
 
 **Wichtige URLs (Dev)**
 - App (Portal): `http://localhost:3000`
+- Dashboard (geschützt): `http://localhost:3000/dashboard`
 - Metabase UI (Admin/BI): `http://localhost:3001`
 - Postgres (Host-Port): `localhost:5432`
 - Embed API (Next.js): `http://localhost:3000/api/metabase/embed/dashboard/:dashboardId`
+
+**Hinweis: CSP-Warnungen im Browser (Dev)**
+- Die "Content Security Policy"-Warnungen kommen typischerweise aus dem Metabase-Embed selbst (Metabase liefert für `/embed/...` eine sehr restriktive CSP aus).
+- Im Dev-Compose läuft Metabase deshalb hinter einem kleinen Nginx-Proxy auf `http://localhost:3001`, der die CSP-Header entfernt (nur Dev), damit die Console sauber bleibt.
+- Datei: `infra/nginx.metabase.dev.conf` (nicht für Production verwenden).
 
 **Metabase initial einrichten (Signed Embedding)**
 1. Öffnen: `http://localhost:3001` und Admin anlegen (Dummy-Mail ist ok für lokales Dev)
@@ -47,6 +53,9 @@ Dev-Stack:
 **Default Admin (NextAuth Credentials)**
 - Email: `admin@hospitalinsights.local`
 - Passwort: `admin1234`
+
+**Rollen & Zugriff (Dev)**
+- `/dashboard` ist geschützt: nur `ADMIN` und `EDITOR` dürfen sich einloggen.
 
 **Entwickler-Workflow (Start/Stop/Restart)**
 - Start/Rebuild: `docker compose -f infra/docker-compose.dev.yml up -d --build`

@@ -3,7 +3,10 @@ import "next-auth/jwt";
 
 declare module "next-auth" {
     interface Session {
-        role?: string;
+        user: {
+            id: string;
+            role: string;
+        } & Session["user"];
     }
 }
 
