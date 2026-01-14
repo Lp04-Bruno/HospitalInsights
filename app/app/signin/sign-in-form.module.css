@@ -27,6 +27,23 @@
   gap: 12px;
 }
 
+.checkRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+}
+
+.checkLabel {
+  font-size: 13px;
+  color: #3f3f46;
+}
+
 .field {
   display: grid;
   gap: 6px;

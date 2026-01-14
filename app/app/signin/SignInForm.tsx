@@ -11,6 +11,7 @@ type SignInFormProps = {
 export function SignInForm({ callbackUrl }: SignInFormProps) {
   const [email, setEmail] = useState("admin@hospitalinsights.local");
   const [password, setPassword] = useState("admin1234");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -26,6 +27,12 @@ export function SignInForm({ callbackUrl }: SignInFormProps) {
         onSubmit={async (e) => {
           e.preventDefault();
           setError(null);
+
+          if (!email.trim() || !password) {
+            setError("Bitte Email und Passwort ausfüllen.");
+            return;
+          }
+
           setIsLoading(true);
 
           try {
@@ -49,8 +56,13 @@ export function SignInForm({ callbackUrl }: SignInFormProps) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email"
+            type="email"
+            required
             autoComplete="email"
             inputMode="email"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             className={styles.input}
           />
         </label>
@@ -59,12 +71,23 @@ export function SignInForm({ callbackUrl }: SignInFormProps) {
           <span className={styles.label}>Passwort</span>
           <input
             value={password}
-            type="password"
+            type={showPassword ? "text" : "password"}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
+            required
             autoComplete="current-password"
             className={styles.input}
           />
+        </label>
+
+        <label className={styles.checkRow}>
+          <input
+            className={styles.checkbox}
+            type="checkbox"
+            checked={showPassword}
+            onChange={(e) => setShowPassword(e.target.checked)}
+          />
+          <span className={styles.checkLabel}>Passwort anzeigen</span>
         </label>
 
         <button
@@ -76,7 +99,7 @@ export function SignInForm({ callbackUrl }: SignInFormProps) {
         </button>
 
         {error && (
-          <p className={styles.error}>
+          <p className={styles.error} role="alert" aria-live="polite">
             {error === "CredentialsSignin"
               ? "Email oder Passwort ist falsch."
               : error}

@@ -1,4 +1,5 @@
 import { SignInForm } from "./SignInForm";
+import Link from "next/link";
 import styles from "./page.module.css";
 
 type SignInPageProps = {
@@ -15,6 +16,11 @@ export default function SignInPage({ searchParams }: SignInPageProps) {
 
   return (
     <main className={styles.page}>
+      <header className={styles.header}>
+        <Link href="/" className={styles.topLink}>
+          Startseite
+        </Link>
+      </header>
       <div className={styles.center}>
         <SignInForm callbackUrl={callbackUrl} />
       </div>

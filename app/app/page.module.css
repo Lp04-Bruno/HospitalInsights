@@ -4,6 +4,48 @@
   padding: 20px;
 }
 
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e4e4e7;
+  background: #fff;
+  color: #18181b;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.button:hover {
+  background: #fafafa;
+}
+
+.primary {
+  border-color: #18181b;
+  background: #18181b;
+  color: #fff;
+}
+
+.primary:hover {
+  background: #27272a;
+}
+
 .title {
   margin: 0;
   font-size: 24px;
