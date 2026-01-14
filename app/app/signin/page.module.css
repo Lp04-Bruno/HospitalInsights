@@ -1,0 +1,11 @@
+.page {
+  min-height: 100vh;
+  background: #fafafa;
+  padding: 24px;
+}
+
+.center {
+  min-height: calc(100vh - 48px);
+  display: grid;
+  place-items: center;
+}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerAuthSession } from "@/lib/auth";
+import styles from "./page.module.css";
 
 export default async function DashboardPage() {
   const session = await getServerAuthSession();
@@ -11,16 +12,31 @@ export default async function DashboardPage() {
   }
 
   return (
-    <main style={{ padding: 24 }}>
-      <h1>Dashboard</h1>
-      <p>
-        Eingeloggt als <strong>{session.user?.email}</strong>
-      </p>
-      <p>Rolle: {session.user.role}</p>
+    <main className={styles.page}>
+      <h1 className={styles.title}>Dashboard</h1>
 
-      <div style={{ display: "flex", gap: 12, marginTop: 16 }}>
-        <Link href="/">Öffentliche Startseite</Link>
+      <div className={styles.meta}>
+        <p>
+          Eingeloggt als <strong>{session.user?.email}</strong>
+        </p>
+        <p>
+          Rolle: <strong>{session.user.role}</strong>
+        </p>
+      </div>
+
+      <div className={styles.actions}>
+        <Link href="/" className={styles.link}>
+          Öffentliche Startseite
+        </Link>
+        <Link
+          href="/api/auth/signout?callbackUrl=/"
+          className={`${styles.link} ${styles.primary}`}
+        >
+          Abmelden
+        </Link>
       </div>
     </main>
   );
 }
+
+

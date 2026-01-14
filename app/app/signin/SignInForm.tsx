@@ -1,0 +1,92 @@
+"use client";
+
+import { signIn } from "next-auth/react";
+import { useState } from "react";
+import styles from "./sign-in-form.module.css";
+
+type SignInFormProps = {
+  callbackUrl: string;
+};
+
+export function SignInForm({ callbackUrl }: SignInFormProps) {
+  const [email, setEmail] = useState("admin@hospitalinsights.local");
+  const [password, setPassword] = useState("admin1234");
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  return (
+    <section className={styles.card}>
+      <h1 className={styles.title}>Sign in</h1>
+      <p className={styles.subtitle}>
+        Melde dich an, um auf den geschützten Bereich zuzugreifen.
+      </p>
+
+      <form
+        className={styles.form}
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setError(null);
+          setIsLoading(true);
+
+          try {
+            const res = await signIn("credentials", {
+              email,
+              password,
+              redirect: true,
+              callbackUrl,
+            });
+
+            // Wenn redirect=true, kommt man i. d. R. nicht hier an
+            if (res?.error) setError(res.error);
+          } finally {
+            setIsLoading(false);
+          }
+        }}
+      >
+        <label className={styles.field}>
+          <span className={styles.label}>Email</span>
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
+            autoComplete="email"
+            inputMode="email"
+            className={styles.input}
+          />
+        </label>
+
+        <label className={styles.field}>
+          <span className={styles.label}>Passwort</span>
+          <input
+            value={password}
+            type="password"
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            autoComplete="current-password"
+            className={styles.input}
+          />
+        </label>
+
+        <button
+          type="submit"
+          disabled={isLoading}
+          className={styles.button}
+        >
+          {isLoading ? "Signing in…" : "Sign in"}
+        </button>
+
+        {error && (
+          <p className={styles.error}>
+            {error === "CredentialsSignin"
+              ? "Email oder Passwort ist falsch."
+              : error}
+          </p>
+        )}
+      </form>
+
+      <p className={styles.hint}>
+        Nach dem Login wirst du weitergeleitet zu: <code className={styles.code}>{callbackUrl}</code>
+      </p>
+    </section>
+  );
+}
