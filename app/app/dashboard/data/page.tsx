@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerAuthSession } from "@/lib/auth";
 import { StatementType, Unit } from "@prisma/client";
 import styles from "./page.module.css";
-import { ValueEntryTable } from "@/app/dashboard/data/ValueEntryTable";
+import { DirtySaveForm } from "@/app/dashboard/data/DirtySaveForm";
 
 type PageProps = {
     searchParams?:
@@ -405,22 +405,13 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
                         </div>
                     </div>
 
-                    <form action={saveFacts}>
-                        <input type="hidden" name="hospitalId" value={selectedHospitalId} />
-                        <input type="hidden" name="periodId" value={selectedPeriod.id} />
-                        <input type="hidden" name="statementType" value={selectedStatementType} />
-
-                        <ValueEntryTable rows={flatRows} />
-
-                        <div className={styles.saveRow}>
-                            <button className={styles.button} type="submit">
-                                Speichern
-                            </button>
-                            <div className={styles.saveHint}>
-                                Zahlen wie <code>129.658.900,5</code>, <code>129658900.5</code> oder <code>39%</code>.
-                            </div>
-                        </div>
-                    </form>
+                    <DirtySaveForm
+                        action={saveFacts}
+                        hospitalId={selectedHospitalId}
+                        periodId={selectedPeriod.id}
+                        statementType={selectedStatementType}
+                        rows={flatRows}
+                    />
                 </div>
             )}
         </section>

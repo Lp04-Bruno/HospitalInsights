@@ -32,9 +32,34 @@ async function deleteHospital(formData: FormData) {
     redirect("/dashboard/hospitals");
 }
 
+async function deleteHospitalYear(formData: FormData) {
+    "use server";
+
+    const hospitalId = String(formData.get("hospitalId") ?? "");
+    const year = Number(String(formData.get("year") ?? "").trim());
+    if (!hospitalId) redirect("/dashboard/hospitals");
+    if (!Number.isInteger(year) || year < 1900 || year > 2100) redirect("/dashboard/hospitals");
+
+    const period = await prisma.period.findUnique({ where: { year } });
+    if (!period) redirect("/dashboard/hospitals");
+
+    await prisma.factValue.deleteMany({
+        where: {
+            hospitalId,
+            periodId: period.id,
+        },
+    });
+
+    redirect("/dashboard/hospitals");
+}
+
 export default async function HospitalsPage() {
     const hospitals = await prisma.hospital.findMany({
         orderBy: { name: "asc" },
+    });
+
+    const periods = await prisma.period.findMany({
+        orderBy: { year: "desc" },
     });
 
     return (
@@ -91,12 +116,32 @@ export default async function HospitalsPage() {
                                         </div>
                                     </div>
 
-                                    <form action={deleteHospital}>
-                                        <input type="hidden" name="hospitalId" value={h.id} />
-                                        <button className={styles.danger} type="submit">
-                                            Löschen
-                                        </button>
-                                    </form>
+                                    <div className={styles.listActions}>
+                                        {periods.length === 0 ? (
+                                            <div className={styles.actionsMeta}>Keine Jahre vorhanden.</div>
+                                        ) : (
+                                            <form action={deleteHospitalYear} className={styles.inlineForm}>
+                                                <input type="hidden" name="hospitalId" value={h.id} />
+                                                <select name="year" className={styles.select} defaultValue={String(periods[0]?.year)}>
+                                                    {periods.map((p) => (
+                                                        <option key={p.id} value={String(p.year)}>
+                                                            {p.year}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                <button className={styles.dangerSmall} type="submit">
+                                                    Jahr löschen
+                                                </button>
+                                            </form>
+                                        )}
+
+                                        <form action={deleteHospital}>
+                                            <input type="hidden" name="hospitalId" value={h.id} />
+                                            <button className={styles.danger} type="submit">
+                                                Hospital löschen
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
                             ))}
                         </div>
