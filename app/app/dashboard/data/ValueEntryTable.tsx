@@ -30,7 +30,9 @@ function unitSuffix(unit: Unit) {
 }
 
 function shouldDefaultCollapse(row: FlatRow) {
-    return row.isSection && /^[A-Z]\./.test(row.label);
+    const t = row.label.trim();
+    const isRoman = /^(I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)\./.test(t);
+    return row.isSection && /^[A-Z]\./.test(t) && !isRoman;
 }
 
 export function ValueEntryTable({ rows, errorByCode }: { rows: FlatRow[]; errorByCode?: Record<string, string> }) {

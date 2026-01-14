@@ -76,8 +76,8 @@ function nominalLevelFromLabel(label: string): number {
     const t = label.trim();
     if (/\(Summe\)/i.test(t)) return 0;
     if (/^(Bilanz|GuV|Cashflow)\b/i.test(t)) return 0;
-    if (/^[A-Z]\./.test(t)) return 0;
     if (/^(I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)\./.test(t)) return 1;
+    if (/^[A-Z]\./.test(t)) return 0;
     if (/^\d+\./.test(t)) return 2;
     if (/^davon\b/i.test(t)) return 3;
     return 2;

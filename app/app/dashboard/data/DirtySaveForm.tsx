@@ -100,6 +100,24 @@ function DirtyBottomBar({
 
 const INITIAL_STATE: SaveFactsState = { ok: true };
 
+function formatTimestampBerlin(iso: string): string {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return iso;
+
+    try {
+        return new Intl.DateTimeFormat("de-DE", {
+            timeZone: "Europe/Berlin",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+        }).format(d);
+    } catch {
+        return d.toISOString().slice(0, 16).replace("T", " ");
+    }
+}
+
 export function DirtySaveForm({
     saveAction,
     undoAction,
@@ -257,15 +275,7 @@ export function DirtySaveForm({
 
     const humanLastSaved = useMemo(() => {
         if (!lastSavedAt) return "—";
-        const d = new Date(lastSavedAt);
-        if (Number.isNaN(d.getTime())) return lastSavedAt;
-        return d.toLocaleString("de-DE", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-        });
+        return formatTimestampBerlin(lastSavedAt);
     }, [lastSavedAt]);
 
     return (
@@ -302,13 +312,8 @@ export function DirtySaveForm({
 
             <ValueEntryTable rows={rows} errorByCode={mergedErrors} />
 
-            <div className={styles.saveRow}>
-                <button className={styles.button} type="submit" disabled={pending || invalidCount > 0}>
-                    Speichern
-                </button>
-                <div className={styles.saveHint}>
-                    Zahlen wie <code>129.658.900,5</code>, <code>129658900.5</code> oder <code>39%</code>.
-                </div>
+            <div className={styles.saveHint}>
+                Zahlen wie <code>129.658.900,5</code>, <code>129658900.5</code> oder <code>39%</code>.
             </div>
 
             <DirtyBottomBar dirtyCount={dirtyCount} invalidCount={invalidCount} onDiscard={discard} pending={pending} />
