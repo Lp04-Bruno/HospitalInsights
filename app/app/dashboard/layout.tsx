@@ -60,7 +60,6 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
       <div className={styles.main}>
         <header className={styles.topbar}>
           <div className={styles.topbarTitle}>Interner Bereich</div>
-          <div className={styles.topbarHint}>MVP: Eingabe & Verwaltung</div>
         </header>
 
         <div className={styles.content}>{children}</div>

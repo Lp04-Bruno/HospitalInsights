@@ -6,13 +6,33 @@ import { StatementType, Unit } from "@prisma/client";
 import styles from "./page.module.css";
 
 type PageProps = {
-  searchParams?: {
-    hospitalId?: string;
-    year?: string;
-    statementType?: StatementType;
-    saved?: string;
-  };
+  searchParams?:
+    | Promise<Record<string, string | string[] | undefined>>
+    | Record<string, string | string[] | undefined>;
 };
+
+function firstParam(v: string | string[] | undefined): string | undefined {
+  if (typeof v === "string") return v;
+  if (Array.isArray(v)) return v[0];
+  return undefined;
+}
+
+async function resolveSearchParams(
+  searchParams: PageProps["searchParams"]
+): Promise<Record<string, string | string[] | undefined>> {
+  if (!searchParams) return {};
+  const maybePromise = searchParams as unknown as { then?: unknown };
+  if (typeof maybePromise.then === "function") {
+    return (await (searchParams as Promise<Record<string, string | string[] | undefined>>)) ?? {};
+  }
+  return (searchParams as Record<string, string | string[] | undefined>) ?? {};
+}
+
+function parseStatementType(raw: string | undefined): StatementType | undefined {
+  if (!raw) return undefined;
+  const values = Object.values(StatementType) as string[];
+  return values.includes(raw) ? (raw as StatementType) : undefined;
+}
 
 function parseUserNumber(raw: string, unit: Unit): number | null {
   const trimmed = raw.trim();
@@ -38,6 +58,7 @@ async function createPeriod(formData: FormData) {
   const year = Number(yearRaw);
 
   const hospitalId = String(formData.get("hospitalId") ?? "").trim();
+  const statementType = String(formData.get("statementType") ?? "").trim();
   if (!hospitalId) redirect("/dashboard/data");
 
   if (!Number.isInteger(year) || year < 1900 || year > 2100) {
@@ -50,9 +71,11 @@ async function createPeriod(formData: FormData) {
     create: { year },
   });
 
-  redirect(
-    `/dashboard/data?hospitalId=${encodeURIComponent(hospitalId)}&year=${year}`
-  );
+  const qs = new URLSearchParams();
+  qs.set("hospitalId", hospitalId);
+  qs.set("year", String(year));
+  if (parseStatementType(statementType)) qs.set("statementType", statementType);
+  redirect(`/dashboard/data?${qs.toString()}`);
 }
 
 async function saveFacts(formData: FormData) {
@@ -152,24 +175,26 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
     redirect("/dashboard/forbidden");
   }
 
+  const sp = await resolveSearchParams(searchParams);
+
   const hospitals = await prisma.hospital.findMany({
     orderBy: { name: "asc" },
   });
 
   const selectedHospitalId =
-    typeof searchParams?.hospitalId === "string" && searchParams.hospitalId
-      ? searchParams.hospitalId
+    typeof firstParam(sp.hospitalId) === "string" && firstParam(sp.hospitalId)
+      ? (firstParam(sp.hospitalId) as string)
       : hospitals[0]?.id;
 
   const periods = await prisma.period.findMany({ orderBy: { year: "desc" } });
 
   const selectedYear =
-    typeof searchParams?.year === "string" && Number.isFinite(Number(searchParams.year))
-      ? Number(searchParams.year)
+    typeof firstParam(sp.year) === "string" && Number.isFinite(Number(firstParam(sp.year)))
+      ? Number(firstParam(sp.year))
       : periods[0]?.year;
 
   const selectedStatementType: StatementType =
-    (searchParams?.statementType as StatementType) ?? StatementType.BALANCE_ASSET;
+    parseStatementType(firstParam(sp.statementType)) ?? StatementType.BALANCE_ASSET;
 
   const selectedPeriod = selectedYear
     ? await prisma.period.findUnique({ where: { year: selectedYear } })
@@ -260,7 +285,7 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
         </p>
       </header>
 
-      {searchParams?.saved === "1" && <div className={styles.notice}>Gespeichert.</div>}
+      {firstParam(sp.saved) === "1" && <div className={styles.notice}>Gespeichert.</div>}
 
       {hospitals.length === 0 ? (
         <div className={styles.notice}>
@@ -325,6 +350,7 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
         {selectedHospitalId && (
           <form action={createPeriod} className={styles.createYear}>
             <input type="hidden" name="hospitalId" value={selectedHospitalId} />
+            <input type="hidden" name="statementType" value={selectedStatementType} />
             <label className={styles.field}>
               Jahr anlegen
               <input name="year" className={styles.input} placeholder="z.B. 2024" />
