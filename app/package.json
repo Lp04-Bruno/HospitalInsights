@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postinstall": "node scripts/postinstall.mjs"
   },
   "dependencies": {
     "@prisma/client": "6.15.0",
@@ -32,6 +33,6 @@
     "typescript": "^5"
   },
   "prisma": {
-    "seed": "prisma generate && ts-node --transpile-only -P prisma/tsconfig.seed.json prisma/seed.ts"
+    "seed": "prisma generate && node scripts/fix-prisma-client-windows.mjs && ts-node --transpile-only -P prisma/tsconfig.seed.json prisma/seed.ts"
   }
 }

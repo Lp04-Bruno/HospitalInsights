@@ -1,6 +1,20 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Dashboard theme */
+  --hi-surface: #ffffff;
+  --hi-border: #e4e4e7;
+  --hi-muted: #71717a;
+  --hi-accent: #4f46e5;
+  --hi-accent-2: #06b6d4;
+  --hi-bg: #f6f7ff;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 @theme inline {
