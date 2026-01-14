@@ -1,87 +1,83 @@
+
 .page {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 24px;
+  display: grid;
+  gap: 12px;
 }
 
 .header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  border: 1px solid #e4e4e7;
+  background: #fff;
+  border-radius: 16px;
+  padding: 18px;
 }
 
 .title {
   margin: 0;
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 850;
   letter-spacing: -0.02em;
-}
-
-.actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid #e4e4e7;
-  background: #fff;
   color: #18181b;
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 600;
 }
 
-.link:hover {
-  background: #fafafa;
-}
-
-.grid {
-  margin-top: 16px;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
+.subtitle {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #52525b;
 }
 
 .card {
   border: 1px solid #e4e4e7;
   background: #fff;
-  border-radius: 12px;
-  padding: 14px;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .cardTitle {
-  margin: 0 0 10px;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 850;
   color: #18181b;
 }
 
-.row {
-  display: grid;
-  grid-template-columns: 200px 1fr;
-  gap: 10px;
-  align-items: center;
-  margin-top: 8px;
+.cardHint {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #71717a;
 }
 
-.label {
-  font-size: 13px;
+.filters,
+.createYear {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.createYear {
+  margin-top: 10px;
+  grid-template-columns: 1fr auto;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 750;
   color: #3f3f46;
-  font-weight: 600;
 }
 
 .select,
 .input {
   width: 100%;
   padding: 10px 12px;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 1px solid #e4e4e7;
   font-size: 14px;
   outline: none;
@@ -93,9 +89,18 @@
   box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.12);
 }
 
+.filterActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
+  border: 1px solid #f4f4f5;
+  border-radius: 14px;
+  overflow: hidden;
 }
 
 .th {
@@ -104,6 +109,7 @@
   color: #52525b;
   padding: 8px;
   border-bottom: 1px solid #e4e4e7;
+  background: #fafafa;
 }
 
 .td {
@@ -127,7 +133,7 @@
 .valueInput {
   width: 100%;
   padding: 9px 10px;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 1px solid #e4e4e7;
   font-size: 14px;
   outline: none;
@@ -141,8 +147,9 @@
 .saveRow {
   margin-top: 12px;
   display: flex;
-  gap: 10px;
-  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
 }
 
 .button {
@@ -150,7 +157,7 @@
   align-items: center;
   justify-content: center;
   padding: 10px 12px;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 1px solid #18181b;
   background: #18181b;
   color: #fff;
@@ -163,8 +170,31 @@
   background: #27272a;
 }
 
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #e4e4e7;
+  background: #fff;
+  color: #18181b;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.secondary:hover {
+  background: #fafafa;
+}
+
 .hint {
   margin: 8px 0 0;
+  font-size: 12px;
+  color: #71717a;
+}
+
+.saveHint {
   font-size: 12px;
   color: #71717a;
 }
@@ -172,9 +202,31 @@
 .notice {
   margin-top: 12px;
   padding: 10px 12px;
-  border-radius: 12px;
+  border-radius: 16px;
   border: 1px solid #e4e4e7;
   background: #fafafa;
   color: #3f3f46;
   font-size: 13px;
+}
+
+.inlineLink {
+  display: inline-block;
+  margin-left: 8px;
+  color: #18181b;
+  text-decoration: underline;
+  font-weight: 750;
+}
+
+@media (max-width: 980px) {
+  .filters {
+    grid-template-columns: 1fr;
+  }
+
+  .createYear {
+    grid-template-columns: 1fr;
+  }
+
+  .filterActions {
+    justify-content: flex-start;
+  }
 }

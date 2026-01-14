@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactElement } from "react";
 import { prisma } from "@/lib/prisma";
@@ -31,25 +30,6 @@ function parseUserNumber(raw: string, unit: Unit): number | null {
 
   if (unit === Unit.COUNT) return Math.trunc(num);
   return num;
-}
-
-async function createHospital(formData: FormData) {
-  "use server";
-  const name = String(formData.get("name") ?? "").trim();
-  const city = String(formData.get("city") ?? "").trim();
-  const state = String(formData.get("state") ?? "").trim();
-
-  if (!name) redirect("/dashboard/data");
-
-  const hospital = await prisma.hospital.create({
-    data: {
-      name,
-      city: city || null,
-      state: state || null,
-    },
-  });
-
-  redirect(`/dashboard/data?hospitalId=${encodeURIComponent(hospital.id)}`);
 }
 
 async function createPeriod(formData: FormData) {
@@ -272,180 +252,135 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
   };
 
   return (
-    <main className={styles.page}>
+    <section className={styles.page}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Daten verwalten (MVP)</h1>
-        <div className={styles.actions}>
-          <Link href="/dashboard" className={styles.link}>
-            Dashboard
-          </Link>
-          <Link href="/" className={styles.link}>
-            Startseite
-          </Link>
-        </div>
+        <h1 className={styles.title}>Datenverwaltung</h1>
+        <p className={styles.subtitle}>
+          Werte pro Krankenhaus, Jahr und Bereich erfassen (analog zur Eingabe-Tabelle).
+        </p>
       </header>
 
-      {searchParams?.saved === "1" && (
-        <div className={styles.notice}>Gespeichert.</div>
-      )}
+      {searchParams?.saved === "1" && <div className={styles.notice}>Gespeichert.</div>}
 
-      <div className={styles.grid}>
-        <section className={styles.card}>
-          <h2 className={styles.cardTitle}>Stammdaten</h2>
+      {hospitals.length === 0 ? (
+        <div className={styles.notice}>
+          Es gibt noch keine Krankenhäuser. Lege zuerst eins in der Hospitalverwaltung an.
+          <a className={styles.inlineLink} href="/dashboard/hospitals">
+            Hospitalverwaltung öffnen
+          </a>
+        </div>
+      ) : null}
 
-          {hospitals.length === 0 ? (
-            <div className={styles.notice}>
-              Es gibt noch keine Krankenhäuser. Lege zuerst eins an.
-            </div>
-          ) : null}
+      <div className={styles.card}>
+        <div className={styles.cardHeader}>
+          <div>
+            <div className={styles.cardTitle}>Auswahl</div>
+            <div className={styles.cardHint}>Wähle Kontext und lade dann die Positionen.</div>
+          </div>
+        </div>
 
-          <form action={createHospital}>
-            <div className={styles.row}>
-              <div className={styles.label}>Neues Krankenhaus</div>
-              <input
-                name="name"
-                className={styles.input}
-                placeholder="z.B. Krankenhaus Musterstadt"
-              />
-            </div>
-            <div className={styles.row}>
-              <div className={styles.label}>Ort (optional)</div>
-              <input name="city" className={styles.input} placeholder="z.B. Hannover" />
-            </div>
-            <div className={styles.row}>
-              <div className={styles.label}>Bundesland (optional)</div>
-              <input name="state" className={styles.input} placeholder="z.B. Niedersachsen" />
-            </div>
-            <div className={styles.saveRow}>
+        {selectedHospitalId && (
+          <form method="get" className={styles.filters}>
+            <label className={styles.field}>
+              Krankenhaus
+              <select name="hospitalId" className={styles.select} defaultValue={selectedHospitalId}>
+                {hospitals.map((h) => (
+                  <option key={h.id} value={h.id}>
+                    {h.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className={styles.field}>
+              Jahr
+              <select name="year" className={styles.select} defaultValue={selectedYear ?? ""}>
+                {periods.map((p) => (
+                  <option key={p.id} value={p.year}>
+                    {p.year}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className={styles.field}>
+              Bereich
+              <select name="statementType" className={styles.select} defaultValue={selectedStatementType}>
+                {Object.values(StatementType).map((st) => (
+                  <option key={st} value={st}>
+                    {statementLabel(st)}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className={styles.filterActions}>
               <button className={styles.button} type="submit">
-                Krankenhaus anlegen
+                Anzeigen
               </button>
             </div>
           </form>
+        )}
 
-          <p className={styles.hint}>
-            Hinweis: Für den MVP nutzen wir die gleichen Eingabe-Positionen wie im Excel-Tool.
-          </p>
-        </section>
-
-        <section className={styles.card}>
-          <h2 className={styles.cardTitle}>Eingabe</h2>
-
-          {!selectedHospitalId ? (
-            <div className={styles.notice}>
-              Lege zuerst ein Krankenhaus an, um Werte zu pflegen.
+        {selectedHospitalId && (
+          <form action={createPeriod} className={styles.createYear}>
+            <input type="hidden" name="hospitalId" value={selectedHospitalId} />
+            <label className={styles.field}>
+              Jahr anlegen
+              <input name="year" className={styles.input} placeholder="z.B. 2024" />
+            </label>
+            <div className={styles.filterActions}>
+              <button className={styles.secondary} type="submit">
+                Jahr anlegen
+              </button>
             </div>
-          ) : null}
-
-          {selectedHospitalId && (
-            <>
-              <form action={createPeriod}>
-                <input type="hidden" name="hospitalId" value={selectedHospitalId} />
-                <div className={styles.row}>
-                  <div className={styles.label}>Jahr anlegen</div>
-                  <input name="year" className={styles.input} placeholder="z.B. 2024" />
-                </div>
-                <div className={styles.saveRow}>
-                  <button className={styles.button} type="submit">
-                    Jahr anlegen
-                  </button>
-                </div>
-              </form>
-
-              <form method="get" className={styles.notice}>
-                <div className={styles.row}>
-                  <div className={styles.label}>Krankenhaus</div>
-                  <select
-                    name="hospitalId"
-                    className={styles.select}
-                    defaultValue={selectedHospitalId}
-                  >
-                    {hospitals.map((h) => (
-                      <option key={h.id} value={h.id}>
-                        {h.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className={styles.row}>
-                  <div className={styles.label}>Jahr</div>
-                  <select
-                    name="year"
-                    className={styles.select}
-                    defaultValue={selectedYear ?? ""}
-                  >
-                    {periods.map((p) => (
-                      <option key={p.id} value={p.year}>
-                        {p.year}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className={styles.row}>
-                  <div className={styles.label}>Bereich</div>
-                  <select
-                    name="statementType"
-                    className={styles.select}
-                    defaultValue={selectedStatementType}
-                  >
-                    {Object.values(StatementType).map((st) => (
-                      <option key={st} value={st}>
-                        {statementLabel(st)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className={styles.saveRow}>
-                  <button className={styles.button} type="submit">
-                    Anzeigen
-                  </button>
-                </div>
-              </form>
-
-              {!selectedPeriod ? (
-                <div className={styles.notice}>
-                  Bitte wähle ein Jahr aus (oder lege eins an).
-                </div>
-              ) : lineItems.length === 0 ? (
-                <div className={styles.notice}>
-                  Keine Positionen vorhanden für {statementLabel(selectedStatementType)}. (Seed noch nicht gelaufen?)
-                </div>
-              ) : (
-                <form action={saveFacts}>
-                  <input type="hidden" name="hospitalId" value={selectedHospitalId} />
-                  <input type="hidden" name="periodId" value={selectedPeriod.id} />
-                  <input type="hidden" name="statementType" value={selectedStatementType} />
-
-                  <table className={styles.table}>
-                    <thead>
-                      <tr>
-                        <th className={styles.th}>Position</th>
-                        <th className={styles.th}>Wert</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rootCodes.flatMap((code) => renderRows(code, 0))}
-                    </tbody>
-                  </table>
-
-                  <div className={styles.saveRow}>
-                    <button className={styles.button} type="submit">
-                      Speichern
-                    </button>
-                  </div>
-
-                  <p className={styles.hint}>
-                    Tipp: Du kannst Zahlen wie <code>129.658.900,5</code> oder <code>129658900.5</code> eingeben. Prozentwerte auch als <code>39%</code>.
-                  </p>
-                </form>
-              )}
-            </>
-          )}
-        </section>
+          </form>
+        )}
       </div>
-    </main>
+
+      {!selectedPeriod ? (
+        <div className={styles.notice}>Bitte wähle ein Jahr aus (oder lege eins an).</div>
+      ) : lineItems.length === 0 ? (
+        <div className={styles.notice}>
+          Keine Positionen vorhanden für {statementLabel(selectedStatementType)}. (Seed noch nicht gelaufen?)
+        </div>
+      ) : (
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <div>
+              <div className={styles.cardTitle}>{statementLabel(selectedStatementType)}</div>
+              <div className={styles.cardHint}>
+                {selectedYear} · {hospitals.find((h) => h.id === selectedHospitalId)?.name}
+              </div>
+            </div>
+          </div>
+
+          <form action={saveFacts}>
+            <input type="hidden" name="hospitalId" value={selectedHospitalId} />
+            <input type="hidden" name="periodId" value={selectedPeriod.id} />
+            <input type="hidden" name="statementType" value={selectedStatementType} />
+
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th className={styles.th}>Position</th>
+                  <th className={styles.th}>Wert</th>
+                </tr>
+              </thead>
+              <tbody>{rootCodes.flatMap((code) => renderRows(code, 0))}</tbody>
+            </table>
+
+            <div className={styles.saveRow}>
+              <button className={styles.button} type="submit">
+                Speichern
+              </button>
+              <div className={styles.saveHint}>
+                Zahlen wie <code>129.658.900,5</code>, <code>129658900.5</code> oder <code>39%</code>.
+              </div>
+            </div>
+          </form>
+        </div>
+      )}
+    </section>
   );
 }

@@ -97,14 +97,12 @@ async function seedFromCsv() {
     const lines = content.split(/\r?\n/);
     if (lines.length < 2) return;
 
-    // Header contains years from col 3 onward
     const headerCols = lines[0].split(";");
     const years = headerCols
         .slice(3)
         .map((y) => Number(String(y).trim()))
         .filter((y) => Number.isInteger(y));
 
-    // Ensure periods exist
     for (const year of years) {
         await prisma.period.upsert({
             where: { year },
@@ -113,7 +111,6 @@ async function seedFromCsv() {
         });
     }
 
-    // Ensure sample hospital exists
     const sampleName = "Stadtwerke Delmenhorst (Sample)";
     const existing = await prisma.hospital.findFirst({ where: { name: sampleName } });
     const hospital =
@@ -163,14 +160,12 @@ async function seedFromCsv() {
             labelColumnIndex = 2;
             label = c2.trim();
         } else if (!label && marker && !/^\d+$/.test(marker)) {
-            // e.g. "-;Herstellungskosten" -> label is in c1
             labelColumnIndex = 1;
             label = c1.trim();
         }
 
         if (!label) continue;
 
-        // Skip section totals/headings that are already represented by the big heading lines.
         if (/B\s*I\s*L\s*A\s*N\s*Z\s*\s*:/i.test(label)) continue;
         if (/G\s*E\s*W\s*I\s*N\s*N/i.test(label) && /V\s*E\s*R\s*L\s*U\s*S\s*T/i.test(label)) continue;
 
@@ -210,13 +205,11 @@ async function seedFromCsv() {
         stack[level] = code;
         stack.length = Math.max(stack.length, level + 1);
 
-        // Seed fact values for the sample hospital for each year.
         for (let i = 0; i < years.length; i += 1) {
             const year = years[i];
             const raw = String(valueCells[i] ?? "").trim();
             const parsed = parseGermanNumber(raw);
 
-            // Heuristic: the 2020 column is mostly "0,0" in the sample export.
             if (year === 2020 && raw === "0,0") continue;
             if (parsed === null) continue;
 
