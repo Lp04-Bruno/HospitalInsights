@@ -69,6 +69,23 @@ function prefixForStatementType(st: StatementType) {
     }
 }
 
+function statementTitle(st: StatementType) {
+    switch (st) {
+        case StatementType.BALANCE_ASSET:
+            return "Bilanz – Aktiva";
+        case StatementType.BALANCE_LIAB:
+            return "Bilanz – Passiva";
+        case StatementType.INCOME_STATEMENT_UKV:
+            return "GuV (UKV)";
+        case StatementType.INCOME_STATEMENT_GKV:
+            return "GuV (GKV)";
+        case StatementType.CASHFLOW:
+            return "Cashflow";
+        default:
+            return String(st);
+    }
+}
+
 function guessLevel(label: string, labelColumnIndex: number) {
     const t = label.trim();
     if (/^[A-Z]\./.test(t)) return 0;
@@ -140,6 +157,67 @@ async function seedFromCsv() {
             currentStatementType = headingType;
             sortOrder = 0;
             stack.length = 0;
+
+            const cols = trimmed.split(";");
+            const label = String(cols[1] ?? "").trim() || String(cols[2] ?? "").trim();
+            const valueCells = cols.slice(3);
+            const hasValues = valueCells.some((v) => {
+                const parsed = parseGermanNumber(String(v ?? "").trim());
+                return parsed !== null;
+            });
+
+            if (hasValues && /B\s*I\s*L\s*A\s*N\s*Z/i.test(label)) {
+                const prefix = prefixForStatementType(currentStatementType);
+                const code = `${prefix}_0000_total_${shortHash(label)}`;
+                const totalLabel = `${statementTitle(currentStatementType)} (Summe)`;
+
+                await prisma.lineItem.upsert({
+                    where: { code },
+                    update: {
+                        label: totalLabel,
+                        statementType: currentStatementType,
+                        parentCode: null,
+                        sortOrder: 0,
+                        unit: Unit.EUR,
+                        isInput: false,
+                    },
+                    create: {
+                        code,
+                        label: totalLabel,
+                        statementType: currentStatementType,
+                        parentCode: null,
+                        sortOrder: 0,
+                        unit: Unit.EUR,
+                        isInput: false,
+                    },
+                });
+
+                for (let i = 0; i < years.length; i += 1) {
+                    const year = years[i];
+                    const raw = String(valueCells[i] ?? "").trim();
+                    const parsed = parseGermanNumber(raw);
+                    if (parsed === null) continue;
+                    const period = periodByYear.get(year);
+                    if (!period) continue;
+                    await prisma.factValue.upsert({
+                        where: {
+                            hospitalId_periodId_lineItemCode: {
+                                hospitalId: hospital.id,
+                                periodId: period.id,
+                                lineItemCode: code,
+                            },
+                        },
+                        update: { value: parsed },
+                        create: {
+                            hospitalId: hospital.id,
+                            periodId: period.id,
+                            lineItemCode: code,
+                            value: parsed,
+                        },
+                    });
+                }
+            }
+
             continue;
         }
 
