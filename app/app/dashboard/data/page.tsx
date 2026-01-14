@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerAuthSession } from "@/lib/auth";
 import { StatementType, Unit } from "@prisma/client";
 import styles from "./page.module.css";
+import { parseUserNumberDetailed } from "@/app/dashboard/data/numberParsing";
 import { DirtySaveForm } from "@/app/dashboard/data/DirtySaveForm";
 
 type PageProps = {
@@ -35,23 +36,15 @@ function parseStatementType(raw: string | undefined): StatementType | undefined 
     return values.includes(raw) ? (raw as StatementType) : undefined;
 }
 
-function parseUserNumber(raw: string, unit: Unit): number | null {
-    const trimmed = raw.trim();
-    if (!trimmed) return null;
-
-    // Accept inputs like: 129.658.900,5  | 129658900.5 | 39% | 39,0%
-    const normalized = trimmed
-        .replace(/\s+/g, "")
-        .replace(/%/g, "")
-        .replace(/\./g, "")
-        .replace(/,/g, ".");
-
-    const num = Number(normalized);
-    if (!Number.isFinite(num)) return null;
-
-    if (unit === Unit.COUNT) return Math.trunc(num);
-    return num;
-}
+type SaveFactsState = {
+    ok: boolean;
+    message?: string;
+    globalError?: string;
+    savedAt?: string;
+    savedBy?: string;
+    changesApplied?: number;
+    fieldErrors?: Record<string, string>;
+};
 
 function formatNumberDE(value: number, unit: Unit): string {
     const maximumFractionDigits = unit === Unit.COUNT ? 0 : 1;
@@ -121,64 +114,278 @@ async function createPeriod(formData: FormData) {
     redirect(`/dashboard/data?${qs.toString()}`);
 }
 
-async function saveFacts(formData: FormData) {
+async function saveFacts(prevState: SaveFactsState, formData: FormData): Promise<SaveFactsState> {
     "use server";
 
     const hospitalId = String(formData.get("hospitalId") ?? "");
     const periodId = String(formData.get("periodId") ?? "");
     const statementType = String(formData.get("statementType") ?? "") as StatementType;
 
-    if (!hospitalId || !periodId || !statementType) redirect("/dashboard/data");
+    const session = await getServerAuthSession();
+    if (!session) return { ok: false, globalError: "Nicht angemeldet." };
+    if (session.user.role !== "ADMIN" && session.user.role !== "EDITOR") {
+        return { ok: false, globalError: "Keine Berechtigung." };
+    }
+
+    if (!hospitalId || !periodId || !statementType) {
+        return { ok: false, globalError: "Ungültige Anfrage." };
+    }
 
     const inputItems = await prisma.lineItem.findMany({
         where: { statementType, isInput: true },
         orderBy: { sortOrder: "asc" },
     });
 
-    for (const item of inputItems) {
+    const presentValueKeys = new Set<string>();
+    for (const [k] of formData.entries()) {
+        if (typeof k === "string" && k.startsWith("v:")) presentValueKeys.add(k);
+    }
+
+    const presentItems = inputItems.filter((i) => presentValueKeys.has(`v:${i.code}`));
+    if (presentItems.length === 0) {
+        return { ok: true, message: "Keine sichtbaren Felder zum Speichern." };
+    }
+
+    const fieldErrors: Record<string, string> = {};
+    const desiredByCode = new Map<string, number | null>();
+
+    for (const item of presentItems) {
         const key = `v:${item.code}`;
         const raw = String(formData.get(key) ?? "");
-        const parsed = parseUserNumber(raw, item.unit);
+        const parsed = parseUserNumberDetailed(raw, item.unit);
 
-        if (parsed === null) {
-            await prisma.factValue.deleteMany({
-                where: {
-                    hospitalId,
-                    periodId,
-                    lineItemCode: item.code,
-                },
-            });
+        if (parsed.kind === "invalid") {
+            fieldErrors[item.code] = item.unit === Unit.PERCENT ? "Ungültige Prozentzahl." : "Ungültige Zahl.";
             continue;
         }
 
-        await prisma.factValue.upsert({
-            where: {
-                hospitalId_periodId_lineItemCode: {
-                    hospitalId,
-                    periodId,
-                    lineItemCode: item.code,
-                },
-            },
-            update: { value: parsed },
-            create: {
-                hospitalId,
-                periodId,
-                lineItemCode: item.code,
-                value: parsed,
-            },
-        });
+        if (parsed.kind === "empty") {
+            desiredByCode.set(item.code, null);
+            continue;
+        }
+
+        const rounded = Math.round(parsed.value * 100) / 100;
+        desiredByCode.set(item.code, rounded);
     }
 
-    const period = await prisma.period.findUnique({ where: { id: periodId } });
-    const year = period?.year;
+    if (Object.keys(fieldErrors).length > 0) {
+        return {
+            ok: false,
+            globalError: "Bitte korrigiere die markierten Felder. Es wurde nichts gespeichert.",
+            fieldErrors,
+        };
+    }
 
-    const qs = new URLSearchParams();
-    qs.set("hospitalId", hospitalId);
-    if (year) qs.set("year", String(year));
-    qs.set("statementType", statementType);
-    qs.set("saved", "1");
+    const codes = presentItems.map((i) => i.code);
+    const existing = await prisma.factValue.findMany({
+        where: {
+            hospitalId,
+            periodId,
+            lineItemCode: { in: codes },
+        },
+        select: { lineItemCode: true, value: true },
+    });
 
-    redirect(`/dashboard/data?${qs.toString()}`);
+    const existingByCode = new Map<string, number | null>();
+    for (const v of existing) {
+        const n = v.value === null ? null : Number(v.value.toString());
+        existingByCode.set(v.lineItemCode, Number.isFinite(n as number) ? (n as number) : null);
+    }
+
+    const changes: Array<{ code: string; unit: Unit; before: number | null; after: number | null }> = [];
+    for (const item of presentItems) {
+        const after = desiredByCode.get(item.code) ?? null;
+        const before = existingByCode.get(item.code) ?? null;
+        if (before === after) continue;
+        changes.push({ code: item.code, unit: item.unit, before, after });
+    }
+
+    if (changes.length === 0) {
+        return { ok: true, message: "Keine Änderungen zum Speichern." };
+    }
+
+    const now = new Date();
+    const savedBy = session.user.email ?? session.user.name ?? "";
+
+    try {
+        await prisma.$transaction(async (tx) => {
+            const run = await tx.factChangeRun.create({
+                data: {
+                    kind: "SAVE",
+                    hospitalId,
+                    periodId,
+                    statementType,
+                    userId: session.user.id,
+                    createdAt: now,
+                },
+                select: { id: true },
+            });
+
+            for (const c of changes) {
+                if (c.after === null) {
+                    await tx.factValue.deleteMany({ where: { hospitalId, periodId, lineItemCode: c.code } });
+                } else {
+                    await tx.factValue.upsert({
+                        where: {
+                            hospitalId_periodId_lineItemCode: {
+                                hospitalId,
+                                periodId,
+                                lineItemCode: c.code,
+                            },
+                        },
+                        update: { value: c.after },
+                        create: { hospitalId, periodId, lineItemCode: c.code, value: c.after },
+                    });
+                }
+
+                await tx.factChange.create({
+                    data: {
+                        runId: run.id,
+                        hospitalId,
+                        periodId,
+                        statementType,
+                        lineItemCode: c.code,
+                        unit: c.unit,
+                        beforeValue: c.before,
+                        afterValue: c.after,
+                        createdAt: now,
+                    },
+                });
+            }
+        });
+    } catch {
+        return {
+            ok: false,
+            globalError: "Speichern fehlgeschlagen (Datenbankfehler). Es wurden keine Änderungen übernommen.",
+        };
+    }
+
+    return {
+        ok: true,
+        message: "Gespeichert.",
+        savedAt: now.toISOString(),
+        savedBy: savedBy || undefined,
+        changesApplied: changes.length,
+    };
+}
+
+async function undoLastSave(prevState: SaveFactsState, formData: FormData): Promise<SaveFactsState> {
+    "use server";
+
+    const hospitalId = String(formData.get("hospitalId") ?? "");
+    const periodId = String(formData.get("periodId") ?? "");
+    const statementType = String(formData.get("statementType") ?? "") as StatementType;
+
+    const session = await getServerAuthSession();
+    if (!session) return { ok: false, globalError: "Nicht angemeldet." };
+    if (session.user.role !== "ADMIN" && session.user.role !== "EDITOR") {
+        return { ok: false, globalError: "Keine Berechtigung." };
+    }
+
+    if (!hospitalId || !periodId || !statementType) {
+        return { ok: false, globalError: "Ungültige Anfrage." };
+    }
+
+    const lastRun = await prisma.factChangeRun.findFirst({
+        where: { hospitalId, periodId, statementType },
+        orderBy: { createdAt: "desc" },
+        select: { id: true, createdAt: true },
+    });
+
+    if (!lastRun) {
+        return { ok: false, globalError: "Kein vorheriger Save gefunden." };
+    }
+
+    const lastChanges = await prisma.factChange.findMany({
+        where: { runId: lastRun.id },
+        select: { lineItemCode: true, unit: true, beforeValue: true },
+    });
+
+    if (lastChanges.length === 0) {
+        return { ok: false, globalError: "Kein vorheriger Save gefunden." };
+    }
+
+    const codes = lastChanges.map((c) => c.lineItemCode);
+    const current = await prisma.factValue.findMany({
+        where: { hospitalId, periodId, lineItemCode: { in: codes } },
+        select: { lineItemCode: true, value: true },
+    });
+
+    const currentByCode = new Map<string, number | null>();
+    for (const v of current) {
+        const n = v.value === null ? null : Number(v.value.toString());
+        currentByCode.set(v.lineItemCode, Number.isFinite(n as number) ? (n as number) : null);
+    }
+
+    const desired: Array<{ code: string; unit: Unit; before: number | null; after: number | null }> = [];
+    for (const c of lastChanges) {
+        const target = c.beforeValue === null ? null : Number(c.beforeValue.toString());
+        const after = Number.isFinite(target as number) ? (target as number) : null;
+        const before = currentByCode.get(c.lineItemCode) ?? null;
+        if (before === after) continue;
+        desired.push({ code: c.lineItemCode, unit: c.unit, before, after });
+    }
+
+    if (desired.length === 0) {
+        return { ok: true, message: "Nichts zum Rückgängig machen." };
+    }
+
+    const now = new Date();
+    const savedBy = session.user.email ?? session.user.name ?? "";
+
+    try {
+        await prisma.$transaction(async (tx) => {
+            const run = await tx.factChangeRun.create({
+                data: {
+                    kind: "UNDO",
+                    hospitalId,
+                    periodId,
+                    statementType,
+                    userId: session.user.id,
+                    createdAt: now,
+                },
+                select: { id: true },
+            });
+
+            for (const c of desired) {
+                if (c.after === null) {
+                    await tx.factValue.deleteMany({ where: { hospitalId, periodId, lineItemCode: c.code } });
+                } else {
+                    await tx.factValue.upsert({
+                        where: {
+                            hospitalId_periodId_lineItemCode: { hospitalId, periodId, lineItemCode: c.code },
+                        },
+                        update: { value: c.after },
+                        create: { hospitalId, periodId, lineItemCode: c.code, value: c.after },
+                    });
+                }
+
+                await tx.factChange.create({
+                    data: {
+                        runId: run.id,
+                        hospitalId,
+                        periodId,
+                        statementType,
+                        lineItemCode: c.code,
+                        unit: c.unit,
+                        beforeValue: c.before,
+                        afterValue: c.after,
+                        createdAt: now,
+                    },
+                });
+            }
+        });
+    } catch {
+        return { ok: false, globalError: "Undo fehlgeschlagen (Datenbankfehler)." };
+    }
+
+    return {
+        ok: true,
+        message: "Undo durchgeführt.",
+        savedAt: now.toISOString(),
+        savedBy: savedBy || undefined,
+        changesApplied: desired.length,
+    };
 }
 
 function statementLabel(st: StatementType) {
@@ -229,6 +436,19 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
     const selectedPeriod = selectedYear
         ? await prisma.period.findUnique({ where: { year: selectedYear } })
         : null;
+
+    const lastRun =
+        selectedHospitalId && selectedPeriod
+            ? await prisma.factChangeRun.findFirst({
+                  where: {
+                      hospitalId: selectedHospitalId,
+                      periodId: selectedPeriod.id,
+                      statementType: selectedStatementType,
+                  },
+                  orderBy: { createdAt: "desc" },
+                  select: { createdAt: true },
+              })
+            : null;
 
     const lineItems = await prisma.lineItem.findMany({
         where: { statementType: selectedStatementType },
@@ -292,127 +512,127 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
         <section className={styles.page}>
             <header className={styles.header}>
                 <h1 className={styles.title}>Datenverwaltung</h1>
-                <p className={styles.subtitle}>
-                    Werte pro Krankenhaus, Jahr und Bereich erfassen (analog zur Eingabe-Tabelle).
-                </p>
             </header>
-
-            {firstParam(sp.saved) === "1" && <div className={styles.notice}>Gespeichert.</div>}
 
             {hospitals.length === 0 ? (
                 <div className={styles.notice}>
-                    Es gibt noch keine Krankenhäuser. Lege zuerst eins in der Hospitalverwaltung an.
-                    <a className={styles.inlineLink} href="/dashboard/hospitals">
+                    Es gibt noch keine Krankenhäuser. Lege zuerst eins in der Hospitalverwaltung an.{" "}
+                    <Link className={styles.inlineLink} href="/dashboard/hospitals">
                         Hospitalverwaltung öffnen
-                    </a>
-                </div>
-            ) : null}
-
-            <div className={styles.card}>
-                <div className={styles.cardHeader}>
-                    <div>
-                        <div className={styles.cardTitle}>Auswahl</div>
-                        <div className={styles.cardHint}>Wähle Kontext und lade dann die Positionen.</div>
-                    </div>
-                </div>
-
-                {selectedHospitalId && (
-                    <form method="get" className={styles.filters}>
-                        <label className={styles.field}>
-                            Krankenhaus
-                            <select name="hospitalId" className={styles.select} defaultValue={selectedHospitalId}>
-                                {hospitals.map((h) => (
-                                    <option key={h.id} value={h.id}>
-                                        {h.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </label>
-
-                        <label className={styles.field}>
-                            Jahr
-                            <select name="year" className={styles.select} defaultValue={selectedYear ?? ""}>
-                                {periods.map((p) => (
-                                    <option key={p.id} value={p.year}>
-                                        {p.year}
-                                    </option>
-                                ))}
-                            </select>
-                        </label>
-
-                        <input type="hidden" name="statementType" value={selectedStatementType} />
-
-                        <div className={styles.filterActions}>
-                            <button className={styles.button} type="submit">
-                                Anzeigen
-                            </button>
-                        </div>
-                    </form>
-                )}
-
-                {selectedHospitalId ? (
-                    <div className={styles.tabs}>
-                        {Object.values(StatementType).map((st) => {
-                            const qs = new URLSearchParams();
-                            qs.set("hospitalId", selectedHospitalId);
-                            if (selectedYear) qs.set("year", String(selectedYear));
-                            qs.set("statementType", st);
-                            const active = st === selectedStatementType;
-                            return (
-                                <Link
-                                    key={st}
-                                    href={`/dashboard/data?${qs.toString()}`}
-                                    className={`${styles.tab} ${active ? styles.tabActive : ""}`}
-                                >
-                                    {statementLabel(st)}
-                                </Link>
-                            );
-                        })}
-                    </div>
-                ) : null}
-
-                {selectedHospitalId && (
-                    <form action={createPeriod} className={styles.createYear}>
-                        <input type="hidden" name="hospitalId" value={selectedHospitalId} />
-                        <input type="hidden" name="statementType" value={selectedStatementType} />
-                        <label className={styles.field}>
-                            Jahr anlegen
-                            <input name="year" className={styles.input} placeholder="z.B. 2024" />
-                        </label>
-                        <div className={styles.filterActions}>
-                            <button className={styles.secondary} type="submit">
-                                Jahr anlegen
-                            </button>
-                        </div>
-                    </form>
-                )}
-            </div>
-
-            {!selectedPeriod ? (
-                <div className={styles.notice}>Bitte wähle ein Jahr aus (oder lege eins an).</div>
-            ) : lineItems.length === 0 ? (
-                <div className={styles.notice}>
-                    Keine Positionen vorhanden für {statementLabel(selectedStatementType)}. (Seed noch nicht gelaufen?)
+                    </Link>
                 </div>
             ) : (
-                <div className={styles.card}>
-                    <div className={styles.cardHeader}>
-                        <div>
-                            <div className={styles.cardTitle}>{statementLabel(selectedStatementType)}</div>
-                            <div className={styles.cardHint}>
-                                {selectedYear} · {hospitals.find((h) => h.id === selectedHospitalId)?.name}
+                <>
+                    <div className={styles.card}>
+                        <div className={styles.cardHeader}>
+                            <div>
+                                <div className={styles.cardTitle}>Auswahl</div>
+                                <div className={styles.cardHint}>Wähle Kontext und lade dann die Positionen.</div>
                             </div>
                         </div>
+
+                        {selectedHospitalId ? (
+                            <form method="get" className={styles.filters}>
+                                <label className={styles.field}>
+                                    Krankenhaus
+                                    <select name="hospitalId" className={styles.select} defaultValue={selectedHospitalId}>
+                                        {hospitals.map((h) => (
+                                            <option key={h.id} value={h.id}>
+                                                {h.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </label>
+
+                                <label className={styles.field}>
+                                    Jahr
+                                    <select name="year" className={styles.select} defaultValue={selectedYear ?? ""}>
+                                        {periods.map((p) => (
+                                            <option key={p.id} value={p.year}>
+                                                {p.year}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </label>
+
+                                <input type="hidden" name="statementType" value={selectedStatementType} />
+
+                                <div className={styles.filterActions}>
+                                    <button className={styles.button} type="submit">
+                                        Anzeigen
+                                    </button>
+                                </div>
+                            </form>
+                        ) : null}
+
+                        {selectedHospitalId ? (
+                            <div className={styles.tabs}>
+                                {Object.values(StatementType).map((st) => {
+                                    const qs = new URLSearchParams();
+                                    qs.set("hospitalId", selectedHospitalId);
+                                    if (selectedYear) qs.set("year", String(selectedYear));
+                                    qs.set("statementType", st);
+                                    const active = st === selectedStatementType;
+                                    return (
+                                        <Link
+                                            key={st}
+                                            href={`/dashboard/data?${qs.toString()}`}
+                                            className={`${styles.tab} ${active ? styles.tabActive : ""}`}
+                                        >
+                                            {statementLabel(st)}
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        ) : null}
+
+                        {selectedHospitalId ? (
+                            <form action={createPeriod} className={styles.createYear}>
+                                <input type="hidden" name="hospitalId" value={selectedHospitalId} />
+                                <input type="hidden" name="statementType" value={selectedStatementType} />
+                                <label className={styles.field}>
+                                    Jahr anlegen
+                                    <input name="year" className={styles.input} placeholder="z.B. 2024" />
+                                </label>
+                                <div className={styles.filterActions}>
+                                    <button className={styles.secondary} type="submit">
+                                        Jahr anlegen
+                                    </button>
+                                </div>
+                            </form>
+                        ) : null}
                     </div>
 
-                    <DirtySaveForm
-                        action={saveFacts}
-                        hospitalId={selectedHospitalId}
-                        periodId={selectedPeriod.id}
-                        statementType={selectedStatementType}
-                        rows={flatRows}
-                    />
-                </div>
+                    {!selectedPeriod ? (
+                        <div className={styles.notice}>Bitte wähle ein Jahr aus (oder lege eins an).</div>
+                    ) : lineItems.length === 0 ? (
+                        <div className={styles.notice}>
+                            Keine Positionen vorhanden für {statementLabel(selectedStatementType)}. (Seed noch nicht gelaufen?)
+                        </div>
+                    ) : (
+                        <div className={styles.card}>
+                            <div className={styles.cardHeader}>
+                                <div>
+                                    <div className={styles.cardTitle}>{statementLabel(selectedStatementType)}</div>
+                                    <div className={styles.cardHint}>
+                                        {selectedYear} · {hospitals.find((h) => h.id === selectedHospitalId)?.name}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <DirtySaveForm
+                                key={`${selectedHospitalId}:${selectedPeriod.id}:${selectedStatementType}`}
+                                saveAction={saveFacts}
+                                undoAction={undoLastSave}
+                                hospitalId={selectedHospitalId}
+                                periodId={selectedPeriod.id}
+                                statementType={selectedStatementType}
+                                rows={flatRows}
+                                initialLastSavedAt={lastRun?.createdAt?.toISOString()}
+                            />
+                        </div>
+                    )}
+                </>
             )}
         </section>
     );

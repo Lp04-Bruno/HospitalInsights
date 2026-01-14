@@ -32,6 +32,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
           items={[
             { href: "/dashboard", label: "Übersicht", exact: true },
             { href: "/dashboard/data", label: "Datenverwaltung" },
+            { href: "/dashboard/audit", label: "Historie / Audit Log" },
             { href: "/dashboard/hospitals", label: "Hospitalverwaltung" },
             { href: "/dashboard/users", label: "Benutzerverwaltung" },
           ]}

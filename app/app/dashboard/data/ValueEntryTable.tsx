@@ -33,7 +33,7 @@ function shouldDefaultCollapse(row: FlatRow) {
     return row.isSection && /^[A-Z]\./.test(row.label);
 }
 
-export function ValueEntryTable({ rows }: { rows: FlatRow[] }) {
+export function ValueEntryTable({ rows, errorByCode }: { rows: FlatRow[]; errorByCode?: Record<string, string> }) {
     const defaultCollapsed = useMemo(() => {
         const s = new Set<string>();
         for (const r of rows) {
@@ -54,8 +54,8 @@ export function ValueEntryTable({ rows }: { rows: FlatRow[] }) {
 
     const expandAll = () => setCollapsed(new Set());
 
-    const renderedRows = useMemo(() => {
-        const out: FlatRow[] = [];
+    const rowsWithHidden = useMemo(() => {
+        const out: Array<{ row: FlatRow; hidden: boolean }> = [];
         const collapsedDepths: number[] = [];
 
         for (const r of rows) {
@@ -64,12 +64,13 @@ export function ValueEntryTable({ rows }: { rows: FlatRow[] }) {
             }
 
             const hidden = collapsedDepths.length > 0;
-            if (!hidden) out.push(r);
+            out.push({ row: r, hidden });
 
             if (!hidden && r.hasChildren && collapsed.has(r.code)) {
                 collapsedDepths.push(r.depth);
             }
         }
+
         return out;
     }, [rows, collapsed]);
 
@@ -93,13 +94,14 @@ export function ValueEntryTable({ rows }: { rows: FlatRow[] }) {
                     </tr>
                 </thead>
                 <tbody>
-                    {renderedRows.map((r) => {
+                    {rowsWithHidden.map(({ row: r, hidden }) => {
                         const valueKey = `v:${r.code}`;
                         const rowClass = `${styles.row} ${r.isSection ? styles.groupRow : ""} ${!r.isInput ? styles.readonlyRow : ""}`;
                         const paddingLeft = 8 + r.depth * 18;
                         const isCollapsed = collapsed.has(r.code);
+                        const fieldError = errorByCode?.[r.code];
                         return (
-                            <tr key={r.code} className={rowClass}>
+                            <tr key={r.code} className={rowClass} style={hidden ? { display: "none" } : undefined}>
                                 <td className={styles.td}>
                                     <div className={styles.itemLabel} style={{ paddingLeft }}>
                                         {r.hasChildren ? (
@@ -131,13 +133,17 @@ export function ValueEntryTable({ rows }: { rows: FlatRow[] }) {
                                 </td>
                                 <td className={styles.td}>
                                     {r.isInput ? (
-                                        <input
-                                            name={valueKey}
-                                            className={styles.valueInput}
-                                            defaultValue={r.prettyValue}
-                                            placeholder={r.unit === Unit.PERCENT ? "z.B. 39" : ""}
-                                            inputMode={r.unit === Unit.COUNT ? "numeric" : "decimal"}
-                                        />
+                                        <div className={styles.valueCell}>
+                                            <input
+                                                name={valueKey}
+                                                className={`${styles.valueInput} ${fieldError ? styles.valueInputInvalid : ""}`}
+                                                defaultValue={r.prettyValue}
+                                                placeholder={r.unit === Unit.PERCENT ? "z.B. 39" : ""}
+                                                inputMode={r.unit === Unit.COUNT ? "numeric" : "decimal"}
+                                                aria-invalid={fieldError ? "true" : "false"}
+                                            />
+                                            {fieldError ? <div className={styles.fieldError}>{fieldError}</div> : null}
+                                        </div>
                                     ) : (
                                         <div className={styles.readonlyValue}>{r.prettyValue || "—"}</div>
                                     )}

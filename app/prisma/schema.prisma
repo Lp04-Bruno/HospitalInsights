@@ -21,6 +21,8 @@ model User {
   role      Role     @default(VIEWER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  factChangeRuns FactChangeRun[]
 }
 
 model Hospital {
@@ -32,6 +34,8 @@ model Hospital {
   updatedAt DateTime @updatedAt
 
   facts     FactValue[]
+
+  factChangeRuns FactChangeRun[]
 }
 
 model Period {
@@ -41,6 +45,8 @@ model Period {
   updatedAt DateTime @updatedAt
 
   facts     FactValue[]
+
+  factChangeRuns FactChangeRun[]
 
   @@unique([year])
 }
@@ -57,6 +63,11 @@ enum Unit {
   EUR
   PERCENT
   COUNT
+}
+
+enum FactChangeRunKind {
+  SAVE
+  UNDO
 }
 
 model LineItem {
@@ -104,4 +115,39 @@ model FactValue {
   @@index([hospitalId, periodId])
   @@index([lineItemCode])
   @@unique([hospitalId, periodId, lineItemCode])
+}
+
+model FactChangeRun {
+  id           String            @id @default(cuid())
+  kind         FactChangeRunKind @default(SAVE)
+  hospitalId   String
+  periodId     String
+  statementType StatementType
+  userId       String?
+  createdAt    DateTime          @default(now())
+
+  hospital     Hospital          @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  period       Period            @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  user         User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  changes      FactChange[]
+
+  @@index([hospitalId, periodId, statementType, createdAt])
+}
+
+model FactChange {
+  id           String         @id @default(cuid())
+  runId        String
+  hospitalId   String
+  periodId     String
+  statementType StatementType
+  lineItemCode String
+  unit         Unit
+  beforeValue  Decimal?       @db.Decimal(18, 2)
+  afterValue   Decimal?       @db.Decimal(18, 2)
+  createdAt    DateTime       @default(now())
+
+  run          FactChangeRun  @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+  @@index([hospitalId, periodId, statementType, lineItemCode])
 }
