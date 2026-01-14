@@ -87,74 +87,76 @@ export function ValueEntryTable({ rows, errorByCode }: { rows: FlatRow[]; errorB
                 </button>
             </div>
 
-            <table className={styles.table}>
-                <thead>
-                    <tr>
-                        <th className={`${styles.th} ${styles.thLabel}`}>Position</th>
-                        <th className={`${styles.th} ${styles.thUnit}`}>Einheit</th>
-                        <th className={`${styles.th} ${styles.thValue}`}>Wert</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {rowsWithHidden.map(({ row: r, hidden }) => {
-                        const valueKey = `v:${r.code}`;
-                        const rowClass = `${styles.row} ${r.isSection ? styles.groupRow : ""} ${!r.isInput ? styles.readonlyRow : ""}`;
-                        const paddingLeft = 8 + r.depth * 18;
-                        const isCollapsed = collapsed.has(r.code);
-                        const fieldError = errorByCode?.[r.code];
-                        return (
-                            <tr key={r.code} className={rowClass} style={hidden ? { display: "none" } : undefined}>
-                                <td className={styles.td}>
-                                    <div className={styles.itemLabel} style={{ paddingLeft }}>
-                                        {r.hasChildren ? (
-                                            <button
-                                                type="button"
-                                                className={styles.caret}
-                                                aria-label={isCollapsed ? "Aufklappen" : "Einklappen"}
-                                                onClick={() => {
-                                                    setCollapsed((prev) => {
-                                                        const next = new Set(prev);
-                                                        if (next.has(r.code)) next.delete(r.code);
-                                                        else next.add(r.code);
-                                                        return next;
-                                                    });
-                                                }}
-                                            >
-                                                <span className={`${styles.caretIcon} ${isCollapsed ? styles.caretClosed : ""}`}>
-                                                    ▾
-                                                </span>
-                                            </button>
-                                        ) : (
-                                            <span className={styles.caretSpacer} />
-                                        )}
-                                        {r.label}
-                                    </div>
-                                </td>
-                                <td className={styles.td}>
-                                    <span className={styles.unitPill}>{unitSuffix(r.unit)}</span>
-                                </td>
-                                <td className={styles.td}>
-                                    {r.isInput ? (
-                                        <div className={styles.valueCell}>
-                                            <input
-                                                name={valueKey}
-                                                className={`${styles.valueInput} ${fieldError ? styles.valueInputInvalid : ""}`}
-                                                defaultValue={r.prettyValue}
-                                                placeholder={r.unit === Unit.PERCENT ? "z.B. 39" : ""}
-                                                inputMode={r.unit === Unit.COUNT ? "numeric" : "decimal"}
-                                                aria-invalid={fieldError ? "true" : "false"}
-                                            />
-                                            {fieldError ? <div className={styles.fieldError}>{fieldError}</div> : null}
+            <div className={styles.tableScroll}>
+                <table className={styles.table}>
+                    <thead>
+                        <tr>
+                            <th className={`${styles.th} ${styles.thLabel}`}>Position</th>
+                            <th className={`${styles.th} ${styles.thUnit}`}>Einheit</th>
+                            <th className={`${styles.th} ${styles.thValue}`}>Wert</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {rowsWithHidden.map(({ row: r, hidden }) => {
+                            const valueKey = `v:${r.code}`;
+                            const rowClass = `${styles.row} ${r.isSection ? styles.groupRow : ""} ${!r.isInput ? styles.readonlyRow : ""}`;
+                            const paddingLeft = 8 + r.depth * 18;
+                            const isCollapsed = collapsed.has(r.code);
+                            const fieldError = errorByCode?.[r.code];
+                            return (
+                                <tr key={r.code} className={rowClass} style={hidden ? { display: "none" } : undefined}>
+                                    <td className={styles.td}>
+                                        <div className={styles.itemLabel} style={{ paddingLeft }}>
+                                            {r.hasChildren ? (
+                                                <button
+                                                    type="button"
+                                                    className={styles.caret}
+                                                    aria-label={isCollapsed ? "Aufklappen" : "Einklappen"}
+                                                    onClick={() => {
+                                                        setCollapsed((prev) => {
+                                                            const next = new Set(prev);
+                                                            if (next.has(r.code)) next.delete(r.code);
+                                                            else next.add(r.code);
+                                                            return next;
+                                                        });
+                                                    }}
+                                                >
+                                                    <span className={`${styles.caretIcon} ${isCollapsed ? styles.caretClosed : ""}`}>
+                                                        ▾
+                                                    </span>
+                                                </button>
+                                            ) : (
+                                                <span className={styles.caretSpacer} />
+                                            )}
+                                            {r.label}
                                         </div>
-                                    ) : (
-                                        <div className={styles.readonlyValue}>{r.prettyValue || "—"}</div>
-                                    )}
-                                </td>
-                            </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
+                                    </td>
+                                    <td className={styles.td}>
+                                        <span className={styles.unitPill}>{unitSuffix(r.unit)}</span>
+                                    </td>
+                                    <td className={styles.td}>
+                                        {r.isInput ? (
+                                            <div className={styles.valueCell}>
+                                                <input
+                                                    name={valueKey}
+                                                    className={`${styles.valueInput} ${fieldError ? styles.valueInputInvalid : ""}`}
+                                                    defaultValue={r.prettyValue}
+                                                    placeholder={r.unit === Unit.PERCENT ? "z.B. 39" : ""}
+                                                    inputMode={r.unit === Unit.COUNT ? "numeric" : "decimal"}
+                                                    aria-invalid={fieldError ? "true" : "false"}
+                                                />
+                                                {fieldError ? <div className={styles.fieldError}>{fieldError}</div> : null}
+                                            </div>
+                                        ) : (
+                                            <div className={styles.readonlyValue}>{r.prettyValue || "—"}</div>
+                                        )}
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 }

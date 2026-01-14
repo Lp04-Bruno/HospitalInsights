@@ -202,21 +202,21 @@
 .tableWrap {
   border: 1px solid #f4f4f5;
   border-radius: 14px;
-  overflow: auto;
-  max-height: 68vh;
   background: #fff;
 }
 
 .tableToolbar {
-  position: sticky;
-  top: 0;
-  z-index: 3;
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  padding: 10px 10px 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.72) 100%);
-  backdrop-filter: blur(8px);
+  padding: 10px;
+  border-bottom: 1px solid #f4f4f5;
+  background: #fff;
+}
+
+.tableScroll {
+  overflow: auto;
+  max-height: 68vh;
 }
 
 .secondarySmall {
@@ -454,30 +454,7 @@
   color: #71717a;
 }
 
-.saveHint {
-  font-size: 12px;
-  color: #71717a;
-}
 
-.lastSavedRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.lastSavedLabel {
-  font-size: 12px;
-  font-weight: 850;
-  color: #3f3f46;
-}
-
-.lastSavedValue {
-  font-size: 12px;
-  color: #71717a;
-  margin-left: auto;
-}
 
 .toast {
   position: sticky;

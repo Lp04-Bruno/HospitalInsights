@@ -67,7 +67,7 @@ export default async function HospitalsPage() {
             <header className={styles.header}>
                 <h1 className={styles.title}>Hospitalverwaltung</h1>
                 <p className={styles.subtitle}>
-                    Krankenhäuser anlegen und verwalten (MVP: Stammdaten + Eingabedaten).
+                    Krankenhäuser anlegen und verwalten.
                 </p>
             </header>
 

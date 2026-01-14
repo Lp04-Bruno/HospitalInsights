@@ -20,12 +20,10 @@ type FlatRow = {
 
 type DirtySaveFormProps = {
     saveAction: (prevState: SaveFactsState, formData: FormData) => Promise<SaveFactsState>;
-    undoAction?: (prevState: SaveFactsState, formData: FormData) => Promise<SaveFactsState>;
     hospitalId: string;
     periodId: string;
     statementType: StatementType;
     rows: FlatRow[];
-    initialLastSavedAt?: string;
 };
 
 export type SaveFactsState = {
@@ -100,32 +98,12 @@ function DirtyBottomBar({
 
 const INITIAL_STATE: SaveFactsState = { ok: true };
 
-function formatTimestampBerlin(iso: string): string {
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return iso;
-
-    try {
-        return new Intl.DateTimeFormat("de-DE", {
-            timeZone: "Europe/Berlin",
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-        }).format(d);
-    } catch {
-        return d.toISOString().slice(0, 16).replace("T", " ");
-    }
-}
-
 export function DirtySaveForm({
     saveAction,
-    undoAction,
     hospitalId,
     periodId,
     statementType,
     rows,
-    initialLastSavedAt,
 }: DirtySaveFormProps) {
     const formRef = useRef<HTMLFormElement>(null);
     const baselineRef = useRef<Map<string, string>>(new Map());
@@ -136,7 +114,6 @@ export function DirtySaveForm({
     const [clientFieldErrors, setClientFieldErrors] = useState<Record<string, string>>({});
     const [serverFieldErrors, setServerFieldErrors] = useState<Record<string, string>>({});
     const [serverState, setServerState] = useState<SaveFactsState>(INITIAL_STATE);
-    const [lastSavedAt, setLastSavedAt] = useState<string | undefined>(initialLastSavedAt);
 
     const [pending, startTransition] = useTransition();
 
@@ -182,7 +159,6 @@ export function DirtySaveForm({
 
             if (res.ok) {
                 setServerFieldErrors({});
-                if (res.savedAt) setLastSavedAt(res.savedAt);
 
                 baselineRef.current = snapshotValues(formRef.current);
                 clearDirty();
@@ -261,23 +237,6 @@ export function DirtySaveForm({
         [invalidCount, saveAction, applyResult, startTransition]
     );
 
-    const onUndo = useCallback(() => {
-        if (!undoAction) return;
-        const form = formRef.current;
-        if (!form) return;
-        const fd = new FormData(form);
-
-        startTransition(async () => {
-            const res = await undoAction(INITIAL_STATE, fd);
-            applyResult(res);
-        });
-    }, [undoAction, applyResult, startTransition]);
-
-    const humanLastSaved = useMemo(() => {
-        if (!lastSavedAt) return "—";
-        return formatTimestampBerlin(lastSavedAt);
-    }, [lastSavedAt]);
-
     return (
         <form ref={formRef} onSubmit={onSubmit} onInput={onInput} onChange={onInput}>
             <input type="hidden" name="hospitalId" value={hospitalId} />
@@ -292,29 +251,7 @@ export function DirtySaveForm({
                 <div className={`${styles.toast} ${styles.toastError}`}>{serverState.globalError}</div>
             ) : null}
 
-            <div className={styles.lastSavedRow}>
-                <div className={styles.lastSavedLabel}>Zuletzt gespeichert</div>
-                <div className={styles.lastSavedValue}>
-                    {humanLastSaved}
-                </div>
-
-                {undoAction ? (
-                    <button
-                        type="button"
-                        className={styles.secondarySmall}
-                        disabled={pending}
-                        onClick={onUndo}
-                    >
-                        Undo letzter Save
-                    </button>
-                ) : null}
-            </div>
-
             <ValueEntryTable rows={rows} errorByCode={mergedErrors} />
-
-            <div className={styles.saveHint}>
-                Zahlen wie <code>129.658.900,5</code>, <code>129658900.5</code> oder <code>39%</code>.
-            </div>
 
             <DirtyBottomBar dirtyCount={dirtyCount} invalidCount={invalidCount} onDiscard={discard} pending={pending} />
         </form>

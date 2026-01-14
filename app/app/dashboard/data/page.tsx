@@ -448,19 +448,6 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
         ? await prisma.period.findUnique({ where: { year: selectedYear } })
         : null;
 
-    const lastRun =
-        selectedHospitalId && selectedPeriod
-            ? await prisma.factChangeRun.findFirst({
-                  where: {
-                      hospitalId: selectedHospitalId,
-                      periodId: selectedPeriod.id,
-                      statementType: selectedStatementType,
-                  },
-                  orderBy: { createdAt: "desc" },
-                  select: { createdAt: true },
-              })
-            : null;
-
     const lineItems = await prisma.lineItem.findMany({
         where: { statementType: selectedStatementType },
         orderBy: { sortOrder: "asc" },
@@ -643,12 +630,10 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
                             <DirtySaveForm
                                 key={`${selectedHospitalId}:${selectedPeriod.id}:${selectedStatementType}`}
                                 saveAction={saveFacts}
-                                undoAction={undoLastSave}
                                 hospitalId={selectedHospitalId}
                                 periodId={selectedPeriod.id}
                                 statementType={selectedStatementType}
                                 rows={flatRows}
-                                initialLastSavedAt={lastRun?.createdAt?.toISOString()}
                             />
                         </div>
                     )}
