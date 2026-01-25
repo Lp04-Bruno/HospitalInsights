@@ -14,10 +14,10 @@ Dev-Stack:
 - Env-Datei anlegen:
   - `cp infra/.env.example infra/.env`
 - Stack starten:
-  - `docker compose -f infra/docker-compose.dev.yml up -d --build`
+  - `docker compose --env-file infra/.env -f infra/docker-compose.dev.yml up -d --build`
 - Migration/Seed (einmalig oder nach Reset):
-  - `docker compose -f infra/docker-compose.dev.yml exec app npx prisma migrate deploy`
-  - `docker compose -f infra/docker-compose.dev.yml exec app npx prisma db seed`
+  - `docker compose --env-file infra/.env -f infra/docker-compose.dev.yml exec -T app npx prisma migrate deploy`
+  - `docker compose --env-file infra/.env -f infra/docker-compose.dev.yml exec -T app npx prisma db seed`
 - Öffnen:
   - App: `http://localhost:3000`
   - Sign-in: `http://localhost:3000/signin`
