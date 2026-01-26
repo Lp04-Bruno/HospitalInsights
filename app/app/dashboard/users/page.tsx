@@ -19,19 +19,19 @@ async function createUser(formData: FormData) {
     const password = String(formData.get("password") ?? "");
     const role = String(formData.get("role") ?? "VIEWER") as Role;
 
-    if (!email || !password) redirect("/dashboard/users");
+    if (!email || !name || !password) redirect("/dashboard/users");
 
     const hash = await bcrypt.hash(password, 12);
 
     await prisma.user.upsert({
         where: { email },
         update: {
-            name: name || null,
+            name,
             role,
         },
         create: {
             email,
-            name: name || null,
+            name,
             password: hash,
             role,
         },
@@ -124,8 +124,8 @@ export default async function UsersPage() {
                         </div>
                         <div className={styles.row}>
                             <label className={styles.label}>
-                                Name (optional)
-                                <input name="name" className={styles.input} placeholder="z.B. Max Mustermann" />
+                                Name
+                                <input name="name" className={styles.input} placeholder="z.B. Max Mustermann" required />
                             </label>
                         </div>
                         <div className={styles.row}>
@@ -162,7 +162,7 @@ export default async function UsersPage() {
                                 <div className={styles.listMain}>
                                     <div className={styles.userEmail}>{u.email}</div>
                                     <div className={styles.userMeta}>
-                                        {(u.name || "—") + " · " + u.role}
+                                        {((u.name ?? "").trim() || "—") + " · " + u.role}
                                     </div>
                                 </div>
 

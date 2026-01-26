@@ -16,7 +16,7 @@ enum Role {
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
-  name      String?
+  name      String
   password  String
   role      Role     @default(VIEWER)
   createdAt DateTime @default(now())
@@ -28,8 +28,8 @@ model User {
 model Hospital {
   id        String   @id @default(cuid())
   name      String
-  city      String?
-  state     String?
+  city      String
+  state     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
