@@ -261,7 +261,6 @@ export default function AuditFilters(props: AuditFiltersProps) {
       </div>
 
       <div className={styles.actions}>
-        <div className={styles.autoHint}>Filter werden automatisch angewendet.</div>
         <Link className={styles.secondary} href="/dashboard/audit">
           Reset
         </Link>

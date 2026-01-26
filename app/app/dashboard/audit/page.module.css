@@ -79,13 +79,6 @@
   justify-content: flex-end;
 }
 
-.autoHint {
-  margin-right: auto;
-  font-size: 12px;
-  color: var(--hi-text-muted);
-  opacity: 0.9;
-}
-
 .button {
   padding: 9px 12px;
   border-radius: 8px;
