@@ -21,6 +21,11 @@ async function createUser(formData: FormData) {
 
     if (!email || !name || !password) redirect("/dashboard/users");
 
+    const sessionEmail = String(session.user.email ?? "").trim().toLowerCase();
+    if (sessionEmail && email === sessionEmail && role !== session.user.role) {
+        redirect("/dashboard/users");
+    }
+
     const hash = await bcrypt.hash(password, 12);
 
     await prisma.user.upsert({
@@ -50,6 +55,10 @@ async function setRole(formData: FormData) {
     const userId = String(formData.get("userId") ?? "");
     const role = String(formData.get("role") ?? "VIEWER") as Role;
     if (!userId) redirect("/dashboard/users");
+
+    if (userId === session.user.id) {
+        redirect("/dashboard/users");
+    }
 
     await prisma.user.update({
         where: { id: userId },
