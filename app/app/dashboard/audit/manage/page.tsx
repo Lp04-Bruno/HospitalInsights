@@ -253,7 +253,6 @@ export default async function AuditManagePage() {
                             <th className={styles.th}>Hospital</th>
                             <th className={styles.th}>Jahr</th>
                             <th className={styles.th}>Statement</th>
-                            <th className={styles.th}>Kind</th>
                             <th className={styles.th}>#Änderungen</th>
                             <th className={styles.th}>Run-ID</th>
                             <th className={styles.th}>Details</th>
@@ -270,7 +269,6 @@ export default async function AuditManagePage() {
                                     <td className={styles.td}>{r.hospital.name}</td>
                                     <td className={styles.td}>{r.period.year}</td>
                                     <td className={styles.td}>{r.statementType}</td>
-                                    <td className={styles.td}>{r.kind}</td>
                                     <td className={styles.td}>{r._count.changes}</td>
                                     <td className={styles.td}>
                                         <span className={styles.mono}>{r.id}</span>
@@ -294,7 +292,7 @@ export default async function AuditManagePage() {
 
                         {latestRuns.length === 0 ? (
                             <tr>
-                                <td className={styles.td} colSpan={10}>
+                                <td className={styles.td} colSpan={9}>
                                     Keine Runs vorhanden.
                                 </td>
                             </tr>

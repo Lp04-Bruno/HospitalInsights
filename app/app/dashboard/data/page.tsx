@@ -230,7 +230,6 @@ async function saveFacts(prevState: SaveFactsState, formData: FormData): Promise
         await prisma.$transaction(async (tx) => {
             const run = await tx.factChangeRun.create({
                 data: {
-                    kind: "SAVE",
                     hospitalId,
                     periodId,
                     statementType,

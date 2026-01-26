@@ -65,11 +65,6 @@ enum Unit {
   COUNT
 }
 
-enum FactChangeRunKind {
-  SAVE
-  UNDO
-}
-
 model LineItem {
   code          String        @id
   label         String
@@ -121,7 +116,6 @@ model FactValue {
 
 model FactChangeRun {
   id           String            @id @default(cuid())
-  kind         FactChangeRunKind @default(SAVE)
   hospitalId   String
   periodId     String
   statementType StatementType

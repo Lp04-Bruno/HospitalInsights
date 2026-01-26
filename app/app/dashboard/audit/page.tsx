@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 import { getServerAuthSession } from "@/lib/auth";
-import { FactChangeRunKind, Prisma, StatementType, Unit } from "@prisma/client";
+import { Prisma, StatementType, Unit } from "@prisma/client";
 
 import styles from "./page.module.css";
 import AuditFilters from "./AuditFilters";
@@ -54,12 +54,6 @@ function parseStatementType(raw: string | undefined): StatementType | undefined 
     if (!raw) return undefined;
     const values = Object.values(StatementType) as string[];
     return values.includes(raw) ? (raw as StatementType) : undefined;
-}
-
-function parseRunKind(raw: string | undefined): FactChangeRunKind | undefined {
-    if (!raw) return undefined;
-    const values = Object.values(FactChangeRunKind) as string[];
-    return values.includes(raw) ? (raw as FactChangeRunKind) : undefined;
 }
 
 function parseISODate(raw: string | undefined): Date | undefined {
@@ -134,7 +128,6 @@ function statementLabel(st: StatementType) {
 const changeInclude = {
     run: {
         select: {
-            kind: true,
             createdAt: true,
             user: { select: { email: true, name: true } },
             hospital: { select: { name: true } },
@@ -192,7 +185,6 @@ export default async function AuditLogPage({ searchParams }: PageProps) {
     const yearRaw = firstParam(sp.year);
     const selectedYear = yearRaw && Number.isFinite(Number(yearRaw)) ? Number(yearRaw) : undefined;
     const selectedStatementType = parseStatementType(firstParam(sp.statementType));
-    const selectedKind = parseRunKind(firstParam(sp.kind));
 
     const selectedUserId = firstParam(sp.userId) || "";
 
@@ -241,7 +233,6 @@ export default async function AuditLogPage({ searchParams }: PageProps) {
     if (selectedStatementType) and.push({ statementType: selectedStatementType });
 
     const runWhere: Record<string, unknown> = {};
-    if (selectedKind) runWhere.kind = selectedKind;
     if (effectiveUserId) runWhere.userId = effectiveUserId;
     if (fromDate || toDate) {
         runWhere.createdAt = {
@@ -321,7 +312,6 @@ export default async function AuditLogPage({ searchParams }: PageProps) {
     if (selectedHospitalId) qsBase.set("hospitalId", selectedHospitalId);
     if (selectedYear !== undefined) qsBase.set("year", String(selectedYear));
     if (selectedStatementType) qsBase.set("statementType", selectedStatementType);
-    if (selectedKind) qsBase.set("kind", selectedKind);
     if (selectedUserId) qsBase.set("userId", selectedUserId);
     if (fromRaw) qsBase.set("from", fromRaw);
     if (toRaw) qsBase.set("to", toRaw);
@@ -358,7 +348,6 @@ export default async function AuditLogPage({ searchParams }: PageProps) {
                 users={users.map((u) => ({ value: u.id, label: u.email ?? u.name ?? u.id }))}
                 years={periods.map((p) => p.year)}
                 statementOptions={Object.values(StatementType).map((st) => ({ value: st, label: statementLabel(st) }))}
-                kindOptions={Object.values(FactChangeRunKind).map((k) => ({ value: k, label: k }))}
                 initial={{
                     hospitalId: selectedHospitalId,
                     userId: selectedUserId,
@@ -367,7 +356,6 @@ export default async function AuditLogPage({ searchParams }: PageProps) {
                     q,
                     year: selectedYear !== undefined ? String(selectedYear) : "",
                     statementType: selectedStatementType ?? "",
-                    kind: selectedKind ?? "",
                     realOnly,
                     mine,
                 }}
@@ -385,7 +373,6 @@ export default async function AuditLogPage({ searchParams }: PageProps) {
                             <th className={styles.th}>Position</th>
                             <th className={styles.th}>Vorher</th>
                             <th className={styles.th}>Nachher</th>
-                            <th className={styles.th}>Run</th>
                             {isAdmin ? <th className={styles.th}>Aktionen</th> : null}
                         </tr>
                     </thead>
@@ -409,7 +396,6 @@ export default async function AuditLogPage({ searchParams }: PageProps) {
                                     </td>
                                     <td className={styles.td}>{before}</td>
                                     <td className={styles.td}>{after}</td>
-                                    <td className={styles.td}>{c.run.kind}</td>
                                     {isAdmin ? (
                                         <td className={styles.td}>
                                             <form action={deleteChange}>
@@ -427,7 +413,7 @@ export default async function AuditLogPage({ searchParams }: PageProps) {
 
                         {changes.length === 0 ? (
                             <tr>
-                                <td className={styles.td} colSpan={isAdmin ? 10 : 9}>
+                                <td className={styles.td} colSpan={isAdmin ? 9 : 8}>
                                     Keine Einträge gefunden.
                                 </td>
                             </tr>

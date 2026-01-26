@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { FactChangeRunKind, StatementType } from "@prisma/client";
+import { StatementType } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { getServerAuthSession } from "@/lib/auth";
@@ -45,7 +45,6 @@ export default async function DashboardPage() {
       select: { code: true, statementType: true },
     }),
     prisma.factChangeRun.findFirst({
-      where: { kind: FactChangeRunKind.SAVE },
       orderBy: { createdAt: "desc" },
       include: { user: { select: { email: true, name: true } } },
     }),

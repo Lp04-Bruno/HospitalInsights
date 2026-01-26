@@ -13,7 +13,6 @@ type AuditFiltersProps = {
   users: Option[];
   years: number[];
   statementOptions: Option[];
-  kindOptions: Option[];
 
   initial: {
     hospitalId: string;
@@ -23,7 +22,6 @@ type AuditFiltersProps = {
     q: string;
     year: string;
     statementType: string;
-    kind: string;
     realOnly: boolean;
     mine: boolean;
   };
@@ -35,7 +33,6 @@ function buildQueryFromState(state: AuditFiltersProps["initial"]) {
   if (state.hospitalId) qs.set("hospitalId", state.hospitalId);
   if (state.year) qs.set("year", state.year);
   if (state.statementType) qs.set("statementType", state.statementType);
-  if (state.kind) qs.set("kind", state.kind);
   if (state.userId) qs.set("userId", state.userId);
   if (state.from) qs.set("from", state.from);
   if (state.to) qs.set("to", state.to);
@@ -78,7 +75,6 @@ export default function AuditFilters(props: AuditFiltersProps) {
       q: readParam(sp, "q"),
       year: readParam(sp, "year"),
       statementType: readParam(sp, "statementType"),
-      kind: readParam(sp, "kind"),
       realOnly: readBool(sp, "realOnly", { defaultTrue: true }),
       mine: readBool(sp, "mine"),
     };
@@ -237,22 +233,6 @@ export default function AuditFilters(props: AuditFiltersProps) {
         >
           <option value="">Alle</option>
           {props.statementOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className={styles.field}>
-        <label>Aktion</label>
-        <select
-          name="kind"
-          value={state.kind}
-          onChange={(e) => setState((s) => ({ ...s, kind: e.target.value }))}
-        >
-          <option value="">Alle</option>
-          {props.kindOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}
             </option>

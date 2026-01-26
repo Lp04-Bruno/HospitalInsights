@@ -132,7 +132,7 @@ export default async function AuditRunDetailsPage({ params }: PageProps) {
                 <div>
                     <h1 className={styles.title}>Run-Details</h1>
                     <div className={styles.muted}>
-                        {run.createdAt.toLocaleString("de-DE")} · {who} · {run.hospital.name} · {run.period.year} · {run.statementType} · {run.kind}
+                        {run.createdAt.toLocaleString("de-DE")} · {who} · {run.hospital.name} · {run.period.year} · {run.statementType}
                     </div>
                 </div>
                 <div className={styles.actions}>
