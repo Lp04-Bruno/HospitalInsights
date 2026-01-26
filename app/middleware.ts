@@ -13,17 +13,17 @@ function redirectToSignIn(req: NextRequest) {
 export async function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl;
 
-    // Protect everything under /dashboard
     if (pathname.startsWith("/dashboard")) {
         const token = await getToken({ req });
         if (!token) return redirectToSignIn(req);
 
-        // Role-based access: only ADMIN/EDITOR get into dashboard
-        const role = (token as { role?: string }).role;
-        if (role !== "ADMIN" && role !== "EDITOR") {
-            const url = req.nextUrl.clone();
-            url.pathname = "/dashboard/forbidden";
-            return NextResponse.redirect(url);
+        if (pathname !== "/dashboard/forbidden") {
+            const role = (token as { role?: string }).role;
+            if (role !== "ADMIN" && role !== "EDITOR") {
+                const url = req.nextUrl.clone();
+                url.pathname = "/dashboard/forbidden";
+                return NextResponse.redirect(url);
+            }
         }
     }
 
