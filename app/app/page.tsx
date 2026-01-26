@@ -21,6 +21,7 @@ export default async function Home() {
     const payload = {
       resource: { dashboard: dashboardId },
       params: {},
+      // eslint-disable-next-line react-hooks/purity
       exp: Math.round(Date.now() / 1000) + 60 * 10,
     };
 
