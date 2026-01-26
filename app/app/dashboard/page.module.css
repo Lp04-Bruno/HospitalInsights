@@ -1,8 +1,18 @@
 .page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.header {
   border: 1px solid #e4e4e7;
   background: #fff;
   border-radius: 16px;
   padding: 18px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .title {
@@ -12,9 +22,118 @@
   letter-spacing: -0.02em;
 }
 
-.text {
-  margin: 10px 0 0;
-  color: #3f3f46;
+.subtitle {
+  color: #52525b;
+  font-size: 13px;
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.kpiCard {
+  border: 1px solid #e4e4e7;
+  background: #fff;
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.kpiLabel {
+  font-size: 12px;
+  color: #52525b;
+  font-weight: 750;
+}
+
+.kpiValue {
+  margin-top: 6px;
+  font-size: 22px;
+  font-weight: 900;
+  color: #18181b;
+}
+
+.kpiValueSmall {
+  margin-top: 6px;
   font-size: 14px;
-  line-height: 1.45;
+  font-weight: 850;
+  color: #18181b;
+}
+
+.kpiHint {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #71717a;
+}
+
+.section {
+  border: 1px solid #e4e4e7;
+  background: #fff;
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 900;
+  color: #18181b;
+  margin-bottom: 12px;
+}
+
+.progressList {
+  display: grid;
+  gap: 12px;
+}
+
+.progressRow {
+  display: grid;
+  gap: 8px;
+}
+
+.progressTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.progressLabel {
+  font-size: 13px;
+  font-weight: 800;
+  color: #18181b;
+}
+
+.progressMeta {
+  font-size: 12px;
+  color: #71717a;
+}
+
+.progressBar {
+  height: 10px;
+  border-radius: 999px;
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #111827, #4f46e5);
+  border-radius: 999px;
+}
+
+@media (max-width: 1100px) {
+  .kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .kpis {
+    grid-template-columns: 1fr;
+  }
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }

@@ -34,7 +34,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
             { href: "/dashboard/audit", label: "Audit Log" },
             { href: "/dashboard/hospitals", label: "Hospitalverwaltung" },
           ]
-        : [];
+        : [{ href: "/dashboard", label: "Übersicht", exact: true }];
 
   return (
     <div className={styles.shell}>
