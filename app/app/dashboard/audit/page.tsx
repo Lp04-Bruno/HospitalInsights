@@ -6,6 +6,7 @@ import { getServerAuthSession } from "@/lib/auth";
 import { FactChangeRunKind, Prisma, StatementType, Unit } from "@prisma/client";
 
 import styles from "./page.module.css";
+import AuditFilters from "./AuditFilters";
 
 type PageProps = {
     searchParams?:
@@ -17,6 +18,23 @@ function firstParam(v: string | string[] | undefined): string | undefined {
     if (typeof v === "string") return v;
     if (Array.isArray(v)) return v[0];
     return undefined;
+}
+
+function lastParam(v: string | string[] | undefined): string | undefined {
+    if (typeof v === "string") return v;
+    if (Array.isArray(v)) return v[v.length - 1];
+    return undefined;
+}
+
+function boolParam(
+    v: string | string[] | undefined,
+    opts?: { defaultTrue?: boolean }
+): boolean {
+    const raw = lastParam(v);
+    if (raw === undefined) return opts?.defaultTrue ?? false;
+    if (raw === "1" || raw.toLowerCase() === "true") return true;
+    if (raw === "0" || raw.toLowerCase() === "false") return false;
+    return opts?.defaultTrue ?? false;
 }
 
 async function resolveSearchParams(
@@ -183,8 +201,8 @@ export default async function AuditLogPage({ searchParams }: PageProps) {
     const fromDate = parseISODate(fromRaw);
     const toDate = parseISODate(toRaw);
 
-    const realOnly = firstParam(sp.realOnly) !== "0";
-    const mine = firstParam(sp.mine) === "1";
+    const realOnly = boolParam(sp.realOnly, { defaultTrue: true });
+    const mine = boolParam(sp.mine);
 
     const q = (firstParam(sp.q) ?? "").trim();
 
@@ -335,109 +353,25 @@ export default async function AuditLogPage({ searchParams }: PageProps) {
                 <div className={styles.muted}>Letzte Änderungen (Seite {page})</div>
             </div>
 
-            <form className={styles.filters}>
-                <div className={styles.field}>
-                    <label>Hospital</label>
-                    <select name="hospitalId" defaultValue={selectedHospitalId}>
-                        <option value="">Alle</option>
-                        {hospitals.map((h) => (
-                            <option key={h.id} value={h.id}>
-                                {h.name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                <div className={styles.field}>
-                    <label>Benutzer</label>
-                    <select name="userId" defaultValue={selectedUserId} disabled={mine}>
-                        <option value="">Alle</option>
-                        {users.map((u) => (
-                            <option key={u.id} value={u.id}>
-                                {u.email ?? u.name ?? u.id}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                <div className={styles.field}>
-                    <label>Zeitraum von</label>
-                    <input type="date" name="from" defaultValue={fromRaw ?? ""} />
-                </div>
-
-                <div className={styles.field}>
-                    <label>Zeitraum bis</label>
-                    <input type="date" name="to" defaultValue={toRaw ?? ""} />
-                </div>
-
-                <div className={styles.field}>
-                    <label>LineItem (Code/Label)</label>
-                    <input name="q" placeholder="z.B. 1.1 oder Erlöse" defaultValue={q} />
-                </div>
-
-                <div className={styles.field}>
-                    <label>Anzeige</label>
-                    <div className={styles.checkRow}>
-                        <input type="hidden" name="realOnly" value="0" />
-                        <label className={styles.checkLabel}>
-                            <input type="checkbox" name="realOnly" value="1" defaultChecked={realOnly} />
-                            Nur echte Änderungen
-                        </label>
-                    </div>
-                    <div className={styles.checkRow}>
-                        <input type="hidden" name="mine" value="0" />
-                        <label className={styles.checkLabel}>
-                            <input type="checkbox" name="mine" value="1" defaultChecked={mine} />
-                            Nur meine
-                        </label>
-                    </div>
-                </div>
-
-                <div className={styles.field}>
-                    <label>Jahr</label>
-                    <select name="year" defaultValue={selectedYear !== undefined ? String(selectedYear) : ""}>
-                        <option value="">Alle</option>
-                        {periods.map((p) => (
-                            <option key={p.id} value={String(p.year)}>
-                                {p.year}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                <div className={styles.field}>
-                    <label>Statement</label>
-                    <select name="statementType" defaultValue={selectedStatementType ?? ""}>
-                        <option value="">Alle</option>
-                        {Object.values(StatementType).map((st) => (
-                            <option key={st} value={st}>
-                                {statementLabel(st)}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                <div className={styles.field}>
-                    <label>Aktion</label>
-                    <select name="kind" defaultValue={selectedKind ?? ""}>
-                        <option value="">Alle</option>
-                        {Object.values(FactChangeRunKind).map((k) => (
-                            <option key={k} value={k}>
-                                {k}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                <div className={styles.actions}>
-                    <button className={styles.button} type="submit">
-                        Filtern
-                    </button>
-                    <Link className={styles.secondary} href="/dashboard/audit">
-                        Reset
-                    </Link>
-                </div>
-            </form>
+            <AuditFilters
+                hospitals={hospitals.map((h) => ({ value: h.id, label: h.name }))}
+                users={users.map((u) => ({ value: u.id, label: u.email ?? u.name ?? u.id }))}
+                years={periods.map((p) => p.year)}
+                statementOptions={Object.values(StatementType).map((st) => ({ value: st, label: statementLabel(st) }))}
+                kindOptions={Object.values(FactChangeRunKind).map((k) => ({ value: k, label: k }))}
+                initial={{
+                    hospitalId: selectedHospitalId,
+                    userId: selectedUserId,
+                    from: fromRaw ?? "",
+                    to: toRaw ?? "",
+                    q,
+                    year: selectedYear !== undefined ? String(selectedYear) : "",
+                    statementType: selectedStatementType ?? "",
+                    kind: selectedKind ?? "",
+                    realOnly,
+                    mine,
+                }}
+            />
 
             <div className={styles.tableWrap}>
                 <table className={styles.table}>
