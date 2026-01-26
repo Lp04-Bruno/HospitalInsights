@@ -15,6 +15,7 @@
   margin: 0;
   font-size: 22px;
   font-weight: 650;
+  color: var(--hi-text);
 }
 
 .filters {
@@ -22,9 +23,9 @@
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 12px;
   padding: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--hi-border);
   border-radius: 10px;
-  background: #fff;
+  background: var(--hi-surface);
 }
 
 .field label {
@@ -32,6 +33,7 @@
   font-size: 12px;
   opacity: 0.8;
   margin-bottom: 6px;
+  color: var(--hi-text-muted);
 }
 
 .field select,
@@ -39,8 +41,16 @@
   width: 100%;
   padding: 8px 10px;
   border-radius: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.18);
-  background: #fff;
+  border: 1px solid var(--hi-border);
+  background: var(--hi-surface);
+  color: var(--hi-text);
+}
+
+.field select:focus,
+.field input:focus {
+  outline: none;
+  border-color: var(--hi-focus-border);
+  box-shadow: 0 0 0 3px var(--hi-focus-ring);
 }
 
 .checkRow {
@@ -54,6 +64,7 @@
   align-items: center;
   gap: 8px;
   font-size: 13px;
+  color: var(--hi-text);
 }
 
 .checkLabel input[type="checkbox"] {
@@ -70,9 +81,9 @@
 .button {
   padding: 9px 12px;
   border-radius: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.18);
-  background: #111827;
-  color: #fff;
+  border: 1px solid var(--hi-border);
+  background: var(--hi-button-bg);
+  color: var(--hi-button-fg);
   cursor: pointer;
   font-weight: 600;
 }
@@ -80,9 +91,9 @@
 .secondary {
   padding: 9px 12px;
   border-radius: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.18);
-  background: #fff;
-  color: #111827;
+  border: 1px solid var(--hi-border);
+  background: var(--hi-button-outline-bg);
+  color: var(--hi-button-outline-fg);
   cursor: pointer;
   font-weight: 600;
 }
@@ -99,9 +110,9 @@
 
 .tableWrap {
   overflow: auto;
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--hi-border);
   border-radius: 10px;
-  background: #fff;
+  background: var(--hi-surface);
 }
 
 .table {
@@ -112,8 +123,9 @@
 .th,
 .td {
   padding: 10px 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid var(--hi-border);
   vertical-align: top;
+  color: var(--hi-text);
 }
 
 .th {
@@ -122,7 +134,7 @@
   opacity: 0.8;
   position: sticky;
   top: 0;
-  background: #fff;
+  background: var(--hi-surface);
   z-index: 1;
 }
 
@@ -141,9 +153,9 @@
 .pagerLink {
   padding: 8px 10px;
   border-radius: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.18);
-  background: #fff;
-  color: #111827;
+  border: 1px solid var(--hi-border);
+  background: var(--hi-button-outline-bg);
+  color: var(--hi-button-outline-fg);
   text-decoration: none;
   font-weight: 600;
 }

@@ -3,12 +3,53 @@
   --foreground: #171717;
 
   /* Dashboard theme */
+  --hi-text: #18181b;
+  --hi-text-muted: #52525b;
+  --hi-text-subtle: #71717a;
+
   --hi-surface: #ffffff;
+  --hi-surface-2: #f4f4f5;
   --hi-border: #e4e4e7;
   --hi-muted: #71717a;
   --hi-accent: #4f46e5;
   --hi-accent-2: #06b6d4;
   --hi-bg: #f6f7ff;
+
+  --hi-page-bg: #fafafa;
+
+  --hi-shell-bg: radial-gradient(
+    1200px 600px at 10% 0%,
+    rgba(79, 70, 229, 0.12) 0%,
+    rgba(246, 247, 255, 1) 45%,
+    rgba(255, 255, 255, 1) 100%
+  );
+  --hi-brand-bg: linear-gradient(
+    135deg,
+    rgba(79, 70, 229, 0.14) 0%,
+    rgba(6, 182, 212, 0.1) 55%,
+    rgba(255, 255, 255, 0.9) 100%
+  );
+
+  --hi-glass: rgba(255, 255, 255, 0.86);
+  --hi-glass-strong: rgba(255, 255, 255, 0.9);
+  --hi-glass-soft: rgba(255, 255, 255, 0.75);
+  --hi-glass-topbar: rgba(255, 255, 255, 0.72);
+  --hi-hover-bg: rgba(255, 255, 255, 0.9);
+
+  --hi-button-bg: #111827;
+  --hi-button-fg: #ffffff;
+  --hi-button-outline-bg: #ffffff;
+  --hi-button-outline-fg: #111827;
+
+  --hi-focus-border: #18181b;
+  --hi-focus-ring: rgba(24, 24, 27, 0.12);
+
+  --hi-table-head-bg: #fafafa;
+  --hi-row-alt-bg: #fcfcfd;
+  --hi-row-hover-bg: rgba(79, 70, 229, 0.04);
+  --hi-group-bg: rgba(79, 70, 229, 0.06);
+  --hi-toast-border: rgba(228, 228, 231, 0.9);
+  --hi-toast-bg: rgba(255, 255, 255, 0.92);
 }
 
 *,
@@ -28,6 +69,52 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+
+    /* Dashboard theme (dark) */
+    --hi-text: #f4f4f5;
+    --hi-text-muted: #a1a1aa;
+    --hi-text-subtle: #a1a1aa;
+
+    --hi-surface: #0b1220;
+    --hi-surface-2: #111827;
+    --hi-border: rgba(255, 255, 255, 0.12);
+    --hi-muted: #a1a1aa;
+    --hi-bg: #070a12;
+    --hi-page-bg: #0a0a0a;
+
+    --hi-shell-bg: radial-gradient(
+      1200px 600px at 10% 0%,
+      rgba(79, 70, 229, 0.22) 0%,
+      rgba(11, 18, 32, 1) 45%,
+      rgba(10, 10, 10, 1) 100%
+    );
+    --hi-brand-bg: linear-gradient(
+      135deg,
+      rgba(79, 70, 229, 0.22) 0%,
+      rgba(6, 182, 212, 0.12) 55%,
+      rgba(11, 18, 32, 0.92) 100%
+    );
+
+    --hi-glass: rgba(11, 18, 32, 0.78);
+    --hi-glass-strong: rgba(11, 18, 32, 0.9);
+    --hi-glass-soft: rgba(11, 18, 32, 0.72);
+    --hi-glass-topbar: rgba(11, 18, 32, 0.7);
+    --hi-hover-bg: rgba(255, 255, 255, 0.06);
+
+    --hi-button-bg: #0f172a;
+    --hi-button-fg: #f8fafc;
+    --hi-button-outline-bg: rgba(255, 255, 255, 0.06);
+    --hi-button-outline-fg: #f4f4f5;
+
+    --hi-focus-border: rgba(255, 255, 255, 0.28);
+    --hi-focus-ring: rgba(79, 70, 229, 0.25);
+
+    --hi-table-head-bg: rgba(255, 255, 255, 0.04);
+    --hi-row-alt-bg: rgba(255, 255, 255, 0.02);
+    --hi-row-hover-bg: rgba(79, 70, 229, 0.18);
+    --hi-group-bg: rgba(79, 70, 229, 0.14);
+    --hi-toast-border: rgba(255, 255, 255, 0.14);
+    --hi-toast-bg: rgba(11, 18, 32, 0.86);
   }
 }
 

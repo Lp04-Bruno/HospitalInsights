@@ -1,6 +1,6 @@
 .page {
   min-height: 100vh;
-  background: #fafafa;
+  background: var(--hi-page-bg);
   padding: 24px;
 }
 
@@ -16,16 +16,16 @@
   justify-content: center;
   padding: 10px 12px;
   border-radius: 10px;
-  border: 1px solid #e4e4e7;
-  background: #fff;
-  color: #18181b;
+  border: 1px solid var(--hi-border);
+  background: var(--hi-surface);
+  color: var(--hi-text);
   text-decoration: none;
   font-size: 14px;
   font-weight: 600;
 }
 
 .topLink:hover {
-  background: #f4f4f5;
+  background: var(--hi-hover-bg);
 }
 
 .center {
