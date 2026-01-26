@@ -111,6 +111,7 @@
 
 .tableWrap {
   overflow: auto;
+  max-width: 100%;
   border: 1px solid var(--hi-border);
   border-radius: 10px;
   background: var(--hi-surface);
@@ -119,6 +120,7 @@
 .table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 980px;
 }
 
 .th,
@@ -168,5 +170,18 @@
 @media (max-width: 1000px) {
   .filters {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1100px) {
+  .th,
+  .td {
+    padding: 8px 10px;
+  }
+}
+
+@media (max-width: 700px) {
+  .table {
+    min-width: 860px;
   }
 }
