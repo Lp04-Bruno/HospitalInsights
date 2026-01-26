@@ -79,6 +79,8 @@ model LineItem {
 
   unit          Unit          @default(EUR)
   isInput       Boolean       @default(true)
+
+  @@unique([statementType, sortOrder])
 }
 
 model ImportRun {

@@ -111,9 +111,11 @@ export function DirtySaveForm({
     const dirtyCountRef = useRef(0);
 
     const [dirtyCount, setDirtyCount] = useState(0);
+    const [dirtyCodes, setDirtyCodes] = useState<Set<string>>(new Set());
     const [clientFieldErrors, setClientFieldErrors] = useState<Record<string, string>>({});
     const [serverFieldErrors, setServerFieldErrors] = useState<Record<string, string>>({});
     const [serverState, setServerState] = useState<SaveFactsState>(INITIAL_STATE);
+    const [navBlockMessage, setNavBlockMessage] = useState<string | null>(null);
 
     const [pending, startTransition] = useTransition();
 
@@ -125,6 +127,7 @@ export function DirtySaveForm({
 
     const clearDirty = useCallback(() => {
         dirtyFieldsRef.current.clear();
+        setDirtyCodes(new Set());
         setDirtyCountIfChanged(0);
     }, []);
 
@@ -152,6 +155,56 @@ export function DirtySaveForm({
     }, [serverFieldErrors, clientFieldErrors]);
 
     const invalidCount = useMemo(() => Object.keys(mergedErrors).length, [mergedErrors]);
+
+    const isNavigationBlocked = dirtyCount > 0 || invalidCount > 0 || pending;
+
+    useEffect(() => {
+        if (!isNavigationBlocked) return;
+
+        const message =
+            invalidCount > 0
+                ? "Bitte korrigiere die markierten Felder und speichere (oder verwerfe), bevor du die Seite wechselst."
+                : "Du hast ungespeicherte Änderungen. Bitte speichere oder verwerfe, bevor du die Seite wechselst.";
+
+        const onDocumentClickCapture = (e: MouseEvent) => {
+            if (!isNavigationBlocked) return;
+            if (e.defaultPrevented) return;
+            if (e.button !== 0) return;
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+            const target = e.target as HTMLElement | null;
+            const anchor = target?.closest?.("a") as HTMLAnchorElement | null;
+            if (!anchor) return;
+
+            const hrefAttr = anchor.getAttribute("href");
+            if (!hrefAttr) return;
+            if (hrefAttr.startsWith("#")) return;
+            if (hrefAttr.startsWith("javascript:")) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+            setNavBlockMessage(message);
+        };
+
+        const onBeforeUnload = (e: BeforeUnloadEvent) => {
+            e.preventDefault();
+            e.returnValue = "";
+        };
+
+        document.addEventListener("click", onDocumentClickCapture, true);
+        window.addEventListener("beforeunload", onBeforeUnload);
+
+        return () => {
+            document.removeEventListener("click", onDocumentClickCapture, true);
+            window.removeEventListener("beforeunload", onBeforeUnload);
+        };
+    }, [invalidCount, isNavigationBlocked, pending, dirtyCount]);
+
+    useEffect(() => {
+        if (!navBlockMessage) return;
+        const t = window.setTimeout(() => setNavBlockMessage(null), 3500);
+        return () => window.clearTimeout(t);
+    }, [navBlockMessage]);
 
     const applyResult = useCallback(
         (res: SaveFactsState) => {
@@ -204,6 +257,14 @@ export function DirtySaveForm({
         else dirtyFieldsRef.current.delete(target.name);
 
         setDirtyCountIfChanged(dirtyFieldsRef.current.size);
+
+        setDirtyCodes(
+            new Set(
+                Array.from(dirtyFieldsRef.current)
+                    .filter((n) => n.startsWith("v:"))
+                    .map((n) => n.slice(2))
+            )
+        );
     }, [rowByCode]);
 
     const discard = useCallback(() => {
@@ -247,11 +308,15 @@ export function DirtySaveForm({
                 <div className={`${styles.toast} ${styles.toastSuccess}`}>{serverState.message}</div>
             ) : null}
 
+            {navBlockMessage ? (
+                <div className={`${styles.toast} ${styles.toastError}`}>{navBlockMessage}</div>
+            ) : null}
+
             {!serverState.ok && serverState.globalError ? (
                 <div className={`${styles.toast} ${styles.toastError}`}>{serverState.globalError}</div>
             ) : null}
 
-            <ValueEntryTable rows={rows} errorByCode={mergedErrors} />
+            <ValueEntryTable rows={rows} errorByCode={mergedErrors} dirtyByCode={dirtyCodes} />
 
             <DirtyBottomBar dirtyCount={dirtyCount} invalidCount={invalidCount} onDiscard={discard} pending={pending} />
         </form>

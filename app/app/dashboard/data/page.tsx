@@ -142,9 +142,17 @@ async function saveFacts(prevState: SaveFactsState, formData: FormData): Promise
         return { ok: false, globalError: "Ungültige Anfrage." };
     }
 
-    const inputItems = await prisma.lineItem.findMany({
+    const inputItemsRaw = await prisma.lineItem.findMany({
         where: { statementType, isInput: true },
         orderBy: { sortOrder: "asc" },
+    });
+
+    // Defensive: avoid duplicate inputs if line items contain duplicate codes.
+    const seenInputCodes = new Set<string>();
+    const inputItems = inputItemsRaw.filter((li) => {
+        if (seenInputCodes.has(li.code)) return false;
+        seenInputCodes.add(li.code);
+        return true;
     });
 
     const presentValueKeys = new Set<string>();
@@ -329,9 +337,17 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
         ? await prisma.period.findUnique({ where: { year: selectedYear } })
         : null;
 
-    const lineItems = await prisma.lineItem.findMany({
+    const lineItemsRaw = await prisma.lineItem.findMany({
         where: { statementType: selectedStatementType },
         orderBy: { sortOrder: "asc" },
+    });
+
+    // Defensive: avoid duplicate rows/inputs if line items contain duplicate codes.
+    const seenCodes = new Set<string>();
+    const lineItems = lineItemsRaw.filter((li) => {
+        if (seenCodes.has(li.code)) return false;
+        seenCodes.add(li.code);
+        return true;
     });
 
     const codes = lineItems.map((li) => li.code);
