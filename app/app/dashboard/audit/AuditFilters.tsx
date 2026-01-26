@@ -111,7 +111,7 @@ export default function AuditFilters(props: AuditFiltersProps) {
     debounceRef.current = window.setTimeout(() => {
       const href = desiredQuery ? `${pathname}?${desiredQuery}` : pathname;
       router.replace(href);
-    }, 450);
+    }, 300);
 
     return () => {
       if (debounceRef.current) window.clearTimeout(debounceRef.current);
