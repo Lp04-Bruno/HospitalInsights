@@ -1,8 +1,8 @@
 .card {
   width: 100%;
   max-width: 420px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: var(--hi-surface);
+  border: 1px solid var(--hi-border);
   border-radius: 12px;
   padding: 24px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -13,12 +13,13 @@
   font-size: 24px;
   font-weight: 600;
   letter-spacing: -0.02em;
+  color: var(--hi-text);
 }
 
 .subtitle {
   margin: 8px 0 0;
   font-size: 14px;
-  color: #52525b;
+  color: var(--hi-text-muted);
 }
 
 .form {
@@ -41,7 +42,7 @@
 
 .checkLabel {
   font-size: 13px;
-  color: #3f3f46;
+  color: var(--hi-text-muted);
 }
 
 .field {
@@ -52,29 +53,31 @@
 .label {
   font-size: 12px;
   font-weight: 600;
-  color: #3f3f46;
+  color: var(--hi-text-muted);
 }
 
 .input {
   padding: 10px 12px;
   border-radius: 10px;
-  border: 1px solid #e4e4e7;
+  border: 1px solid var(--hi-border);
   font-size: 14px;
   outline: none;
   transition: border-color 120ms ease, box-shadow 120ms ease;
+  background: var(--hi-surface);
+  color: var(--hi-text);
 }
 
 .input:focus {
-  border-color: #18181b;
-  box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.12);
+  border-color: var(--hi-focus-border);
+  box-shadow: 0 0 0 3px var(--hi-focus-ring);
 }
 
 .button {
   padding: 10px 12px;
   border-radius: 10px;
-  border: 1px solid #18181b;
-  background: #18181b;
-  color: #fff;
+  border: 1px solid var(--hi-border);
+  background: var(--hi-button-bg);
+  color: var(--hi-button-fg);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -99,14 +102,14 @@
 .hint {
   margin-top: 16px;
   font-size: 12px;
-  color: #52525b;
+  color: var(--hi-text-muted);
 }
 
 .code {
   padding: 2px 6px;
   border-radius: 6px;
-  background: #f4f4f5;
-  color: #18181b;
+  background: var(--hi-surface-2);
+  color: var(--hi-text);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
     "Liberation Mono", "Courier New", monospace;
   font-size: 11px;

@@ -4,8 +4,8 @@
 }
 
 .header {
-  border: 1px solid #e4e4e7;
-  background: #fff;
+  border: 1px solid var(--hi-border);
+  background: var(--hi-surface);
   border-radius: 16px;
   padding: 18px;
 }
@@ -15,13 +15,13 @@
   font-size: 20px;
   font-weight: 850;
   letter-spacing: -0.02em;
-  color: #18181b;
+  color: var(--hi-text);
 }
 
 .subtitle {
   margin: 8px 0 0;
   font-size: 13px;
-  color: #52525b;
+  color: var(--hi-text-muted);
 }
 
 .grid {
@@ -32,8 +32,8 @@
 }
 
 .card {
-  border: 1px solid #e4e4e7;
-  background: #fff;
+  border: 1px solid var(--hi-border);
+  background: var(--hi-surface);
   border-radius: 16px;
   padding: 16px;
   min-width: 0;
@@ -43,7 +43,7 @@
   margin: 0 0 12px;
   font-size: 13px;
   font-weight: 800;
-  color: #18181b;
+  color: var(--hi-text);
 }
 
 .form {
@@ -60,7 +60,7 @@
   gap: 6px;
   font-size: 12px;
   font-weight: 750;
-  color: #3f3f46;
+  color: var(--hi-text-muted);
 }
 
 .input {
@@ -68,9 +68,11 @@
   max-width: 100%;
   padding: 10px 12px;
   border-radius: 12px;
-  border: 1px solid #e4e4e7;
+  border: 1px solid var(--hi-border);
   font-size: 14px;
   outline: none;
+  background: var(--hi-surface);
+  color: var(--hi-text);
 }
 
 .input:focus {
@@ -103,9 +105,9 @@
 
 .empty {
   padding: 12px;
-  border: 1px dashed #e4e4e7;
+  border: 1px dashed var(--hi-border);
   border-radius: 14px;
-  color: #52525b;
+  color: var(--hi-text-muted);
   font-size: 13px;
 }
 
@@ -121,8 +123,8 @@
   gap: 12px;
   padding: 12px;
   border-radius: 14px;
-  border: 1px solid #e4e4e7;
-  background: #fafafa;
+  border: 1px solid var(--hi-border);
+  background: var(--hi-surface-2);
 }
 
 .listMain {
@@ -132,20 +134,20 @@
 .hospitalName {
   font-size: 14px;
   font-weight: 850;
-  color: #18181b;
+  color: var(--hi-text);
 }
 
 .hospitalMeta {
   margin-top: 4px;
   font-size: 12px;
-  color: #71717a;
+  color: var(--hi-text-subtle);
 }
 
 .danger {
   padding: 9px 10px;
   border-radius: 12px;
-  border: 1px solid #f4f4f5;
-  background: #fff;
+  border: 1px solid var(--hi-border);
+  background: var(--hi-button-outline-bg);
   color: #b91c1c;
   font-size: 13px;
   font-weight: 800;
@@ -176,9 +178,9 @@
   max-width: 160px;
   padding: 9px 10px;
   border-radius: 12px;
-  border: 1px solid #e4e4e7;
-  background: rgba(255, 255, 255, 0.9);
-  color: #18181b;
+  border: 1px solid var(--hi-border);
+  background: var(--hi-button-outline-bg);
+  color: var(--hi-text);
   font-size: 13px;
   font-weight: 800;
   outline: none;
@@ -192,8 +194,8 @@
 .dangerSmall {
   padding: 9px 10px;
   border-radius: 12px;
-  border: 1px solid #f4f4f5;
-  background: #fff;
+  border: 1px solid var(--hi-border);
+  background: var(--hi-button-outline-bg);
   color: #b91c1c;
   font-size: 13px;
   font-weight: 900;
@@ -207,7 +209,7 @@
 
 .actionsMeta {
   font-size: 12px;
-  color: #71717a;
+  color: var(--hi-text-subtle);
 }
 
 @media (max-width: 980px) {

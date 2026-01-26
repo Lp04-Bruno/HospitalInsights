@@ -23,9 +23,9 @@
   justify-content: center;
   padding: 10px 12px;
   border-radius: 10px;
-  border: 1px solid #e4e4e7;
-  background: #fff;
-  color: #18181b;
+  border: 1px solid var(--hi-border);
+  background: var(--hi-button-outline-bg);
+  color: var(--hi-text);
   text-decoration: none;
   font-size: 14px;
   font-weight: 600;
@@ -33,7 +33,7 @@
 }
 
 .button:hover {
-  background: #fafafa;
+  background: var(--hi-hover-bg);
 }
 
 .primary {
@@ -60,17 +60,17 @@
 .frame {
   width: 100%;
   height: 80vh;
-  border: 1px solid #e4e4e7;
+  border: 1px solid var(--hi-border);
   border-radius: 12px;
-  background: #fff;
+  background: var(--hi-surface);
 }
 
 .notice {
   margin-top: 18px;
   padding: 12px;
   border-radius: 12px;
-  border: 1px solid #e4e4e7;
-  background: #fff;
-  color: #3f3f46;
+  border: 1px solid var(--hi-border);
+  background: var(--hi-surface);
+  color: var(--hi-text-muted);
   font-size: 14px;
 }

@@ -106,10 +106,6 @@ export function SignInForm({ callbackUrl }: SignInFormProps) {
           </p>
         )}
       </form>
-
-      <p className={styles.hint}>
-        Nach dem Login wirst du weitergeleitet zu: <code className={styles.code}>{callbackUrl}</code>
-      </p>
     </section>
   );
 }

@@ -16,9 +16,25 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
   const session = await getServerAuthSession();
   if (!session) redirect("/signin?callbackUrl=/dashboard");
 
-  if (session.user.role !== "ADMIN" && session.user.role !== "EDITOR") {
-    redirect("/dashboard/forbidden");
-  }
+  const role = session.user.role;
+  const navItems =
+    role === "ADMIN"
+      ? [
+          { href: "/dashboard", label: "Übersicht", exact: true },
+          { href: "/dashboard/data", label: "Datenverwaltung" },
+          { href: "/dashboard/audit", label: "Audit Log" },
+          { href: "/dashboard/audit/manage", label: "Audit Log – Management" },
+          { href: "/dashboard/hospitals", label: "Hospitalverwaltung" },
+          { href: "/dashboard/users", label: "Benutzerverwaltung" },
+        ]
+      : role === "EDITOR"
+        ? [
+            { href: "/dashboard", label: "Übersicht", exact: true },
+            { href: "/dashboard/data", label: "Datenverwaltung" },
+            { href: "/dashboard/audit", label: "Audit Log" },
+            { href: "/dashboard/hospitals", label: "Hospitalverwaltung" },
+          ]
+        : [{ href: "/dashboard", label: "Übersicht", exact: true }];
 
   return (
     <div className={styles.shell}>
@@ -29,19 +45,13 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
         </div>
 
         <DashboardNav
-          items={[
-            { href: "/dashboard", label: "Übersicht", exact: true },
-            { href: "/dashboard/data", label: "Datenverwaltung" },
-            { href: "/dashboard/audit", label: "Historie / Audit Log" },
-            { href: "/dashboard/hospitals", label: "Hospitalverwaltung" },
-            { href: "/dashboard/users", label: "Benutzerverwaltung" },
-          ]}
+          items={navItems}
         />
 
         <div className={styles.sidebarFooter}>
           <div className={styles.userBox}>
             <div className={styles.userEmail}>{session.user.email}</div>
-            <div className={styles.userRole}>Rolle: {session.user.role}</div>
+            <div className={styles.userRole}>Rolle: {role}</div>
           </div>
 
           <div className={styles.sidebarFooterLinks}>

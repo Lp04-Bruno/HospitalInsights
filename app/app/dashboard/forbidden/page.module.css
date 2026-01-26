@@ -1,7 +1,7 @@
 .page {
   max-width: 760px;
-  border: 1px solid #e4e4e7;
-  background: #fff;
+  border: 1px solid var(--hi-border);
+  background: var(--hi-surface);
   border-radius: 16px;
   padding: 18px;
 }
@@ -11,10 +11,11 @@
   font-size: 20px;
   font-weight: 850;
   letter-spacing: -0.02em;
+  color: var(--hi-text);
 }
 
 .text {
   margin: 12px 0 0;
   font-size: 14px;
-  color: #3f3f46;
+  color: var(--hi-text-muted);
 }
