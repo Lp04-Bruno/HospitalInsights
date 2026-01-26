@@ -19,7 +19,7 @@
 
 .filters {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 12px;
   padding: 12px;
   border: 1px solid rgba(0, 0, 0, 0.12);
@@ -41,6 +41,24 @@
   border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.18);
   background: #fff;
+}
+
+.checkRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.checkLabel input[type="checkbox"] {
+  width: auto;
+  padding: 0;
 }
 
 .actions {
@@ -67,6 +85,16 @@
   color: #111827;
   cursor: pointer;
   font-weight: 600;
+}
+
+.dangerSmall {
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(185, 28, 28, 0.35);
+  background: rgba(220, 38, 38, 0.08);
+  color: rgb(185, 28, 28);
+  cursor: pointer;
+  font-weight: 650;
 }
 
 .tableWrap {
