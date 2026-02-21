@@ -68,6 +68,17 @@ Setzt diese Variablen als Dokploy Env/Secrets (nicht im Repo):
 - Regelmäßig `pg_dump` der Prod-DB und extern speichern.
 - Vor Deploys (oder täglich) Snapshot ziehen.
 
+**Praktische Minimal-Strategie (ohne DB-Port nach außen):**
+
+- In [infra/docker-compose.prod.yml](infra/docker-compose.prod.yml) ist im DB-Service ein Backup-Volume `/backups` vorgesehen.
+- Erzeugt Dumps direkt im DB-Container (z.B. via Dokploy Exec oder per SSH auf den Host):
+  - `pg_dump -U $POSTGRES_USER -d $POSTGRES_DB -Fc -f /backups/prod_$(date +%F).dump`
+- Kopiert die Dumps anschließend extern weg (S3/Storage/Backup-Server).
+
+**Restore-Test (mindestens 1x vor Live):**
+
+- In einer separaten Test-DB (oder lokal) einen Dump mit `pg_restore` einspielen und prüfen, ob App startet.
+
 ## Alternative: 3 getrennte Dokploy Apps
 
 Geht auch, aber dann müsst ihr sicherstellen, dass alle Container im selben Docker-Netz sind und `DATABASE_URL` korrekt auf den DB-Service zeigt.

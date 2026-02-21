@@ -92,6 +92,10 @@ Für später „Production“ empfiehlt sich:
 
 - Checkliste: `infra/dokploy-setup.md`
 
+### Go-Live Audit
+
+- Checkliste: `infra/go-live-audit.md`
+
 ### Metabase in Production (vereinfacht)
 
 - Lokal (Dev): `METABASE_SITE_URL=http://localhost:3001`
