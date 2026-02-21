@@ -50,9 +50,13 @@ Dev-Stack:
 5. Dashboard-ID in `infra/.env` setzen:
    - `METABASE_DASHBOARD_ID=2`
 
-**Default Admin (NextAuth Credentials)**
+**Default Admin (Dev-only, NextAuth Credentials)**
 - Email: `admin@hospitalinsights.local`
 - Passwort: `admin1234`
+
+In Production solltet ihr **keine** festen Default-Credentials verwenden.
+Wenn ihr initial einen Admin anlegen wollt, nutzt entweder die App-UI/DB oder führt `prisma db seed` mit
+`SEED_ADMIN_EMAIL` + `SEED_ADMIN_PASSWORD` aus.
 
 **Rollen & Zugriff (Dev)**
 - `/dashboard` ist geschützt: nur `ADMIN` und `EDITOR` dürfen sich einloggen.
@@ -79,14 +83,19 @@ Für später „Production“ empfiehlt sich:
 
 ### Production Dateien (Repo)
 
-- App Dockerfile: `app/Dockerfile.prod`
+- App Dockerfile (Production): `app/Dockerfile`
+- App Dockerfile (Development): `app/Dockerfile.dev`
 - Prod Compose Template: `infra/docker-compose.prod.yml`
 - Prod Env Template: `infra/.env.prod.example`
+
+### Dokploy Setup
+
+- Checkliste: `infra/dokploy-setup.md`
 
 ### Metabase in Production (vereinfacht)
 
 - Lokal (Dev): `METABASE_SITE_URL=http://localhost:3001`
-- Server (Prod): `METABASE_SITE_URL=https://metabase.<eure-domain>` (muss im Browser erreichbar sein, da iFrame-URL)
+- Server (Prod): `METABASE_SITE_URL=https://metabase.hospitalinsights.de` (muss im Browser erreichbar sein, da iFrame-URL)
 - `METABASE_EMBED_SECRET`, `METABASE_DASHBOARD_ID` und optional `METABASE_DASHBOARD_CATALOG` setzt ihr am besten erst,
   nachdem Metabase auf dem Server läuft und ihr Embedding aktiviert + Dashboards erstellt/importiert habt.
 
