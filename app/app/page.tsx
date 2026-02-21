@@ -1,59 +1,120 @@
 import styles from "./page.module.css";
 import Link from "next/link";
 import { getServerAuthSession } from "@/lib/auth";
-import jwt from "jsonwebtoken";
+import { prisma } from "@/lib/prisma";
+import LandingExplorer from "@/app/_components/LandingExplorer";
+
+type ViewOption = {
+  type: "dashboard" | "question";
+  id: number;
+  name: string;
+  hospitalParamKey?: string;
+};
 
 export default async function Home() {
   const session = await getServerAuthSession();
-  const dashboardId = Number(process.env.METABASE_DASHBOARD_ID ?? "1");
 
-  const METABASE_SITE_URL = process.env.METABASE_SITE_URL;
-  const METABASE_EMBED_SECRET = process.env.METABASE_EMBED_SECRET;
+  const initialDashboardId = Number(process.env.METABASE_DASHBOARD_ID ?? "1");
+  const initialView = Number.isFinite(initialDashboardId)
+    ? ({ type: "dashboard", id: initialDashboardId } as const)
+    : undefined;
+  const dashboardsFromEnvRaw = process.env.METABASE_DASHBOARD_CATALOG;
 
-  let iframeUrl: string | null = null;
-  let iframeError: string | null = null;
+  const views: ViewOption[] = (() => {
+    if (dashboardsFromEnvRaw) {
+      try {
+        const parsed = JSON.parse(dashboardsFromEnvRaw) as Array<
+          Partial<{
+            type: "dashboard" | "question";
+            id: number;
+            name: string;
+            hospitalParamKey: string;
+          }>
+        >;
 
-  if (!Number.isFinite(dashboardId)) {
-    iframeError = "Invalid dashboard id.";
-  } else if (!METABASE_SITE_URL || !METABASE_EMBED_SECRET) {
-    iframeError = "Missing METABASE_SITE_URL or METABASE_EMBED_SECRET.";
-  } else {
-    const payload = {
-      resource: { dashboard: dashboardId },
-      params: {},
-      // eslint-disable-next-line react-hooks/purity
-      exp: Math.round(Date.now() / 1000) + 60 * 10,
-    };
+        const normalized: ViewOption[] = parsed
+          .filter((d) => Number.isFinite(Number(d.id)) && typeof d.name === "string" && d.name)
+          .map((d) => ({
+            type: (d.type === "question" ? "question" : "dashboard") as ViewOption["type"],
+            id: Number(d.id),
+            name: String(d.name),
+            ...(typeof d.hospitalParamKey === "string" && d.hospitalParamKey
+              ? { hospitalParamKey: d.hospitalParamKey }
+              : null),
+          }));
 
-    const token = jwt.sign(payload, METABASE_EMBED_SECRET);
-    iframeUrl = `${METABASE_SITE_URL}/embed/dashboard/${token}#bordered=true&titled=true`;
-  }
+        if (normalized.length > 0) return normalized;
+      } catch {
+        // Ignore invalid env JSON
+      }
+    }
+
+    if (Number.isFinite(initialDashboardId)) {
+      return [{ type: "dashboard" as const, id: initialDashboardId, name: "Dashboard" }];
+    }
+
+    return [];
+  })();
+
+  const hospitals = await prisma.hospital.findMany({
+    orderBy: [{ name: "asc" }],
+    select: { id: true, name: true, city: true, state: true },
+  });
 
   return (
-    <main className={styles.page}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>HospitalInsights</h1>
-        <nav className={styles.nav}>
-          {session ? (
-            <Link href="/dashboard" className={`${styles.button} ${styles.primary}`}>
-              Dashboard
-            </Link>
-          ) : (
-            <Link
-              href="/signin?callbackUrl=/dashboard"
-              className={`${styles.button} ${styles.primary}`}
-            >
-              Sign in
-            </Link>
-          )}
-        </nav>
-      </header>
+    <main className={styles.shell}>
+      <div className={styles.page}>
+        <header className={styles.header}>
+          <div className={styles.brand}>
+            <h1 className={styles.title}>HospitalInsights</h1>
+            <p className={styles.subtitle}>Auswertung und Vergleich von Kennzahlen.</p>
+          </div>
+          <nav className={styles.nav}>
+            {session ? (
+              <Link href="/dashboard" className={`${styles.button} ${styles.primary}`}>
+                Dashboard
+              </Link>
+            ) : (
+              <Link
+                href="/signin?callbackUrl=/dashboard"
+                className={`${styles.button} ${styles.primary}`}
+              >
+                Sign in
+              </Link>
+            )}
+          </nav>
+        </header>
 
-      <div className={styles.frameWrap}>
-        {iframeUrl ? (
-          <iframe title="Metabase Dashboard" src={iframeUrl} className={styles.frame} />
+        <section className={styles.hero} aria-label="Start">
+          <div className={styles.heroContent}>
+            <div className={styles.heroBadge}>Metabase</div>
+            <h2 className={styles.heroTitle}>Kennzahlen pro Krankenhaus</h2>
+            <p className={styles.heroText}>
+              Wähle Ansicht und Krankenhaus aus. Optional kannst du zwei Krankenhäuser nebeneinander
+              vergleichen.
+            </p>
+
+            <div className={styles.stats}>
+              <div className={styles.stat}>
+                <div className={styles.statValue}>{views.length}</div>
+                <div className={styles.statLabel}>Ansichten</div>
+              </div>
+              <div className={styles.stat}>
+                <div className={styles.statValue}>{hospitals.length}</div>
+                <div className={styles.statLabel}>Krankenhäuser</div>
+              </div>
+            </div>
+          </div>
+          <div className={styles.heroArt} aria-hidden="true" />
+        </section>
+
+        {views.length > 0 ? (
+          <LandingExplorer views={views} hospitals={hospitals} initialView={initialView} />
         ) : (
-          <div className={styles.notice}>{iframeError ?? "No dashboard iframeUrl returned."}</div>
+          <section className={styles.notice} aria-label="Hinweis">
+            Keine Metabase-Ansicht konfiguriert. Setze `METABASE_DASHBOARD_ID` oder
+            `METABASE_DASHBOARD_CATALOG`.
+          </section>
         )}
       </div>
     </main>

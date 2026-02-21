@@ -58,11 +58,13 @@ Dev-Stack:
 - `/dashboard` ist geschützt: nur `ADMIN` und `EDITOR` dürfen sich einloggen.
 
 **Entwickler-Workflow (Start/Stop/Restart)**
-- Start/Rebuild: `docker compose -f infra/docker-compose.dev.yml up -d --build`
-- Logs: `docker compose -f infra/docker-compose.dev.yml logs -f app`
-- Restart nur App: `docker compose -f infra/docker-compose.dev.yml restart app`
-- Stop (Container aus, Volumes behalten): `docker compose -f infra/docker-compose.dev.yml down`
-- Komplett-Reset (DB + Metabase Setup löschen!): `docker compose -f infra/docker-compose.dev.yml down -v`
+Die Compose-Kommandos bitte aus dem Repo-Root (`HospitalInsights/`) ausführen, damit Pfade wie `infra/.env` stimmen.
+
+- Start/Rebuild: `docker compose --env-file infra/.env -f infra/docker-compose.dev.yml up -d --build`
+- Logs: `docker compose --env-file infra/.env -f infra/docker-compose.dev.yml logs -f app`
+- Restart nur App: `docker compose --env-file infra/.env -f infra/docker-compose.dev.yml restart app`
+- Stop (Container aus, Volumes behalten): `docker compose --env-file infra/.env -f infra/docker-compose.dev.yml down`
+- Komplett-Reset (DB + Metabase Setup löschen!): `docker compose --env-file infra/.env -f infra/docker-compose.dev.yml down -v`
 
 **Dev vs Production - Konzept**
 Aktuell ist dieses Repo auf lokalen Dev ausgelegt.
