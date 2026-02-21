@@ -9,8 +9,8 @@ type SignInFormProps = {
 };
 
 export function SignInForm({ callbackUrl }: SignInFormProps) {
-  const [email, setEmail] = useState("admin@hospitalinsights.local");
-  const [password, setPassword] = useState("admin1234");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -106,10 +106,6 @@ export function SignInForm({ callbackUrl }: SignInFormProps) {
           </p>
         )}
       </form>
-
-      <p className={styles.hint}>
-        Nach dem Login wirst du weitergeleitet zu: <code className={styles.code}>{callbackUrl}</code>
-      </p>
     </section>
   );
 }

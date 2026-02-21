@@ -1,0 +1,97 @@
+.wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.card {
+  width: 100%;
+  max-width: 860px;
+  background: var(--hi-surface, #fff);
+  border: 1px solid var(--hi-border, #e4e4e7);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.header {
+  margin-bottom: 14px;
+}
+
+.title {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.subtitle {
+  margin: 8px 0 0;
+  color: var(--hi-muted, #71717a);
+}
+
+.notice {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.actions {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.buttonPrimary,
+.buttonSecondary,
+.link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.buttonPrimary {
+  background: var(--hi-accent, #4f46e5);
+  color: white;
+}
+
+.buttonSecondary {
+  background: transparent;
+  border-color: var(--hi-border, #e4e4e7);
+  color: var(--foreground, #171717);
+}
+
+.link {
+  background: transparent;
+  border-color: transparent;
+  color: var(--hi-accent, #4f46e5);
+}
+
+.support {
+  margin-top: 16px;
+}
+
+.supportSummary {
+  cursor: pointer;
+  color: var(--hi-muted, #71717a);
+}
+
+.supportBox {
+  margin-top: 10px;
+  border: 1px solid var(--hi-border, #e4e4e7);
+  border-radius: 12px;
+  background: rgba(113, 113, 122, 0.06);
+  padding: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

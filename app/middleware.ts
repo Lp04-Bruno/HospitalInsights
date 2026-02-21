@@ -13,17 +13,24 @@ function redirectToSignIn(req: NextRequest) {
 export async function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl;
 
-    // Protect everything under /dashboard
     if (pathname.startsWith("/dashboard")) {
         const token = await getToken({ req });
         if (!token) return redirectToSignIn(req);
 
-        // Role-based access: only ADMIN/EDITOR get into dashboard
+        // Role-based access:
+        // - /dashboard (overview) is visible to all authenticated roles (incl. VIEWER)
+        // - /dashboard/forbidden must be accessible to avoid redirect loops
+        // - everything else under /dashboard requires ADMIN or EDITOR
         const role = (token as { role?: string }).role;
-        if (role !== "ADMIN" && role !== "EDITOR") {
-            const url = req.nextUrl.clone();
-            url.pathname = "/dashboard/forbidden";
-            return NextResponse.redirect(url);
+        const isOverview = pathname === "/dashboard" || pathname === "/dashboard/";
+        const isForbidden = pathname === "/dashboard/forbidden";
+
+        if (!isOverview && !isForbidden) {
+            if (role !== "ADMIN" && role !== "EDITOR") {
+                const url = req.nextUrl.clone();
+                url.pathname = "/dashboard/forbidden";
+                return NextResponse.redirect(url);
+            }
         }
     }
 

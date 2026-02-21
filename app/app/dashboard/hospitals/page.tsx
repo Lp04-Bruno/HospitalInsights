@@ -9,13 +9,13 @@ async function createHospital(formData: FormData) {
     const city = String(formData.get("city") ?? "").trim();
     const state = String(formData.get("state") ?? "").trim();
 
-    if (!name) redirect("/dashboard/hospitals");
+    if (!name || !city || !state) redirect("/dashboard/hospitals");
 
     await prisma.hospital.create({
         data: {
             name,
-            city: city || null,
-            state: state || null,
+            city,
+            state,
         },
     });
 
@@ -83,14 +83,14 @@ export default async function HospitalsPage() {
                         </div>
                         <div className={styles.row}>
                             <label className={styles.label}>
-                                Stadt (optional)
-                                <input name="city" className={styles.input} placeholder="z.B. Hannover" />
+                                Stadt
+                                <input name="city" className={styles.input} placeholder="z.B. Hannover" required />
                             </label>
                         </div>
                         <div className={styles.row}>
                             <label className={styles.label}>
-                                Bundesland (optional)
-                                <input name="state" className={styles.input} placeholder="z.B. Niedersachsen" />
+                                Bundesland
+                                <input name="state" className={styles.input} placeholder="z.B. Niedersachsen" required />
                             </label>
                         </div>
                         <div className={styles.actions}>
@@ -112,7 +112,10 @@ export default async function HospitalsPage() {
                                     <div className={styles.listMain}>
                                         <div className={styles.hospitalName}>{h.name}</div>
                                         <div className={styles.hospitalMeta}>
-                                            {[h.city, h.state].filter(Boolean).join(" · ") || "—"}
+                                            {[h.city, h.state]
+                                                .map((x) => String(x ?? "").trim())
+                                                .filter((x) => x.length > 0)
+                                                .join(" · ") || "—"}
                                         </div>
                                     </div>
 

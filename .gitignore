@@ -4,6 +4,9 @@ Thumbs.db
 Desktop.ini
 *.swp
 *.swo
+.idea/
+.fleet/
+.history/
 .vscode/
 !.vscode/extensions.json
 !.vscode/settings.json
@@ -14,6 +17,9 @@ Desktop.ini
 .env
 .env.*
 !.env.example
+!.env.*.example
+.envrc
+*.pem
 
 # --- Node / Next.js ---
 **/node_modules/
@@ -22,16 +28,26 @@ Desktop.ini
 **/dist/
 **/build/
 **/*.tsbuildinfo
+**/.vercel/
+**/.turbo/
+**/.eslintcache
+**/coverage/
 
 # --- Logs ---
 **/npm-debug.log*
 **/yarn-debug.log*
 **/yarn-error.log*
 **/.pnpm-debug.log*
+**/*.log
 
 # --- Prisma ---
 **/prisma/dev.db
 **/prisma/dev.db-journal
+**/prisma/*.db
+**/prisma/*.db-journal
+**/prisma/*.sqlite
+**/prisma/*.sqlite-journal
+**/prisma/*.sqlite3
 
 # --- Docker ---
 **/.docker/

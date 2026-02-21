@@ -47,7 +47,9 @@ async function main() {
     await run("npx", ["prisma", "generate", "--schema", schemaPath]);
 
     // Windows-only safety
-    await run("node", ["scripts/fix-prisma-client-windows.mjs"]);
+    if (process.platform === "win32") {
+        await run("node", ["scripts/fix-prisma-client-windows.mjs"]);
+    }
 }
 
 main().catch((e) => {

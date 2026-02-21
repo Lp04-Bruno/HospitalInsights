@@ -16,7 +16,7 @@ enum Role {
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
-  name      String?
+  name      String
   password  String
   role      Role     @default(VIEWER)
   createdAt DateTime @default(now())
@@ -28,8 +28,8 @@ model User {
 model Hospital {
   id        String   @id @default(cuid())
   name      String
-  city      String?
-  state     String?
+  city      String
+  state     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -65,11 +65,6 @@ enum Unit {
   COUNT
 }
 
-enum FactChangeRunKind {
-  SAVE
-  UNDO
-}
-
 model LineItem {
   code          String        @id
   label         String
@@ -79,6 +74,8 @@ model LineItem {
 
   unit          Unit          @default(EUR)
   isInput       Boolean       @default(true)
+
+  @@unique([statementType, sortOrder])
 }
 
 model ImportRun {
@@ -119,7 +116,6 @@ model FactValue {
 
 model FactChangeRun {
   id           String            @id @default(cuid())
-  kind         FactChangeRunKind @default(SAVE)
   hospitalId   String
   periodId     String
   statementType StatementType

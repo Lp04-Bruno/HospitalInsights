@@ -4,28 +4,39 @@ import { prisma } from "@/lib/prisma";
 import { getServerAuthSession } from "@/lib/auth";
 import { Role } from "@prisma/client";
 import styles from "./page.module.css";
+import { ConfirmSubmitButton } from "@/app/dashboard/_components/ConfirmSubmitButton";
+import { ResetPasswordButton } from "./ResetPasswordButton";
 
 async function createUser(formData: FormData) {
     "use server";
+
+    const session = await getServerAuthSession();
+    if (!session) redirect("/signin?callbackUrl=/dashboard/users");
+    if (session.user.role !== "ADMIN") redirect("/dashboard/forbidden");
 
     const email = String(formData.get("email") ?? "").trim().toLowerCase();
     const name = String(formData.get("name") ?? "").trim();
     const password = String(formData.get("password") ?? "");
     const role = String(formData.get("role") ?? "VIEWER") as Role;
 
-    if (!email || !password) redirect("/dashboard/users");
+    if (!email || !name || !password) redirect("/dashboard/users");
+
+    const sessionEmail = String(session.user.email ?? "").trim().toLowerCase();
+    if (sessionEmail && email === sessionEmail && role !== session.user.role) {
+        redirect("/dashboard/users");
+    }
 
     const hash = await bcrypt.hash(password, 12);
 
     await prisma.user.upsert({
         where: { email },
         update: {
-            name: name || null,
+            name,
             role,
         },
         create: {
             email,
-            name: name || null,
+            name,
             password: hash,
             role,
         },
@@ -37,9 +48,17 @@ async function createUser(formData: FormData) {
 async function setRole(formData: FormData) {
     "use server";
 
+    const session = await getServerAuthSession();
+    if (!session) redirect("/signin?callbackUrl=/dashboard/users");
+    if (session.user.role !== "ADMIN") redirect("/dashboard/forbidden");
+
     const userId = String(formData.get("userId") ?? "");
     const role = String(formData.get("role") ?? "VIEWER") as Role;
     if (!userId) redirect("/dashboard/users");
+
+    if (userId === session.user.id) {
+        redirect("/dashboard/users");
+    }
 
     await prisma.user.update({
         where: { id: userId },
@@ -49,12 +68,32 @@ async function setRole(formData: FormData) {
     redirect("/dashboard/users");
 }
 
+async function deleteUser(formData: FormData) {
+    "use server";
+
+    const session = await getServerAuthSession();
+    if (!session) redirect("/signin?callbackUrl=/dashboard/users");
+    if (session.user.role !== "ADMIN") redirect("/dashboard/forbidden");
+
+    const confirmed = String(formData.get("confirmed") ?? "").trim();
+    const userId = String(formData.get("userId") ?? "").trim();
+    if (confirmed !== "1" || !userId) redirect("/dashboard/users");
+
+    if (userId === session.user.id) {
+        redirect("/dashboard/users");
+    }
+
+    await prisma.user.delete({ where: { id: userId } });
+    redirect("/dashboard/users");
+}
+
 export default async function UsersPage() {
     const session = await getServerAuthSession();
     if (!session) redirect("/signin?callbackUrl=/dashboard/users");
 
-    // Only ADMIN can manage users.
-    const isAdmin = session.user.role === "ADMIN";
+    if (session.user.role !== "ADMIN") {
+        redirect("/dashboard/forbidden");
+    }
 
     const users = await prisma.user.findMany({
         orderBy: { createdAt: "desc" },
@@ -72,15 +111,9 @@ export default async function UsersPage() {
             <header className={styles.header}>
                 <h1 className={styles.title}>Benutzerverwaltung</h1>
                 <p className={styles.subtitle}>
-                    Benutzer anlegen und Rollen zuweisen. Nur Admins dürfen hier Änderungen machen.
+                    Benutzer anlegen, Rollen zuweisen, Passwörter zurücksetzen.
                 </p>
             </header>
-
-            {!isAdmin && (
-                <div className={styles.notice}>
-                    Du bist kein Admin. Du kannst die Benutzerliste sehen, aber keine Änderungen durchführen.
-                </div>
-            )}
 
             <div className={styles.grid}>
                 <div className={styles.card}>
@@ -95,26 +128,25 @@ export default async function UsersPage() {
                                     placeholder="z.B. editor@hospitalinsights.local"
                                     type="email"
                                     required
-                                    disabled={!isAdmin}
                                 />
                             </label>
                         </div>
                         <div className={styles.row}>
                             <label className={styles.label}>
-                                Name (optional)
-                                <input name="name" className={styles.input} placeholder="z.B. Max Mustermann" disabled={!isAdmin} />
+                                Name
+                                <input name="name" className={styles.input} placeholder="z.B. Max Mustermann" required />
                             </label>
                         </div>
                         <div className={styles.row}>
                             <label className={styles.label}>
                                 Passwort
-                                <input name="password" className={styles.input} type="password" required disabled={!isAdmin} />
+                                <input name="password" className={styles.input} type="password" required />
                             </label>
                         </div>
                         <div className={styles.row}>
                             <label className={styles.label}>
                                 Rolle
-                                <select name="role" className={styles.select} defaultValue={Role.EDITOR} disabled={!isAdmin}>
+                                <select name="role" className={styles.select} defaultValue={Role.EDITOR}>
                                     {Object.values(Role).map((r) => (
                                         <option key={r} value={r}>
                                             {r}
@@ -124,7 +156,7 @@ export default async function UsersPage() {
                             </label>
                         </div>
                         <div className={styles.actions}>
-                            <button className={styles.button} type="submit" disabled={!isAdmin}>
+                            <button className={styles.button} type="submit">
                                 Speichern
                             </button>
                         </div>
@@ -139,7 +171,7 @@ export default async function UsersPage() {
                                 <div className={styles.listMain}>
                                     <div className={styles.userEmail}>{u.email}</div>
                                     <div className={styles.userMeta}>
-                                        {(u.name || "—") + " · " + u.role}
+                                        {((u.name ?? "").trim() || "—") + " · " + u.role}
                                     </div>
                                 </div>
 
@@ -149,7 +181,6 @@ export default async function UsersPage() {
                                         name="role"
                                         className={styles.roleSelect}
                                         defaultValue={u.role}
-                                        disabled={!isAdmin}
                                     >
                                         {Object.values(Role).map((r) => (
                                             <option key={r} value={r}>
@@ -157,10 +188,24 @@ export default async function UsersPage() {
                                             </option>
                                         ))}
                                     </select>
-                                    <button className={styles.secondary} type="submit" disabled={!isAdmin}>
+                                    <button className={styles.secondary} type="submit">
                                         Setzen
                                     </button>
                                 </form>
+
+                                <div className={styles.rowActions}>
+                                    <ResetPasswordButton userId={u.id} email={u.email} className={styles.secondary} />
+                                    <form action={deleteUser}>
+                                        <input type="hidden" name="userId" value={u.id} />
+                                        <input type="hidden" name="confirmed" value="1" />
+                                        <ConfirmSubmitButton
+                                            className={styles.dangerSmall}
+                                            confirmMessage={`Benutzer ${u.email} wirklich löschen?`}
+                                        >
+                                            Löschen
+                                        </ConfirmSubmitButton>
+                                    </form>
+                                </div>
                             </div>
                         ))}
                     </div>

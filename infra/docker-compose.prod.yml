@@ -1,0 +1,60 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    restart: unless-stopped
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - db_backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  metabase:
+    image: metabase/metabase:v0.58.1
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - metabase_data:/metabase.db
+
+  app:
+    build:
+      context: ../app
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      METABASE_SITE_URL: ${METABASE_SITE_URL}
+      METABASE_EMBED_SECRET: ${METABASE_EMBED_SECRET}
+      METABASE_DASHBOARD_ID: ${METABASE_DASHBOARD_ID}
+      METABASE_DASHBOARD_CATALOG: ${METABASE_DASHBOARD_CATALOG}
+      METABASE_EMBED_HOSPITAL_PARAM: ${METABASE_EMBED_HOSPITAL_PARAM:-hospitalId}
+      SKIP_DB_MIGRATIONS: ${SKIP_DB_MIGRATIONS:-false}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pg_data:
+  metabase_data:
+  db_backups:
