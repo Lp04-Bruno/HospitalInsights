@@ -70,11 +70,25 @@ Die Compose-Kommandos bitte aus dem Repo-Root (`HospitalInsights/`) ausführen, 
 Aktuell ist dieses Repo auf lokalen Dev ausgelegt.
 
 Für später „Production“ empfiehlt sich:
-- Separate Compose-Datei (z.B. `infra/docker-compose.prod.yml`) + eigenes Env (z.B. `infra/.env.prod`)
+- Separate Compose-Datei (z.B. `infra/docker-compose.prod.yml`) + eigenes Env (z.B. `infra/.env.prod` oder Dokploy Env Vars)
 - Keine Bind-Mounts (kein `../app:/app`), stattdessen gebautes Image
 - `next build` + `next start` (statt `next dev`)
 - Echte Secrets (`NEXTAUTH_SECRET`, `METABASE_EMBED_SECRET`) und echte `NEXTAUTH_URL`
-- Metabase idealerweise nicht öffentlich exponieren (oder nur intern/VPN), Embedding weiter über Signed Embedding
+- Metabase in Production **ohne** den Dev-Nginx-Proxy betreiben (Dokploy/Traefik übernimmt Routing)
+- Datenbank in Production **keine** Host-Ports nach außen mappen (Zugriff nur intern + SSH-Tunnel bei Bedarf)
+
+### Production Dateien (Repo)
+
+- App Dockerfile: `app/Dockerfile.prod`
+- Prod Compose Template: `infra/docker-compose.prod.yml`
+- Prod Env Template: `infra/.env.prod.example`
+
+### Metabase in Production (vereinfacht)
+
+- Lokal (Dev): `METABASE_SITE_URL=http://localhost:3001`
+- Server (Prod): `METABASE_SITE_URL=https://metabase.<eure-domain>` (muss im Browser erreichbar sein, da iFrame-URL)
+- `METABASE_EMBED_SECRET`, `METABASE_DASHBOARD_ID` und optional `METABASE_DASHBOARD_CATALOG` setzt ihr am besten erst,
+  nachdem Metabase auf dem Server läuft und ihr Embedding aktiviert + Dashboards erstellt/importiert habt.
 
 **Hinweis: Metabase Accounts & Contributors (lokales Dev)**
 - Jeder Contributor hat lokal seine eigene Metabase-Instanz (Docker Volume `metabase_data`) → eigene User/Passwörter.

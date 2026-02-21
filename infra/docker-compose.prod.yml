@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  metabase:
+    image: metabase/metabase:latest
+    depends_on:
+      - db
+    volumes:
+      - metabase_data:/metabase.db
+
+  app:
+    build:
+      context: ../app
+      dockerfile: Dockerfile.prod
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      METABASE_SITE_URL: ${METABASE_SITE_URL}
+      METABASE_EMBED_SECRET: ${METABASE_EMBED_SECRET}
+      METABASE_DASHBOARD_ID: ${METABASE_DASHBOARD_ID}
+      METABASE_DASHBOARD_CATALOG: ${METABASE_DASHBOARD_CATALOG}
+      METABASE_EMBED_HOSPITAL_PARAM: ${METABASE_EMBED_HOSPITAL_PARAM}
+      SKIP_DB_MIGRATIONS: ${SKIP_DB_MIGRATIONS:-false}
+
+volumes:
+  pg_data:
+  metabase_data:
