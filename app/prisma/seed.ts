@@ -330,29 +330,48 @@ async function seedFromCsv() {
 }
 
 async function main() {
-    const email = "admin@hospitalinsights.local";
-    const password = "admin1234";
+    const isProd = process.env.NODE_ENV === "production";
 
-    const hash = await bcrypt.hash(password, 12);
+    const seedAdminEmail = process.env.SEED_ADMIN_EMAIL ?? (isProd ? "" : "admin@hospitalinsights.local");
+    const seedAdminPassword = process.env.SEED_ADMIN_PASSWORD ?? (isProd ? "" : "admin1234");
 
-    await prisma.user.upsert({
-        where: { email },
-        update: {
-            name: "Admin",
-            password: hash,
-            role: Role.ADMIN,
-        },
-        create: {
-            email,
-            name: "Admin",
-            password: hash,
-            role: Role.ADMIN,
-        },
-    });
+    if (!isProd || (seedAdminEmail && seedAdminPassword)) {
+        if (!seedAdminEmail || !seedAdminPassword) {
+            throw new Error("Missing SEED_ADMIN_EMAIL or SEED_ADMIN_PASSWORD for admin seeding");
+        }
 
-    console.log("Seeded admin:", { email, password });
+        const hash = await bcrypt.hash(seedAdminPassword, 12);
+        await prisma.user.upsert({
+            where: { email: seedAdminEmail },
+            update: {
+                name: "Admin",
+                password: hash,
+                role: Role.ADMIN,
+            },
+            create: {
+                email: seedAdminEmail,
+                name: "Admin",
+                password: hash,
+                role: Role.ADMIN,
+            },
+        });
 
-    await seedFromCsv();
+        console.log("Seeded admin:", { email: seedAdminEmail });
+        if (!isProd) {
+            console.log("[dev] Seeded admin password is the default unless SEED_ADMIN_PASSWORD is set.");
+        }
+    } else {
+        console.warn(
+            "[seed] Skipping admin creation in production. Set SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD if you want to seed an admin user."
+        );
+    }
+
+    const seedSampleData = process.env.SEED_SAMPLE_DATA === "true";
+    if (!isProd || seedSampleData) {
+        await seedFromCsv();
+    } else {
+        console.warn("[seed] Skipping sample CSV data in production. Set SEED_SAMPLE_DATA=true to enable.");
+    }
 }
 
 main()
