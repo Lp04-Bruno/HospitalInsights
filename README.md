@@ -82,3 +82,10 @@ Für später „Production“ empfiehlt sich:
 
 **Wichtiger Hinweis (DB Trennung)**
 Metabase nutzt eine eigene interne DB (Volume `metabase_data`). So bleibt die App-Datenbank frei von Metabase-Systemtabellen und Prisma-Migrations funktionieren sauber.
+
+## Prod → Dev DB Sync
+
+Wenn ihr Produktionsdaten lokal zum Testen nutzen wollt, macht das als kontrollierten Dump/Restore Workflow (Postgres `pg_dump` → lokal `pg_restore`).
+
+- Anleitung: [infra/db-sync.md](infra/db-sync.md)
+
