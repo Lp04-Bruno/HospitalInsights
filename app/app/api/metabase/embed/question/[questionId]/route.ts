@@ -1,12 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
-function safeParamKey(input: string | undefined | null) {
-  if (!input) return undefined;
-  const trimmed = input.trim();
-  if (!trimmed) return undefined;
-  if (!/^[A-Za-z0-9_]{1,64}$/.test(trimmed)) return undefined;
-  return trimmed;
+type ViewConfig = {
+  type: "dashboard" | "question";
+  id: number;
+  hospitalParamKey?: string;
+};
+
+function parseViewCatalog(): ViewConfig[] {
+  const raw = process.env.METABASE_DASHBOARD_CATALOG;
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw) as Array<Partial<ViewConfig>>;
+    return parsed
+      .map(
+        (v): ViewConfig => ({
+          type: v.type === "question" ? "question" : "dashboard",
+          id: Number(v.id),
+          hospitalParamKey:
+            typeof v.hospitalParamKey === "string" && v.hospitalParamKey.trim()
+              ? v.hospitalParamKey.trim()
+              : undefined,
+        })
+      )
+      .filter((v) => Number.isFinite(v.id));
+  } catch {
+    return [];
+  }
+}
+
+function getAllowedQuestionConfig(questionId: number): ViewConfig | null {
+  const fromCatalog = parseViewCatalog().find((v) => v.type === "question" && v.id === questionId);
+  if (fromCatalog) return fromCatalog;
+  return null;
 }
 
 export async function GET(
@@ -19,9 +45,13 @@ export async function GET(
     return NextResponse.json({ error: "Invalid question id" }, { status: 400 });
   }
 
+  const allowed = getAllowedQuestionConfig(questionId);
+  if (!allowed) {
+    return NextResponse.json({ error: "Question not allowed" }, { status: 404 });
+  }
+
   const url = new URL(req.url);
   const hospitalId = url.searchParams.get("hospitalId") ?? undefined;
-  const overrideParamKey = safeParamKey(url.searchParams.get("paramKey"));
 
   const METABASE_SITE_URL = process.env.METABASE_SITE_URL;
   const METABASE_EMBED_SECRET = process.env.METABASE_EMBED_SECRET;
@@ -33,7 +63,10 @@ export async function GET(
     );
   }
 
-  const hospitalParamKey = overrideParamKey ?? process.env.METABASE_EMBED_HOSPITAL_PARAM ?? "hospitalId";
+  const hospitalParamKey =
+    allowed.hospitalParamKey ??
+    process.env.METABASE_EMBED_HOSPITAL_PARAM ??
+    "hospitalId";
   const embedParams: Record<string, string> = {};
   if (hospitalId) {
     embedParams[hospitalParamKey] = hospitalId;

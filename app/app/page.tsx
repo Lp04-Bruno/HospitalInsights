@@ -14,7 +14,9 @@ type ViewOption = {
 export default async function Home() {
   const session = await getServerAuthSession();
 
-  const initialDashboardId = Number(process.env.METABASE_DASHBOARD_ID ?? "1");
+  const initialDashboardId = process.env.METABASE_DASHBOARD_ID
+    ? Number(process.env.METABASE_DASHBOARD_ID)
+    : Number.NaN;
   const initialView = Number.isFinite(initialDashboardId)
     ? ({ type: "dashboard", id: initialDashboardId } as const)
     : undefined;

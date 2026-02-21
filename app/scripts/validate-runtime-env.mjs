@@ -20,7 +20,6 @@ function main() {
   requireEnv("DATABASE_URL");
   requireEnv("NEXTAUTH_URL");
   requireEnv("NEXTAUTH_SECRET");
-  requireEnv("METABASE_SITE_URL");
 
   const hasSiteUrl = hasEnv("METABASE_SITE_URL");
   const hasEmbedSecret = hasEnv("METABASE_EMBED_SECRET");
