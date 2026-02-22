@@ -9,6 +9,10 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:migrate:status": "prisma migrate status",
     "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "node scripts/prepare-husky.mjs",
     "postinstall": "node scripts/postinstall.mjs"
   },
   "dependencies": {
@@ -30,6 +34,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9.39.3",
     "eslint-config-next": "16.1.6",
+    "prettier": "^3.6.2",
     "tailwindcss": "^4.2.0",
     "ts-node": "^10.9.2",
     "typescript": "^5"

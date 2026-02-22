@@ -1,0 +1,27 @@
+# Dependencies
+**/node_modules/
+
+# Build output
+**/.next/
+**/out/
+**/dist/
+**/build/
+
+# Caches
+**/.turbo/
+**/.vercel/
+**/.cache/
+
+# Logs
+**/*.log
+
+# Generated
+**/*.tsbuildinfo
+
+# Prisma generated client (installed into node_modules anyway)
+
+# Docker
+**/.docker/
+
+# Misc
+**/coverage/

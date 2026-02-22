@@ -33,6 +33,9 @@ Desktop.ini
 **/.eslintcache
 **/coverage/
 
+# --- Prettier ---
+**/.prettiercache
+
 # --- Logs ---
 **/npm-debug.log*
 **/yarn-debug.log*
