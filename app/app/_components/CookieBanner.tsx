@@ -4,12 +4,7 @@ import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import styles from "./CookieBanner.module.css";
-import {
-  getConsentServerSnapshot,
-  getConsentSnapshot,
-  setStoredConsent,
-  subscribeConsent,
-} from "./consent";
+import { getConsentServerSnapshot, getConsentSnapshot, setStoredConsent, subscribeConsent } from "./consent";
 
 export default function CookieBanner() {
   const pathname = usePathname();
@@ -23,8 +18,7 @@ export default function CookieBanner() {
     <div className={styles.wrap} role="region" aria-label="Cookie-Hinweis">
       <div className={styles.banner}>
         <div className={styles.text}>
-          Diese Website kann externe Inhalte von Metabase laden. Erst nach Zustimmung werden diese
-          Inhalte angezeigt. Details in der{" "}
+          Diese Website kann externe Inhalte von Metabase laden. Erst nach Zustimmung werden diese Inhalte angezeigt. Details in der{" "}
           <Link className={styles.link} href="/datenschutz">
             Datenschutzerklärung
           </Link>

@@ -24,16 +24,9 @@ type Props = {
   initialView?: { type: "dashboard" | "question"; id: number };
 };
 
-type EmbedState =
-  | { status: "idle" }
-  | { status: "loading" }
-  | { status: "ready"; url: string }
-  | { status: "error"; message: string };
+type EmbedState = { status: "idle" } | { status: "loading" } | { status: "ready"; url: string } | { status: "error"; message: string };
 
-function initialViewKey(
-  views: ViewOption[],
-  initialView?: { type: "dashboard" | "question"; id: number }
-) {
+function initialViewKey(views: ViewOption[], initialView?: { type: "dashboard" | "question"; id: number }) {
   const preferred =
     initialView && views.some((v) => v.type === initialView.type && v.id === initialView.id)
       ? views.find((v) => v.type === initialView.type && v.id === initialView.id)
@@ -246,9 +239,7 @@ export default function LandingExplorer({ views, hospitals, initialView }: Props
             </label>
           ) : null}
 
-          <div className={styles.hint}>
-            {selectedView ? `${selectedView.name} · ` : ""}Datenquelle: Metabase
-          </div>
+          <div className={styles.hint}>{selectedView ? `${selectedView.name} · ` : ""}Datenquelle: Metabase</div>
         </div>
       </div>
 
@@ -256,15 +247,11 @@ export default function LandingExplorer({ views, hospitals, initialView }: Props
         <div className={styles.embedCard}>
           <div className={styles.embedHeader}>
             <div className={styles.embedTitle}>{compare ? "A" : "Ausgabe"}</div>
-            <div className={styles.embedMeta}>
-              {hospitalASelected ? hospitalLabel(hospitalASelected) : "Bitte auswählen"}
-            </div>
+            <div className={styles.embedMeta}>{hospitalASelected ? hospitalLabel(hospitalASelected) : "Bitte auswählen"}</div>
           </div>
           <div className={styles.embedBody}>
             {!canLoadEmbeds ? (
-              <div className={styles.embedPlaceholder}>
-                Externe Inhalte (Metabase) sind deaktiviert. Bitte im Cookie-Banner zustimmen.
-              </div>
+              <div className={styles.embedPlaceholder}>Externe Inhalte (Metabase) sind deaktiviert. Bitte im Cookie-Banner zustimmen.</div>
             ) : embedA.status === "idle" ? (
               <div className={styles.embedPlaceholder}>Ansicht und Krankenhaus auswählen.</div>
             ) : embedA.status === "loading" ? (
@@ -281,9 +268,7 @@ export default function LandingExplorer({ views, hospitals, initialView }: Props
           <div className={styles.embedCard}>
             <div className={styles.embedHeader}>
               <div className={styles.embedTitle}>B</div>
-              <div className={styles.embedMeta}>
-                {hospitalBSelected ? hospitalLabel(hospitalBSelected) : "Bitte auswählen"}
-              </div>
+              <div className={styles.embedMeta}>{hospitalBSelected ? hospitalLabel(hospitalBSelected) : "Bitte auswählen"}</div>
             </div>
             <div className={styles.embedBody}>
               {!canLoadEmbeds ? (

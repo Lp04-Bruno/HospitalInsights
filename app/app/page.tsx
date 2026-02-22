@@ -15,12 +15,8 @@ type ViewOption = {
 export default async function Home() {
   const session = await getServerAuthSession();
 
-  const initialDashboardId = process.env.METABASE_DASHBOARD_ID
-    ? Number(process.env.METABASE_DASHBOARD_ID)
-    : Number.NaN;
-  const initialView = Number.isFinite(initialDashboardId)
-    ? ({ type: "dashboard", id: initialDashboardId } as const)
-    : undefined;
+  const initialDashboardId = process.env.METABASE_DASHBOARD_ID ? Number(process.env.METABASE_DASHBOARD_ID) : Number.NaN;
+  const initialView = Number.isFinite(initialDashboardId) ? ({ type: "dashboard", id: initialDashboardId } as const) : undefined;
   const dashboardsFromEnvRaw = process.env.METABASE_DASHBOARD_CATALOG;
 
   const views: ViewOption[] = (() => {
@@ -41,9 +37,7 @@ export default async function Home() {
             type: (d.type === "question" ? "question" : "dashboard") as ViewOption["type"],
             id: Number(d.id),
             name: String(d.name),
-            ...(typeof d.hospitalParamKey === "string" && d.hospitalParamKey
-              ? { hospitalParamKey: d.hospitalParamKey }
-              : null),
+            ...(typeof d.hospitalParamKey === "string" && d.hospitalParamKey ? { hospitalParamKey: d.hospitalParamKey } : null),
           }));
 
         if (normalized.length > 0) return normalized;
@@ -78,10 +72,7 @@ export default async function Home() {
                 Dashboard
               </Link>
             ) : (
-              <Link
-                href="/signin?callbackUrl=/dashboard"
-                className={`${styles.button} ${styles.primary}`}
-              >
+              <Link href="/signin?callbackUrl=/dashboard" className={`${styles.button} ${styles.primary}`}>
                 Sign in
               </Link>
             )}
@@ -93,8 +84,7 @@ export default async function Home() {
             <div className={styles.heroBadge}>Metabase</div>
             <h2 className={styles.heroTitle}>Kennzahlen pro Krankenhaus</h2>
             <p className={styles.heroText}>
-              Wähle Ansicht und Krankenhaus aus. Optional kannst du zwei Krankenhäuser nebeneinander
-              vergleichen.
+              Wähle Ansicht und Krankenhaus aus. Optional kannst du zwei Krankenhäuser nebeneinander vergleichen.
             </p>
 
             <div className={styles.stats}>
@@ -115,8 +105,7 @@ export default async function Home() {
           <LandingExplorer views={views} hospitals={hospitals} initialView={initialView} />
         ) : (
           <section className={styles.notice} aria-label="Hinweis">
-            Keine Metabase-Ansicht konfiguriert. Setze `METABASE_DASHBOARD_ID` oder
-            `METABASE_DASHBOARD_CATALOG`.
+            Keine Metabase-Ansicht konfiguriert. Setze `METABASE_DASHBOARD_ID` oder `METABASE_DASHBOARD_CATALOG`.
           </section>
         )}
 
@@ -125,5 +114,3 @@ export default async function Home() {
     </main>
   );
 }
-
-

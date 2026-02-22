@@ -39,15 +39,12 @@ export default function ImpressumPage() {
             </p>
 
             <h2>Projektkontext</h2>
-            <p>
-              HospitalInsights ist ein Studienprojekt an der Privaten Hochschule für Wirtschaft und
-              Technik (PHWT), Standort Vechta.
-            </p>
+            <p>HospitalInsights ist ein Studienprojekt an der Privaten Hochschule für Wirtschaft und Technik (PHWT), Standort Vechta.</p>
 
             <h2>Haftungshinweis</h2>
             <p>
-              Inhalte dieser Website wurden mit Sorgfalt erstellt. Für Richtigkeit, Vollständigkeit
-              und Aktualität übernehmen wir keine Gewähr.
+              Inhalte dieser Website wurden mit Sorgfalt erstellt. Für Richtigkeit, Vollständigkeit und Aktualität übernehmen wir keine
+              Gewähr.
             </p>
           </div>
         </section>

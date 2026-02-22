@@ -89,8 +89,7 @@
   border-radius: 12px;
   background: rgba(113, 113, 122, 0.06);
   padding: 12px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    "Liberation Mono", "Courier New", monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 12px;
   white-space: pre-wrap;
   word-break: break-word;
