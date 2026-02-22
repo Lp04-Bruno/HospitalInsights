@@ -41,7 +41,7 @@ services:
       METABASE_DASHBOARD_ID: ${METABASE_DASHBOARD_ID}
       METABASE_DASHBOARD_CATALOG: ${METABASE_DASHBOARD_CATALOG}
       METABASE_EMBED_HOSPITAL_PARAM: ${METABASE_EMBED_HOSPITAL_PARAM:-hospitalId}
-      SKIP_DB_MIGRATIONS: ${SKIP_DB_MIGRATIONS:-false}
+      SKIP_DB_MIGRATIONS: "${SKIP_DB_MIGRATIONS:-false}"
     healthcheck:
       test:
         ["CMD", "node", "-e", "fetch('http://localhost:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
