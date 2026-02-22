@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getServerAuthSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import LandingExplorer from "@/app/_components/LandingExplorer";
+import Footer from "@/app/_components/Footer";
 
 type ViewOption = {
   type: "dashboard" | "question";
@@ -118,6 +119,8 @@ export default async function Home() {
             `METABASE_DASHBOARD_CATALOG`.
           </section>
         )}
+
+        <Footer />
       </div>
     </main>
   );

@@ -1,7 +1,7 @@
 .shell {
   min-height: 100vh;
   background: var(--hi-shell-bg);
-  padding: 32px 20px 40px;
+  padding: 32px 20px 120px;
 }
 
 .page {

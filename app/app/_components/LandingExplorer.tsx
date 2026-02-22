@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import styles from "../page.module.css";
+import { getConsentServerSnapshot, getConsentSnapshot, subscribeConsent } from "./consent";
 
 type ViewOption = {
   type: "dashboard" | "question";
@@ -72,6 +73,7 @@ function parseViewKey(views: ViewOption[], viewKey: string): ViewOption | undefi
 }
 
 export default function LandingExplorer({ views, hospitals, initialView }: Props) {
+  const consent = useSyncExternalStore(subscribeConsent, getConsentSnapshot, getConsentServerSnapshot);
   const [viewKey, setViewKey] = useState<string>(() => initialViewKey(views, initialView));
   const [hospitalA, setHospitalA] = useState<string>("");
   const [compare, setCompare] = useState(false);
@@ -83,7 +85,21 @@ export default function LandingExplorer({ views, hospitals, initialView }: Props
   const requestSeqA = useRef(0);
   const requestSeqB = useRef(0);
 
+  const canLoadEmbeds = consent === "accepted";
+
+  useEffect(() => {
+    if (!canLoadEmbeds) return;
+    if (viewKey && hospitalA) loadEmbedA(viewKey, hospitalA);
+    if (compare && viewKey && hospitalB) loadEmbedB(viewKey, hospitalB);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canLoadEmbeds]);
+
   function loadEmbedA(nextViewKey: string, nextHospitalId: string) {
+    if (!canLoadEmbeds) {
+      setEmbedA({ status: "idle" });
+      return;
+    }
+
     const view = parseViewKey(views, nextViewKey);
     if (!view || !nextHospitalId) {
       setEmbedA({ status: "idle" });
@@ -104,6 +120,11 @@ export default function LandingExplorer({ views, hospitals, initialView }: Props
   }
 
   function loadEmbedB(nextViewKey: string, nextHospitalId: string) {
+    if (!canLoadEmbeds) {
+      setEmbedB({ status: "idle" });
+      return;
+    }
+
     const view = parseViewKey(views, nextViewKey);
     if (!view || !nextHospitalId) {
       setEmbedB({ status: "idle" });
@@ -142,7 +163,7 @@ export default function LandingExplorer({ views, hospitals, initialView }: Props
                 if (!next) {
                   setHospitalB("");
                   setEmbedB({ status: "idle" });
-                } else if (hospitalB) {
+                } else if (hospitalB && canLoadEmbeds) {
                   loadEmbedB(viewKey, hospitalB);
                 }
               }}
@@ -160,8 +181,13 @@ export default function LandingExplorer({ views, hospitals, initialView }: Props
               onChange={(e) => {
                 const nextKey = e.target.value;
                 setViewKey(nextKey);
-                loadEmbedA(nextKey, hospitalA);
-                if (compare) loadEmbedB(nextKey, hospitalB);
+                if (canLoadEmbeds) {
+                  loadEmbedA(nextKey, hospitalA);
+                  if (compare) loadEmbedB(nextKey, hospitalB);
+                } else {
+                  setEmbedA({ status: "idle" });
+                  setEmbedB({ status: "idle" });
+                }
               }}
             >
               {views.length === 0 ? (
@@ -184,7 +210,8 @@ export default function LandingExplorer({ views, hospitals, initialView }: Props
               onChange={(e) => {
                 const nextHospitalId = e.target.value;
                 setHospitalA(nextHospitalId);
-                loadEmbedA(viewKey, nextHospitalId);
+                if (canLoadEmbeds) loadEmbedA(viewKey, nextHospitalId);
+                else setEmbedA({ status: "idle" });
               }}
             >
               <option value="">Bitte auswählen</option>
@@ -205,7 +232,8 @@ export default function LandingExplorer({ views, hospitals, initialView }: Props
                 onChange={(e) => {
                   const nextHospitalId = e.target.value;
                   setHospitalB(nextHospitalId);
-                  if (compare) loadEmbedB(viewKey, nextHospitalId);
+                  if (compare && canLoadEmbeds) loadEmbedB(viewKey, nextHospitalId);
+                  else setEmbedB({ status: "idle" });
                 }}
               >
                 <option value="">Bitte auswählen</option>
@@ -233,7 +261,11 @@ export default function LandingExplorer({ views, hospitals, initialView }: Props
             </div>
           </div>
           <div className={styles.embedBody}>
-            {embedA.status === "idle" ? (
+            {!canLoadEmbeds ? (
+              <div className={styles.embedPlaceholder}>
+                Externe Inhalte (Metabase) sind deaktiviert. Bitte im Cookie-Banner zustimmen.
+              </div>
+            ) : embedA.status === "idle" ? (
               <div className={styles.embedPlaceholder}>Ansicht und Krankenhaus auswählen.</div>
             ) : embedA.status === "loading" ? (
               <div className={styles.embedPlaceholder}>Lädt…</div>
@@ -254,7 +286,11 @@ export default function LandingExplorer({ views, hospitals, initialView }: Props
               </div>
             </div>
             <div className={styles.embedBody}>
-              {embedB.status === "idle" ? (
+              {!canLoadEmbeds ? (
+                <div className={styles.embedPlaceholder}>
+                  Externe Inhalte (Metabase) sind deaktiviert. Bitte im Cookie-Banner zustimmen.
+                </div>
+              ) : embedB.status === "idle" ? (
                 <div className={styles.embedPlaceholder}>Krankenhaus B auswählen.</div>
               ) : embedB.status === "loading" ? (
                 <div className={styles.embedPlaceholder}>Lädt…</div>
