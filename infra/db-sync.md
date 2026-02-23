@@ -15,28 +15,23 @@ Ziel: Produktionsdaten in die lokale Dev-DB übernehmen, ohne Prisma-Migrations 
 Diese Variante braucht **keinen** öffentlich erreichbaren Postgres-Port auf dem VPS.
 
 1. **SSH-Tunnel** aufbauen (Beispiel: Postgres läuft auf dem VPS nur intern auf `127.0.0.1:5432` oder in Docker-Netz):
-
    - Auf eurem Rechner:
      - `ssh -L 55432:127.0.0.1:5432 <user>@<vps-host>`
 
 2. **Dump erstellen** (custom-format, gut für Restore):
-
    - `PGPASSWORD='<prod_pw>' pg_dump -h 127.0.0.1 -p 55432 -U <prod_user> -d <prod_db> -Fc -f prod.dump`
 
 3. **Lokale Dev-DB leeren** (empfohlen: Volume reset) und Stack starten:
-
    - `docker compose --env-file infra/.env -f infra/docker-compose.dev.yml down -v`
    - `docker compose --env-file infra/.env -f infra/docker-compose.dev.yml up -d db`
 
 4. **Restore in lokale DB** (im Postgres-Container):
-
    - Dump in den DB-Container kopieren:
      - `docker cp prod.dump hospitalinsights-db:/tmp/prod.dump`
    - Restore ausführen:
      - `docker exec -e PGPASSWORD=hospitalinsights_pw -i hospitalinsights-db pg_restore -U hospitalinsights -d hospitalinsights --clean --if-exists /tmp/prod.dump`
 
 5. **App/Metabase wieder starten**:
-
    - `docker compose --env-file infra/.env -f infra/docker-compose.dev.yml up -d`
 
 ## Variante B: Dump direkt im Dokploy/Docker-Host erzeugen
@@ -44,15 +39,12 @@ Diese Variante braucht **keinen** öffentlich erreichbaren Postgres-Port auf dem
 Wenn ihr Shell-Zugriff auf den VPS habt, könnt ihr den Dump auch direkt im laufenden Postgres-Container machen.
 
 1. Auf dem VPS den Postgres-Container identifizieren:
-
    - `docker ps --format "table {{.Names}}\t{{.Image}}"`
 
 2. Dump im Container erzeugen:
-
    - `docker exec -e PGPASSWORD='<prod_pw>' <postgres-container-name> pg_dump -U <prod_user> -d <prod_db> -Fc -f /tmp/prod.dump`
 
 3. Dump vom VPS kopieren:
-
    - `docker cp <postgres-container-name>:/tmp/prod.dump ./prod.dump`
    - (danach wie oben lokal restore)
 

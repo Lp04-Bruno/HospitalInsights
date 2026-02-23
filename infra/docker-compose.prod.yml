@@ -16,7 +16,7 @@ services:
       retries: 10
 
   metabase:
-    image: metabase/metabase:v0.58.1
+    image: metabase/metabase:v0.58.7.1
     restart: unless-stopped
     depends_on:
       db:
@@ -41,15 +41,10 @@ services:
       METABASE_DASHBOARD_ID: ${METABASE_DASHBOARD_ID}
       METABASE_DASHBOARD_CATALOG: ${METABASE_DASHBOARD_CATALOG}
       METABASE_EMBED_HOSPITAL_PARAM: ${METABASE_EMBED_HOSPITAL_PARAM:-hospitalId}
-      SKIP_DB_MIGRATIONS: ${SKIP_DB_MIGRATIONS:-false}
+      SKIP_DB_MIGRATIONS: "${SKIP_DB_MIGRATIONS:-false}"
     healthcheck:
       test:
-        [
-          "CMD",
-          "node",
-          "-e",
-          "fetch('http://localhost:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
-        ]
+        ["CMD", "node", "-e", "fetch('http://localhost:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 10s
       timeout: 5s
       retries: 10

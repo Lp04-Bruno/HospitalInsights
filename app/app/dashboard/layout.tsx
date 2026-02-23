@@ -44,9 +44,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
           <div className={styles.brandSubtitle}>Dashboard</div>
         </div>
 
-        <DashboardNav
-          items={navItems}
-        />
+        <DashboardNav items={navItems} />
 
         <div className={styles.sidebarFooter}>
           <div className={styles.userBox}>
@@ -58,10 +56,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
             <Link href="/" className={styles.footerLink}>
               Startseite
             </Link>
-            <Link
-              href="/api/auth/signout?callbackUrl=/"
-              className={styles.footerLink}
-            >
+            <Link href="/api/auth/signout?callbackUrl=/" className={styles.footerLink}>
               Abmelden
             </Link>
           </div>

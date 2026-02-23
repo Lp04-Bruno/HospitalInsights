@@ -8,317 +8,310 @@ import { ValueEntryTable } from "./ValueEntryTable";
 import { parseUserNumberDetailed } from "./numberParsing";
 
 type FlatRow = {
-    code: string;
-    depth: number;
-    label: string;
-    unit: Unit;
-    isInput: boolean;
-    isSection: boolean;
-    hasChildren: boolean;
-    prettyValue: string;
+  code: string;
+  depth: number;
+  label: string;
+  unit: Unit;
+  isInput: boolean;
+  isSection: boolean;
+  hasChildren: boolean;
+  prettyValue: string;
 };
 
 type DirtySaveFormProps = {
-    saveAction: (prevState: SaveFactsState, formData: FormData) => Promise<SaveFactsState>;
-    hospitalId: string;
-    periodId: string;
-    statementType: StatementType;
-    rows: FlatRow[];
+  saveAction: (prevState: SaveFactsState, formData: FormData) => Promise<SaveFactsState>;
+  hospitalId: string;
+  periodId: string;
+  statementType: StatementType;
+  rows: FlatRow[];
 };
 
 export type SaveFactsState = {
-    ok: boolean;
-    message?: string;
-    globalError?: string;
-    savedAt?: string;
-    savedBy?: string;
-    changesApplied?: number;
-    fieldErrors?: Record<string, string>;
+  ok: boolean;
+  message?: string;
+  globalError?: string;
+  savedAt?: string;
+  savedBy?: string;
+  changesApplied?: number;
+  fieldErrors?: Record<string, string>;
 };
 
 function snapshotValues(form: HTMLFormElement | null) {
-    const map = new Map<string, string>();
-    if (!form) return map;
+  const map = new Map<string, string>();
+  if (!form) return map;
 
-    const elements = Array.from(form.elements);
-    for (const el of elements) {
-        if (!(el instanceof HTMLInputElement)) continue;
-        if (!el.name.startsWith("v:")) continue;
-        map.set(el.name, el.value);
-    }
+  const elements = Array.from(form.elements);
+  for (const el of elements) {
+    if (!(el instanceof HTMLInputElement)) continue;
+    if (!el.name.startsWith("v:")) continue;
+    map.set(el.name, el.value);
+  }
 
-    return map;
+  return map;
 }
 
 function DirtyBottomBar({
-    dirtyCount,
-    invalidCount,
-    onDiscard,
-    pending,
+  dirtyCount,
+  invalidCount,
+  onDiscard,
+  pending,
 }: {
-    dirtyCount: number;
-    invalidCount: number;
-    onDiscard: () => void;
-    pending: boolean;
+  dirtyCount: number;
+  invalidCount: number;
+  onDiscard: () => void;
+  pending: boolean;
 }) {
-    if (dirtyCount === 0 && invalidCount === 0) return null;
+  if (dirtyCount === 0 && invalidCount === 0) return null;
 
-    return (
-        <div className={styles.bottomBar} role="status" aria-live="polite">
-            <div className={styles.bottomBarInner}>
-                <div className={styles.bottomBarLeft}>
-                    {invalidCount > 0 ? (
-                        <>
-                            <span className={styles.errorPill}>Bitte korrigieren</span>
-                            <span className={styles.unsavedMeta}>
-                                {invalidCount} Feld{invalidCount === 1 ? "" : "er"} ungültig
-                            </span>
-                        </>
-                    ) : (
-                        <>
-                            <span className={styles.unsavedPill}>Ungespeicherte Änderungen</span>
-                            <span className={styles.unsavedMeta}>
-                                {dirtyCount} Feld{dirtyCount === 1 ? "" : "er"} geändert
-                            </span>
-                        </>
-                    )}
-                </div>
-                <div className={styles.bottomBarButtons}>
-                    <button type="button" className={styles.secondary} onClick={onDiscard} disabled={pending}>
-                        Verwerfen
-                    </button>
-                    <button className={styles.button} type="submit" disabled={pending || invalidCount > 0}>
-                        {pending ? "Speichert…" : "Speichern"}
-                    </button>
-                </div>
-            </div>
+  return (
+    <div className={styles.bottomBar} role="status" aria-live="polite">
+      <div className={styles.bottomBarInner}>
+        <div className={styles.bottomBarLeft}>
+          {invalidCount > 0 ? (
+            <>
+              <span className={styles.errorPill}>Bitte korrigieren</span>
+              <span className={styles.unsavedMeta}>
+                {invalidCount} Feld{invalidCount === 1 ? "" : "er"} ungültig
+              </span>
+            </>
+          ) : (
+            <>
+              <span className={styles.unsavedPill}>Ungespeicherte Änderungen</span>
+              <span className={styles.unsavedMeta}>
+                {dirtyCount} Feld{dirtyCount === 1 ? "" : "er"} geändert
+              </span>
+            </>
+          )}
         </div>
-    );
+        <div className={styles.bottomBarButtons}>
+          <button type="button" className={styles.secondary} onClick={onDiscard} disabled={pending}>
+            Verwerfen
+          </button>
+          <button className={styles.button} type="submit" disabled={pending || invalidCount > 0}>
+            {pending ? "Speichert…" : "Speichern"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 const INITIAL_STATE: SaveFactsState = { ok: true };
 
-export function DirtySaveForm({
-    saveAction,
-    hospitalId,
-    periodId,
-    statementType,
-    rows,
-}: DirtySaveFormProps) {
-    const formRef = useRef<HTMLFormElement>(null);
-    const baselineRef = useRef<Map<string, string>>(new Map());
-    const dirtyFieldsRef = useRef<Set<string>>(new Set());
-    const dirtyCountRef = useRef(0);
+export function DirtySaveForm({ saveAction, hospitalId, periodId, statementType, rows }: DirtySaveFormProps) {
+  const formRef = useRef<HTMLFormElement>(null);
+  const baselineRef = useRef<Map<string, string>>(new Map());
+  const dirtyFieldsRef = useRef<Set<string>>(new Set());
+  const dirtyCountRef = useRef(0);
 
-    const [dirtyCount, setDirtyCount] = useState(0);
-    const [dirtyCodes, setDirtyCodes] = useState<Set<string>>(new Set());
-    const [clientFieldErrors, setClientFieldErrors] = useState<Record<string, string>>({});
-    const [serverFieldErrors, setServerFieldErrors] = useState<Record<string, string>>({});
-    const [serverState, setServerState] = useState<SaveFactsState>(INITIAL_STATE);
-    const [navBlockMessage, setNavBlockMessage] = useState<string | null>(null);
+  const [dirtyCount, setDirtyCount] = useState(0);
+  const [dirtyCodes, setDirtyCodes] = useState<Set<string>>(new Set());
+  const [clientFieldErrors, setClientFieldErrors] = useState<Record<string, string>>({});
+  const [serverFieldErrors, setServerFieldErrors] = useState<Record<string, string>>({});
+  const [serverState, setServerState] = useState<SaveFactsState>(INITIAL_STATE);
+  const [navBlockMessage, setNavBlockMessage] = useState<string | null>(null);
 
-    const [pending, startTransition] = useTransition();
+  const [pending, startTransition] = useTransition();
 
-    const setDirtyCountIfChanged = (next: number) => {
-        if (dirtyCountRef.current === next) return;
-        dirtyCountRef.current = next;
-        setDirtyCount(next);
+  const setDirtyCountIfChanged = (next: number) => {
+    if (dirtyCountRef.current === next) return;
+    dirtyCountRef.current = next;
+    setDirtyCount(next);
+  };
+
+  const clearDirty = useCallback(() => {
+    dirtyFieldsRef.current.clear();
+    setDirtyCodes(new Set());
+    setDirtyCountIfChanged(0);
+  }, []);
+
+  const rowByCode = useMemo(() => {
+    const m = new Map<string, FlatRow>();
+    for (const r of rows) m.set(r.code, r);
+    return m;
+  }, [rows]);
+
+  const initialBaseline = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const r of rows) {
+      if (!r.isInput) continue;
+      m.set(`v:${r.code}`, r.prettyValue ?? "");
+    }
+    return m;
+  }, [rows]);
+
+  useEffect(() => {
+    baselineRef.current = new Map(initialBaseline);
+  }, [initialBaseline]);
+
+  const mergedErrors = useMemo(() => {
+    return { ...serverFieldErrors, ...clientFieldErrors };
+  }, [serverFieldErrors, clientFieldErrors]);
+
+  const invalidCount = useMemo(() => Object.keys(mergedErrors).length, [mergedErrors]);
+
+  const isNavigationBlocked = dirtyCount > 0 || invalidCount > 0 || pending;
+
+  useEffect(() => {
+    if (!isNavigationBlocked) return;
+
+    const message =
+      invalidCount > 0
+        ? "Bitte korrigiere die markierten Felder und speichere (oder verwerfe), bevor du die Seite wechselst."
+        : "Du hast ungespeicherte Änderungen. Bitte speichere oder verwerfe, bevor du die Seite wechselst.";
+
+    const onDocumentClickCapture = (e: MouseEvent) => {
+      if (!isNavigationBlocked) return;
+      if (e.defaultPrevented) return;
+      if (e.button !== 0) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+      const target = e.target as HTMLElement | null;
+      const anchor = target?.closest?.("a") as HTMLAnchorElement | null;
+      if (!anchor) return;
+
+      const hrefAttr = anchor.getAttribute("href");
+      if (!hrefAttr) return;
+      if (hrefAttr.startsWith("#")) return;
+      if (hrefAttr.startsWith("javascript:")) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      setNavBlockMessage(message);
     };
 
-    const clearDirty = useCallback(() => {
-        dirtyFieldsRef.current.clear();
-        setDirtyCodes(new Set());
-        setDirtyCountIfChanged(0);
-    }, []);
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
 
-    const rowByCode = useMemo(() => {
-        const m = new Map<string, FlatRow>();
-        for (const r of rows) m.set(r.code, r);
-        return m;
-    }, [rows]);
+    document.addEventListener("click", onDocumentClickCapture, true);
+    window.addEventListener("beforeunload", onBeforeUnload);
 
-    const initialBaseline = useMemo(() => {
-        const m = new Map<string, string>();
-        for (const r of rows) {
-            if (!r.isInput) continue;
-            m.set(`v:${r.code}`, r.prettyValue ?? "");
-        }
-        return m;
-    }, [rows]);
+    return () => {
+      document.removeEventListener("click", onDocumentClickCapture, true);
+      window.removeEventListener("beforeunload", onBeforeUnload);
+    };
+  }, [invalidCount, isNavigationBlocked, pending, dirtyCount]);
 
-    useEffect(() => {
-        baselineRef.current = new Map(initialBaseline);
-    }, [initialBaseline]);
+  useEffect(() => {
+    if (!navBlockMessage) return;
+    const t = window.setTimeout(() => setNavBlockMessage(null), 3500);
+    return () => window.clearTimeout(t);
+  }, [navBlockMessage]);
 
-    const mergedErrors = useMemo(() => {
-        return { ...serverFieldErrors, ...clientFieldErrors };
-    }, [serverFieldErrors, clientFieldErrors]);
+  const applyResult = useCallback(
+    (res: SaveFactsState) => {
+      setServerState(res);
 
-    const invalidCount = useMemo(() => Object.keys(mergedErrors).length, [mergedErrors]);
-
-    const isNavigationBlocked = dirtyCount > 0 || invalidCount > 0 || pending;
-
-    useEffect(() => {
-        if (!isNavigationBlocked) return;
-
-        const message =
-            invalidCount > 0
-                ? "Bitte korrigiere die markierten Felder und speichere (oder verwerfe), bevor du die Seite wechselst."
-                : "Du hast ungespeicherte Änderungen. Bitte speichere oder verwerfe, bevor du die Seite wechselst.";
-
-        const onDocumentClickCapture = (e: MouseEvent) => {
-            if (!isNavigationBlocked) return;
-            if (e.defaultPrevented) return;
-            if (e.button !== 0) return;
-            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-
-            const target = e.target as HTMLElement | null;
-            const anchor = target?.closest?.("a") as HTMLAnchorElement | null;
-            if (!anchor) return;
-
-            const hrefAttr = anchor.getAttribute("href");
-            if (!hrefAttr) return;
-            if (hrefAttr.startsWith("#")) return;
-            if (hrefAttr.startsWith("javascript:")) return;
-
-            e.preventDefault();
-            e.stopPropagation();
-            setNavBlockMessage(message);
-        };
-
-        const onBeforeUnload = (e: BeforeUnloadEvent) => {
-            e.preventDefault();
-            e.returnValue = "";
-        };
-
-        document.addEventListener("click", onDocumentClickCapture, true);
-        window.addEventListener("beforeunload", onBeforeUnload);
-
-        return () => {
-            document.removeEventListener("click", onDocumentClickCapture, true);
-            window.removeEventListener("beforeunload", onBeforeUnload);
-        };
-    }, [invalidCount, isNavigationBlocked, pending, dirtyCount]);
-
-    useEffect(() => {
-        if (!navBlockMessage) return;
-        const t = window.setTimeout(() => setNavBlockMessage(null), 3500);
-        return () => window.clearTimeout(t);
-    }, [navBlockMessage]);
-
-    const applyResult = useCallback(
-        (res: SaveFactsState) => {
-            setServerState(res);
-
-            if (res.ok) {
-                setServerFieldErrors({});
-
-                baselineRef.current = snapshotValues(formRef.current);
-                clearDirty();
-            } else {
-                setServerFieldErrors(res.fieldErrors ?? {});
-            }
-        },
-        [clearDirty]
-    );
-
-    const onInput = useCallback((e: React.FormEvent<HTMLFormElement>) => {
-        const target = e.target;
-        if (!(target instanceof HTMLInputElement)) return;
-        if (!target.name.startsWith("v:")) return;
-
-        const code = target.name.slice(2);
-
-        const row = rowByCode.get(code);
-        if (row?.isInput) {
-            const parsed = parseUserNumberDetailed(target.value, row.unit);
-            setClientFieldErrors((prev) => {
-                const next = { ...prev };
-                if (parsed.kind === "invalid") {
-                    next[code] = row.unit === Unit.PERCENT ? "Ungültige Prozentzahl." : "Ungültige Zahl.";
-                } else {
-                    delete next[code];
-                }
-                return next;
-            });
-
-            setServerFieldErrors((prev) => {
-                if (!prev[code]) return prev;
-                const next = { ...prev };
-                delete next[code];
-                return next;
-            });
-        }
-
-        const baseline = baselineRef.current.get(target.name) ?? "";
-        const isDirty = target.value !== baseline;
-
-        if (isDirty) dirtyFieldsRef.current.add(target.name);
-        else dirtyFieldsRef.current.delete(target.name);
-
-        setDirtyCountIfChanged(dirtyFieldsRef.current.size);
-
-        setDirtyCodes(
-            new Set(
-                Array.from(dirtyFieldsRef.current)
-                    .filter((n) => n.startsWith("v:"))
-                    .map((n) => n.slice(2))
-            )
-        );
-    }, [rowByCode]);
-
-    const discard = useCallback(() => {
-        const form = formRef.current;
-        if (!form) return;
-        form.reset();
-        setClientFieldErrors({});
+      if (res.ok) {
         setServerFieldErrors({});
-        setServerState(INITIAL_STATE);
+
+        baselineRef.current = snapshotValues(formRef.current);
         clearDirty();
-    }, [clearDirty]);
+      } else {
+        setServerFieldErrors(res.fieldErrors ?? {});
+      }
+    },
+    [clearDirty]
+  );
 
-    const onSubmit = useCallback(
-        (e: React.FormEvent<HTMLFormElement>) => {
-            e.preventDefault();
+  const onInput = useCallback(
+    (e: React.FormEvent<HTMLFormElement>) => {
+      const target = e.target;
+      if (!(target instanceof HTMLInputElement)) return;
+      if (!target.name.startsWith("v:")) return;
 
-            if (invalidCount > 0) {
-                applyResult({ ok: false, globalError: "Bitte korrigiere die markierten Felder." });
-                return;
-            }
+      const code = target.name.slice(2);
 
-            const form = formRef.current;
-            if (!form) return;
-            const fd = new FormData(form);
+      const row = rowByCode.get(code);
+      if (row?.isInput) {
+        const parsed = parseUserNumberDetailed(target.value, row.unit);
+        setClientFieldErrors((prev) => {
+          const next = { ...prev };
+          if (parsed.kind === "invalid") {
+            next[code] = row.unit === Unit.PERCENT ? "Ungültige Prozentzahl." : "Ungültige Zahl.";
+          } else {
+            delete next[code];
+          }
+          return next;
+        });
 
-            startTransition(async () => {
-                const res = await saveAction(INITIAL_STATE, fd);
-                applyResult(res);
-            });
-        },
-        [invalidCount, saveAction, applyResult, startTransition]
-    );
+        setServerFieldErrors((prev) => {
+          if (!prev[code]) return prev;
+          const next = { ...prev };
+          delete next[code];
+          return next;
+        });
+      }
 
-    return (
-        <form ref={formRef} onSubmit={onSubmit} onInput={onInput} onChange={onInput}>
-            <input type="hidden" name="hospitalId" value={hospitalId} />
-            <input type="hidden" name="periodId" value={periodId} />
-            <input type="hidden" name="statementType" value={statementType} />
+      const baseline = baselineRef.current.get(target.name) ?? "";
+      const isDirty = target.value !== baseline;
 
-            {serverState.ok && serverState.message ? (
-                <div className={`${styles.toast} ${styles.toastSuccess}`}>{serverState.message}</div>
-            ) : null}
+      if (isDirty) dirtyFieldsRef.current.add(target.name);
+      else dirtyFieldsRef.current.delete(target.name);
 
-            {navBlockMessage ? (
-                <div className={`${styles.toast} ${styles.toastError}`}>{navBlockMessage}</div>
-            ) : null}
+      setDirtyCountIfChanged(dirtyFieldsRef.current.size);
 
-            {!serverState.ok && serverState.globalError ? (
-                <div className={`${styles.toast} ${styles.toastError}`}>{serverState.globalError}</div>
-            ) : null}
+      setDirtyCodes(
+        new Set(
+          Array.from(dirtyFieldsRef.current)
+            .filter((n) => n.startsWith("v:"))
+            .map((n) => n.slice(2))
+        )
+      );
+    },
+    [rowByCode]
+  );
 
-            <ValueEntryTable rows={rows} errorByCode={mergedErrors} dirtyByCode={dirtyCodes} />
+  const discard = useCallback(() => {
+    const form = formRef.current;
+    if (!form) return;
+    form.reset();
+    setClientFieldErrors({});
+    setServerFieldErrors({});
+    setServerState(INITIAL_STATE);
+    clearDirty();
+  }, [clearDirty]);
 
-            <DirtyBottomBar dirtyCount={dirtyCount} invalidCount={invalidCount} onDiscard={discard} pending={pending} />
-        </form>
-    );
+  const onSubmit = useCallback(
+    (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+
+      if (invalidCount > 0) {
+        applyResult({ ok: false, globalError: "Bitte korrigiere die markierten Felder." });
+        return;
+      }
+
+      const form = formRef.current;
+      if (!form) return;
+      const fd = new FormData(form);
+
+      startTransition(async () => {
+        const res = await saveAction(INITIAL_STATE, fd);
+        applyResult(res);
+      });
+    },
+    [invalidCount, saveAction, applyResult, startTransition]
+  );
+
+  return (
+    <form ref={formRef} onSubmit={onSubmit} onInput={onInput} onChange={onInput}>
+      <input type="hidden" name="hospitalId" value={hospitalId} />
+      <input type="hidden" name="periodId" value={periodId} />
+      <input type="hidden" name="statementType" value={statementType} />
+
+      {serverState.ok && serverState.message ? <div className={`${styles.toast} ${styles.toastSuccess}`}>{serverState.message}</div> : null}
+
+      {navBlockMessage ? <div className={`${styles.toast} ${styles.toastError}`}>{navBlockMessage}</div> : null}
+
+      {!serverState.ok && serverState.globalError ? (
+        <div className={`${styles.toast} ${styles.toastError}`}>{serverState.globalError}</div>
+      ) : null}
+
+      <ValueEntryTable rows={rows} errorByCode={mergedErrors} dirtyByCode={dirtyCodes} />
+
+      <DirtyBottomBar dirtyCount={dirtyCount} invalidCount={invalidCount} onDiscard={discard} pending={pending} />
+    </form>
+  );
 }

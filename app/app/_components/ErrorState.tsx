@@ -57,28 +57,17 @@ export function ErrorState({
         </header>
 
         <div className={styles.notice}>
-          <div>
-            Bitte versuche es erneut. Wenn das Problem reproduzierbar ist, melde
-            dich kurz mit den Schritten.
-          </div>
+          <div>Bitte versuche es erneut. Wenn das Problem reproduzierbar ist, melde dich kurz mit den Schritten.</div>
         </div>
 
         <div className={styles.actions}>
           {onRetry ? (
-            <button
-              className={styles.buttonPrimary}
-              type="button"
-              onClick={onRetry}
-            >
+            <button className={styles.buttonPrimary} type="button" onClick={onRetry}>
               {retryLabel}
             </button>
           ) : null}
 
-          <button
-            className={styles.buttonSecondary}
-            type="button"
-            onClick={() => router.back()}
-          >
+          <button className={styles.buttonSecondary} type="button" onClick={() => router.back()}>
             {backLabel}
           </button>
 

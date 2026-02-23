@@ -69,7 +69,12 @@ export default async function DashboardPage() {
       }));
     }
 
-    const rows = [] as Array<{ statementType: StatementType; expected: number; actual: number; percent: number }>;
+    const rows = [] as Array<{
+      statementType: StatementType;
+      expected: number;
+      actual: number;
+      percent: number;
+    }>;
     for (const st of statementTypes) {
       const codes = codesByStatement.get(st) ?? [];
       const expected = hospitalCount * codes.length;
@@ -93,13 +98,7 @@ export default async function DashboardPage() {
   const actualTotal = completion.reduce((s, r) => s + r.actual, 0);
   const missingTotal = Math.max(0, expectedTotal - actualTotal);
 
-  const adminStats = isAdmin
-    ? await Promise.all([
-        prisma.user.count(),
-        prisma.factChangeRun.count(),
-        prisma.factChange.count(),
-      ])
-    : null;
+  const adminStats = isAdmin ? await Promise.all([prisma.user.count(), prisma.factChangeRun.count(), prisma.factChange.count()]) : null;
 
   return (
     <section className={styles.page}>
@@ -128,18 +127,12 @@ export default async function DashboardPage() {
         <div className={styles.kpiCard}>
           <div className={styles.kpiLabel}>Eingaben offen (aktuelles Jahr)</div>
           <div className={styles.kpiValue}>{missingTotal}</div>
-          <div className={styles.kpiHint}>
-            {expectedTotal > 0 ? `${actualTotal}/${expectedTotal} ausgefüllt` : "—"}
-          </div>
+          <div className={styles.kpiHint}>{expectedTotal > 0 ? `${actualTotal}/${expectedTotal} ausgefüllt` : "—"}</div>
         </div>
         <div className={styles.kpiCard}>
           <div className={styles.kpiLabel}>Letztes Speichern</div>
-          <div className={styles.kpiValueSmall}>
-            {latestSaveRun ? latestSaveRun.createdAt.toLocaleString("de-DE") : "—"}
-          </div>
-          <div className={styles.kpiHint}>
-            {latestSaveRun ? (latestSaveRun.user?.email ?? latestSaveRun.user?.name ?? "—") : ""}
-          </div>
+          <div className={styles.kpiValueSmall}>{latestSaveRun ? latestSaveRun.createdAt.toLocaleString("de-DE") : "—"}</div>
+          <div className={styles.kpiHint}>{latestSaveRun ? (latestSaveRun.user?.email ?? latestSaveRun.user?.name ?? "—") : ""}</div>
         </div>
       </div>
 
@@ -152,9 +145,7 @@ export default async function DashboardPage() {
               <div key={row.statementType} className={styles.progressRow}>
                 <div className={styles.progressTop}>
                   <div className={styles.progressLabel}>{statementLabel(row.statementType)}</div>
-                  <div className={styles.progressMeta}>
-                    {row.expected > 0 ? `${row.actual}/${row.expected} · ${missing} offen` : "—"}
-                  </div>
+                  <div className={styles.progressMeta}>{row.expected > 0 ? `${row.actual}/${row.expected} · ${missing} offen` : "—"}</div>
                 </div>
                 <div className={styles.progressBar}>
                   <div className={styles.progressFill} style={{ width: `${row.percent}%` }} />
@@ -187,5 +178,3 @@ export default async function DashboardPage() {
     </section>
   );
 }
-
-

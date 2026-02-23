@@ -31,14 +31,7 @@ export type FormattedValueInputProps = {
   className?: string;
 };
 
-export function FormattedValueInput({
-  name,
-  defaultValue,
-  unit,
-  placeholder,
-  invalid,
-  className,
-}: FormattedValueInputProps) {
+export function FormattedValueInput({ name, defaultValue, unit, placeholder, invalid, className }: FormattedValueInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const dispatchInputEvent = useCallback(() => {
@@ -86,8 +79,7 @@ export function FormattedValueInput({
     if (!el || !form) return;
 
     const inputs = Array.from(form.elements).filter(
-      (node): node is HTMLInputElement =>
-        node instanceof HTMLInputElement && node.name.startsWith("v:") && !node.disabled,
+      (node): node is HTMLInputElement => node instanceof HTMLInputElement && node.name.startsWith("v:") && !node.disabled
     );
 
     const idx = inputs.indexOf(el);

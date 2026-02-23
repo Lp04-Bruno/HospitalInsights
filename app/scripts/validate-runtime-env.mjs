@@ -32,9 +32,7 @@ function main() {
     );
   }
   if (!hasDashboardId && !hasCatalog) {
-    console.warn(
-      "[env] No METABASE_DASHBOARD_ID or METABASE_DASHBOARD_CATALOG set. Configure at least one for the landing page."
-    );
+    console.warn("[env] No METABASE_DASHBOARD_ID or METABASE_DASHBOARD_CATALOG set. Configure at least one for the landing page.");
   }
   console.log("[env] Runtime env validation OK");
 }
