@@ -20,6 +20,7 @@
 
 # caches
 .eslintcache
+.prettiercache
 
 # debug logs
 npm-debug.log*

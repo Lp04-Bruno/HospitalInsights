@@ -17,10 +17,7 @@ function parseViewCatalog(): ViewConfig[] {
         (v): ViewConfig => ({
           type: v.type === "question" ? "question" : "dashboard",
           id: Number(v.id),
-          hospitalParamKey:
-            typeof v.hospitalParamKey === "string" && v.hospitalParamKey.trim()
-              ? v.hospitalParamKey.trim()
-              : undefined,
+          hospitalParamKey: typeof v.hospitalParamKey === "string" && v.hospitalParamKey.trim() ? v.hospitalParamKey.trim() : undefined,
         })
       )
       .filter((v) => Number.isFinite(v.id));
@@ -35,10 +32,7 @@ function getAllowedQuestionConfig(questionId: number): ViewConfig | null {
   return null;
 }
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { questionId: string } | Promise<{ questionId: string }> }
-) {
+export async function GET(req: NextRequest, { params }: { params: { questionId: string } | Promise<{ questionId: string }> }) {
   const resolvedParams = await Promise.resolve(params);
   const questionId = Number(resolvedParams.questionId);
   if (!Number.isFinite(questionId)) {
@@ -57,16 +51,10 @@ export async function GET(
   const METABASE_EMBED_SECRET = process.env.METABASE_EMBED_SECRET;
 
   if (!METABASE_SITE_URL || !METABASE_EMBED_SECRET) {
-    return NextResponse.json(
-      { error: "Missing METABASE_SITE_URL or METABASE_EMBED_SECRET" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Missing METABASE_SITE_URL or METABASE_EMBED_SECRET" }, { status: 500 });
   }
 
-  const hospitalParamKey =
-    allowed.hospitalParamKey ??
-    process.env.METABASE_EMBED_HOSPITAL_PARAM ??
-    "hospitalId";
+  const hospitalParamKey = allowed.hospitalParamKey ?? process.env.METABASE_EMBED_HOSPITAL_PARAM ?? "hospitalId";
   const embedParams: Record<string, string> = {};
   if (hospitalId) {
     embedParams[hospitalParamKey] = hospitalId;

@@ -123,11 +123,7 @@ export default function AuditFilters(props: AuditFiltersProps) {
     >
       <div className={styles.field}>
         <label>Hospital</label>
-        <select
-          name="hospitalId"
-          value={state.hospitalId}
-          onChange={(e) => setState((s) => ({ ...s, hospitalId: e.target.value }))}
-        >
+        <select name="hospitalId" value={state.hospitalId} onChange={(e) => setState((s) => ({ ...s, hospitalId: e.target.value }))}>
           <option value="">Alle</option>
           {props.hospitals.map((h) => (
             <option key={h.value} value={h.value}>
@@ -156,22 +152,12 @@ export default function AuditFilters(props: AuditFiltersProps) {
 
       <div className={styles.field}>
         <label>Zeitraum von</label>
-        <input
-          type="date"
-          name="from"
-          value={state.from}
-          onChange={(e) => setState((s) => ({ ...s, from: e.target.value }))}
-        />
+        <input type="date" name="from" value={state.from} onChange={(e) => setState((s) => ({ ...s, from: e.target.value }))} />
       </div>
 
       <div className={styles.field}>
         <label>Zeitraum bis</label>
-        <input
-          type="date"
-          name="to"
-          value={state.to}
-          onChange={(e) => setState((s) => ({ ...s, to: e.target.value }))}
-        />
+        <input type="date" name="to" value={state.to} onChange={(e) => setState((s) => ({ ...s, to: e.target.value }))} />
       </div>
 
       <div className={styles.field}>
@@ -188,21 +174,13 @@ export default function AuditFilters(props: AuditFiltersProps) {
         <label>Anzeige</label>
         <div className={styles.checkRow}>
           <label className={styles.checkLabel}>
-            <input
-              type="checkbox"
-              checked={state.realOnly}
-              onChange={(e) => setState((s) => ({ ...s, realOnly: e.target.checked }))}
-            />
+            <input type="checkbox" checked={state.realOnly} onChange={(e) => setState((s) => ({ ...s, realOnly: e.target.checked }))} />
             Nur echte Änderungen
           </label>
         </div>
         <div className={styles.checkRow}>
           <label className={styles.checkLabel}>
-            <input
-              type="checkbox"
-              checked={state.mine}
-              onChange={(e) => setState((s) => ({ ...s, mine: e.target.checked }))}
-            />
+            <input type="checkbox" checked={state.mine} onChange={(e) => setState((s) => ({ ...s, mine: e.target.checked }))} />
             Nur meine
           </label>
         </div>
@@ -210,11 +188,7 @@ export default function AuditFilters(props: AuditFiltersProps) {
 
       <div className={styles.field}>
         <label>Jahr</label>
-        <select
-          name="year"
-          value={state.year}
-          onChange={(e) => setState((s) => ({ ...s, year: e.target.value }))}
-        >
+        <select name="year" value={state.year} onChange={(e) => setState((s) => ({ ...s, year: e.target.value }))}>
           <option value="">Alle</option>
           {props.years.map((y) => (
             <option key={y} value={String(y)}>

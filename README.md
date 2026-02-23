@@ -3,6 +3,7 @@
 HospitalInsights ist eine Web-Plattform, die Jahresabschlüsse/Bilanzen von Krankenhäusern verständlich aufbereitet und vergleichbar macht (Benchmarking).
 
 Dev-Stack:
+
 - Next.js (App Router) als Portal (öffentlich + Admin/Editor Bereiche)
 - PostgreSQL als zentrale Datenbank
 - Prisma für Schema/Migrations/Import-Pipelines
@@ -10,6 +11,7 @@ Dev-Stack:
 - Öffentliche Darstellung über kontrolliertes Metabase Signed Embedding (Metabase bleibt idealerweise intern)
 
 **Quickstart (lokal, Development)**
+
 - Voraussetzungen installieren: Docker Desktop (Compose v2), Git
 - Env-Datei anlegen:
   - `cp infra/.env.example infra/.env`
@@ -24,6 +26,7 @@ Dev-Stack:
   - Metabase UI: `http://localhost:3001`
 
 **Wichtige URLs (Dev)**
+
 - App (Portal): `http://localhost:3000`
 - Dashboard (geschützt): `http://localhost:3000/dashboard`
 - Metabase UI (Admin/BI): `http://localhost:3001`
@@ -31,11 +34,13 @@ Dev-Stack:
 - Embed API (Next.js): `http://localhost:3000/api/metabase/embed/dashboard/:dashboardId`
 
 **Hinweis: CSP-Warnungen im Browser (Dev)**
+
 - Die "Content Security Policy"-Warnungen kommen typischerweise aus dem Metabase-Embed selbst (Metabase liefert für `/embed/...` eine sehr restriktive CSP aus).
 - Im Dev-Compose läuft Metabase deshalb hinter einem kleinen Nginx-Proxy auf `http://localhost:3001`, der die CSP-Header entfernt (nur Dev), damit die Console sauber bleibt.
 - Datei: `infra/nginx.metabase.dev.conf` (nicht für Production verwenden).
 
 **Metabase initial einrichten (Signed Embedding)**
+
 1. Öffnen: `http://localhost:3001` und Admin anlegen (Dummy-Mail ist ok für lokales Dev)
 2. Datenbank hinzufügen (Postgres):
    - Host: `db`
@@ -51,6 +56,7 @@ Dev-Stack:
    - `METABASE_DASHBOARD_ID=2`
 
 **Default Admin (Dev-only, NextAuth Credentials)**
+
 - Email: `admin@hospitalinsights.local`
 - Passwort: `admin1234`
 
@@ -59,6 +65,7 @@ Wenn ihr initial einen Admin anlegen wollt, nutzt entweder die App-UI/DB oder f�
 `SEED_ADMIN_EMAIL` + `SEED_ADMIN_PASSWORD` aus.
 
 **Rollen & Zugriff (Dev)**
+
 - `/dashboard` ist geschützt: nur `ADMIN` und `EDITOR` dürfen sich einloggen.
 
 **Entwickler-Workflow (Start/Stop/Restart)**
@@ -74,6 +81,7 @@ Die Compose-Kommandos bitte aus dem Repo-Root (`HospitalInsights/`) ausführen, 
 Aktuell ist dieses Repo auf lokalen Dev ausgelegt.
 
 Für später „Production“ empfiehlt sich:
+
 - Separate Compose-Datei (z.B. `infra/docker-compose.prod.yml`) + eigenes Env (z.B. `infra/.env.prod` oder Dokploy Env Vars)
 - Keine Bind-Mounts (kein `../app:/app`), stattdessen gebautes Image
 - `next build` + `next start` (statt `next dev`)
@@ -104,6 +112,7 @@ Für später „Production“ empfiehlt sich:
   nachdem Metabase auf dem Server läuft und ihr Embedding aktiviert + Dashboards erstellt/importiert habt.
 
 **Hinweis: Metabase Accounts & Contributors (lokales Dev)**
+
 - Jeder Contributor hat lokal seine eigene Metabase-Instanz (Docker Volume `metabase_data`) → eigene User/Passwörter.
 - Dummy-Mails (z.B. `dev@local.test`) sind für lokale Tests völlig ausreichend.
 
@@ -115,4 +124,3 @@ Metabase nutzt eine eigene interne DB (Volume `metabase_data`). So bleibt die Ap
 Wenn ihr Produktionsdaten lokal zum Testen nutzen wollt, macht das als kontrollierten Dump/Restore Workflow (Postgres `pg_dump` → lokal `pg_restore`).
 
 - Anleitung: [infra/db-sync.md](infra/db-sync.md)
-

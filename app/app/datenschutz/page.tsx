@@ -30,10 +30,7 @@ export default function DatenschutzPage() {
             </p>
 
             <h2>2. Projektkontext</h2>
-            <p>
-              HospitalInsights ist ein Studienprojekt an der Privaten Hochschule für Wirtschaft und
-              Technik (PHWT), Standort Vechta.
-            </p>
+            <p>HospitalInsights ist ein Studienprojekt an der Privaten Hochschule für Wirtschaft und Technik (PHWT), Standort Vechta.</p>
 
             <h2>3. Wissenschaftliche Betreuung (Kontakt an der PHWT)</h2>
             <p>
@@ -48,26 +45,25 @@ export default function DatenschutzPage() {
 
             <h2>4. Verarbeitungen beim Aufruf</h2>
             <p>
-              Beim Aufruf der Website werden technisch notwendige Daten verarbeitet (z.B. IP-Adresse,
-              Zeitstempel, User-Agent), um die Seite auszuliefern und abzusichern.
+              Beim Aufruf der Website werden technisch notwendige Daten verarbeitet (z.B. IP-Adresse, Zeitstempel, User-Agent), um die Seite
+              auszuliefern und abzusichern.
             </p>
 
             <h2>5. Externe Inhalte: Metabase</h2>
             <p>
-              Auf der Landing Page können Metabase-Dashboards/Fragen als externe Inhalte eingebunden
-              werden. Diese Inhalte werden erst nach Ihrer Zustimmung geladen.
+              Auf der Landing Page können Metabase-Dashboards/Fragen als externe Inhalte eingebunden werden. Diese Inhalte werden erst nach
+              Ihrer Zustimmung geladen.
             </p>
 
             <h2>6. Cookies / Einwilligung</h2>
             <p>
-              Für das Laden externer Metabase-Inhalte wird eine Einwilligung gespeichert (Cookie)
-              damit die Entscheidung beim nächsten Besuch nicht erneut abgefragt werden muss.
+              Für das Laden externer Metabase-Inhalte wird eine Einwilligung gespeichert (Cookie) damit die Entscheidung beim nächsten
+              Besuch nicht erneut abgefragt werden muss.
             </p>
 
             <p>
-              Technische Umsetzung: Wir speichern Ihre Entscheidung als Cookie/LocalStorage-Eintrag
-              mit dem Wert &quot;accepted&quot; oder &quot;declined&quot; (Standard-Laufzeit: 1 Jahr).
-              Ohne Zustimmung werden die Metabase-Frames nicht geladen.
+              Technische Umsetzung: Wir speichern Ihre Entscheidung als Cookie/LocalStorage-Eintrag mit dem Wert &quot;accepted&quot; oder
+              &quot;declined&quot; (Standard-Laufzeit: 1 Jahr). Ohne Zustimmung werden die Metabase-Frames nicht geladen.
             </p>
 
             <h2>7. Ihre Rechte</h2>

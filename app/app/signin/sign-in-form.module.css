@@ -62,7 +62,9 @@
   border: 1px solid var(--hi-border);
   font-size: 14px;
   outline: none;
-  transition: border-color 120ms ease, box-shadow 120ms ease;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
   background: var(--hi-surface);
   color: var(--hi-text);
 }
@@ -81,7 +83,9 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 120ms ease, opacity 120ms ease;
+  transition:
+    background 120ms ease,
+    opacity 120ms ease;
 }
 
 .button:hover {
@@ -110,7 +114,6 @@
   border-radius: 6px;
   background: var(--hi-surface-2);
   color: var(--hi-text);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    "Liberation Mono", "Courier New", monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 11px;
 }

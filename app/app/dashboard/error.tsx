@@ -2,13 +2,7 @@
 
 import { ErrorState } from "@/app/_components/ErrorState";
 
-export default function DashboardError({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+export default function DashboardError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
     <ErrorState
       title="Dashboard"

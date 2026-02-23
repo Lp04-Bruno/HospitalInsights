@@ -18,9 +18,7 @@ export function SignInForm({ callbackUrl }: SignInFormProps) {
   return (
     <section className={styles.card}>
       <h1 className={styles.title}>Sign in</h1>
-      <p className={styles.subtitle}>
-        Melde dich an, um auf den geschützten Bereich zuzugreifen.
-      </p>
+      <p className={styles.subtitle}>Melde dich an, um auf den geschützten Bereich zuzugreifen.</p>
 
       <form
         className={styles.form}
@@ -81,28 +79,17 @@ export function SignInForm({ callbackUrl }: SignInFormProps) {
         </label>
 
         <label className={styles.checkRow}>
-          <input
-            className={styles.checkbox}
-            type="checkbox"
-            checked={showPassword}
-            onChange={(e) => setShowPassword(e.target.checked)}
-          />
+          <input className={styles.checkbox} type="checkbox" checked={showPassword} onChange={(e) => setShowPassword(e.target.checked)} />
           <span className={styles.checkLabel}>Passwort anzeigen</span>
         </label>
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className={styles.button}
-        >
+        <button type="submit" disabled={isLoading} className={styles.button}>
           {isLoading ? "Signing in…" : "Sign in"}
         </button>
 
         {error && (
           <p className={styles.error} role="alert" aria-live="polite">
-            {error === "CredentialsSignin"
-              ? "Email oder Passwort ist falsch."
-              : error}
+            {error === "CredentialsSignin" ? "Email oder Passwort ist falsch." : error}
           </p>
         )}
       </form>

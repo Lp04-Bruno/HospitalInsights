@@ -4,14 +4,8 @@ export default function ForbiddenPage() {
   return (
     <section className={styles.page}>
       <h1 className={styles.title}>Zugriff verweigert</h1>
-      <p className={styles.text}>
-        Du bist eingeloggt, hast aber keine Berechtigung für diesen Bereich.
-      </p>
-      <p className={styles.text}>
-        Wenn du glaubst, dass das ein Fehler ist, wende dich an einen Admin.
-      </p>
+      <p className={styles.text}>Du bist eingeloggt, hast aber keine Berechtigung für diesen Bereich.</p>
+      <p className={styles.text}>Wenn du glaubst, dass das ein Fehler ist, wende dich an einen Admin.</p>
     </section>
   );
 }
-
-
