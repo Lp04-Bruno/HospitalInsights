@@ -34,10 +34,12 @@ async function main() {
     return;
   }
 
-  if (await exists(target)) return;
+  if (await exists(target)) {
+    await fs.rm(target, { recursive: true, force: true });
+  }
 
   await copyDir(source, target);
-  console.log("[fix-prisma-client] Copied generated client to:", target);
+  console.log("[fix-prisma-client] Synced generated client to:", target);
 }
 
 main().catch((e) => {

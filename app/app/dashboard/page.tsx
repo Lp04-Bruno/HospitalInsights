@@ -48,18 +48,15 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
   const sp = await resolveSearchParams(searchParams);
   const selectedHospitalId = firstParam(sp.hospitalId);
-  const selectedYear = parseYear(firstParam(sp.year));
+  const requestedYear = parseYear(firstParam(sp.year));
 
-  const [hospitalCount, singleHospital, selectedHospital, periodSelected, periodLatest, periodCount, allLineItems, latestSaveRun] =
+  const [hospitalCount, singleHospital, selectedHospital, allLineItems, latestSaveRunGlobal, globalPeriodCount, usedPeriodIds] =
     await Promise.all([
       prisma.hospital.count(),
-      prisma.hospital.findFirst({ select: { name: true }, orderBy: { name: "asc" } }),
+      prisma.hospital.findFirst({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
       selectedHospitalId
         ? prisma.hospital.findUnique({ where: { id: selectedHospitalId }, select: { id: true, name: true } })
         : Promise.resolve(null),
-      selectedYear ? prisma.period.findFirst({ where: { year: selectedYear }, select: { id: true, year: true } }) : Promise.resolve(null),
-      prisma.period.findFirst({ orderBy: { year: "desc" }, select: { id: true, year: true } }),
-      prisma.period.count(),
       prisma.lineItem.findMany({
         select: { code: true, statementType: true, label: true, parentCode: true, unit: true, isInput: true },
       }),
@@ -67,9 +64,56 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         orderBy: { createdAt: "desc" },
         include: { user: { select: { email: true, name: true } } },
       }),
+      prisma.period.count(),
+      prisma.hospitalPeriod.findMany({ distinct: ["periodId"], select: { periodId: true } }),
     ]);
 
-  const periodActive = periodSelected ?? periodLatest;
+  const usedYearCount = usedPeriodIds.length;
+
+  const effectiveHospital = selectedHospital ?? (hospitalCount === 1 ? singleHospital : null);
+
+  const hospitalPeriods = effectiveHospital
+    ? await prisma.hospitalPeriod.findMany({
+        where: { hospitalId: effectiveHospital.id },
+        include: { period: { select: { id: true, year: true } } },
+        orderBy: { period: { year: "desc" } },
+      })
+    : [];
+
+  const hospitalYearCount = effectiveHospital ? hospitalPeriods.length : null;
+
+  const periodsForHospital = hospitalPeriods.map((hp) => hp.period);
+  const availableYearsForHospital = new Set(periodsForHospital.map((p) => p.year));
+
+  const selectedYear =
+    requestedYear !== undefined && (!effectiveHospital || availableYearsForHospital.has(requestedYear))
+      ? requestedYear
+      : effectiveHospital
+        ? periodsForHospital[0]?.year
+        : undefined;
+
+  const periodActive = await (async () => {
+    if (effectiveHospital) {
+      if (selectedYear === undefined) return null;
+      return periodsForHospital.find((p) => p.year === selectedYear) ?? null;
+    }
+    if (selectedYear !== undefined) {
+      return prisma.period.findFirst({ where: { year: selectedYear }, select: { id: true, year: true } });
+    }
+    return prisma.period.findFirst({ orderBy: { year: "desc" }, select: { id: true, year: true } });
+  })();
+
+  const latestSaveRunContext = await (async () => {
+    if (!periodActive) return null;
+    return prisma.factChangeRun.findFirst({
+      where: {
+        periodId: periodActive.id,
+        ...(effectiveHospital ? { hospitalId: effectiveHospital.id } : {}),
+      },
+      orderBy: { createdAt: "desc" },
+      include: { user: { select: { email: true, name: true } } },
+    });
+  })();
 
   const childrenByCode = new Map<string, string[]>();
   for (const li of allLineItems) {
@@ -107,7 +151,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   const statementTypes = Object.values(StatementType);
 
   const completion = await (async () => {
-    const effectiveHospitals = selectedHospital ? 1 : hospitalCount;
+    const effectiveHospitals = effectiveHospital ? 1 : hospitalCount;
     if (!periodActive || effectiveHospitals === 0) {
       return statementTypes.map((st) => ({
         statementType: st,
@@ -133,7 +177,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               where: {
                 periodId: periodActive.id,
                 value: { not: null },
-                ...(selectedHospital ? { hospitalId: selectedHospital.id } : {}),
+                ...(effectiveHospital ? { hospitalId: effectiveHospital.id } : {}),
                 lineItemCode: { in: codes.length > 0 ? codes : ["__none__"] },
               },
             });
@@ -157,15 +201,10 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           {periodActive ? (
             <span>
               Jahr: <strong>{periodActive.year}</strong>
-              {selectedHospital?.name ? (
+              {effectiveHospital?.name ? (
                 <>
                   {" "}
-                  · Krankenhaus: <strong>{selectedHospital.name}</strong>
-                </>
-              ) : hospitalCount === 1 && singleHospital?.name ? (
-                <>
-                  {" "}
-                  · Krankenhaus: <strong>{singleHospital.name}</strong>
+                  · Krankenhaus: <strong>{effectiveHospital.name}</strong>
                 </>
               ) : hospitalCount > 1 ? (
                 <>
@@ -180,24 +219,40 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         </div>
       </div>
 
-      <div className={styles.kpis}>
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiLabel}>Hospitals</div>
-          <div className={styles.kpiValue}>{hospitalCount}</div>
-        </div>
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiLabel}>Jahre</div>
-          <div className={styles.kpiValue}>{periodCount}</div>
-        </div>
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiLabel}>Eingaben offen</div>
-          <div className={styles.kpiValue}>{missingTotal}</div>
-          <div className={styles.kpiHint}>{expectedTotal > 0 ? `${actualTotal}/${expectedTotal} ausgefüllt` : "—"}</div>
-        </div>
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiLabel}>Letztes Speichern</div>
-          <div className={styles.kpiValueSmall}>{latestSaveRun ? latestSaveRun.createdAt.toLocaleString("de-DE") : "—"}</div>
-          <div className={styles.kpiHint}>{latestSaveRun ? (latestSaveRun.user?.email ?? latestSaveRun.user?.name ?? "—") : ""}</div>
+      <div className={styles.section}>
+        <div className={styles.sectionTitle}>Aktueller Kontext</div>
+        <div className={styles.kpis}>
+          <div className={styles.kpiCard}>
+            <div className={styles.kpiLabel}>Krankenhaus</div>
+            <div className={styles.kpiValueSmall}>
+              {effectiveHospital?.name ?? (hospitalCount > 1 ? "Alle" : hospitalCount === 1 ? (singleHospital?.name ?? "—") : "—")}
+            </div>
+            <div className={styles.kpiHint}>
+              {effectiveHospital && hospitalYearCount !== null ? `${hospitalYearCount} Jahre vorhanden` : "—"}
+            </div>
+          </div>
+
+          <div className={styles.kpiCard}>
+            <div className={styles.kpiLabel}>Jahr</div>
+            <div className={styles.kpiValue}>{periodActive?.year ?? "—"}</div>
+            <div className={styles.kpiHint}>{periodActive ? "Ausgewähltes Jahr für Auswertungen" : "Kein Jahr verfügbar"}</div>
+          </div>
+
+          <div className={styles.kpiCard}>
+            <div className={styles.kpiLabel}>Eingaben offen</div>
+            <div className={styles.kpiValue}>{missingTotal}</div>
+            <div className={styles.kpiHint}>{expectedTotal > 0 ? `${actualTotal}/${expectedTotal} ausgefüllt` : "—"}</div>
+          </div>
+
+          <div className={styles.kpiCard}>
+            <div className={styles.kpiLabel}>Letztes Speichern (Kontext)</div>
+            <div className={styles.kpiValueSmall}>
+              {latestSaveRunContext ? latestSaveRunContext.createdAt.toLocaleString("de-DE") : "—"}
+            </div>
+            <div className={styles.kpiHint}>
+              {latestSaveRunContext ? (latestSaveRunContext.user?.email ?? latestSaveRunContext.user?.name ?? "—") : ""}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -218,6 +273,36 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               </div>
             );
           })}
+        </div>
+      </div>
+
+      <div className={styles.section}>
+        <div className={styles.sectionTitle}>Gesamt</div>
+        <div className={styles.kpis}>
+          <div className={styles.kpiCard}>
+            <div className={styles.kpiLabel}>Krankenhäuser</div>
+            <div className={styles.kpiValue}>{hospitalCount}</div>
+          </div>
+
+          <div className={styles.kpiCard}>
+            <div className={styles.kpiLabel}>Jahre (gesamt)</div>
+            <div className={styles.kpiValue}>{globalPeriodCount}</div>
+            <div className={styles.kpiHint}>Alle angelegten Jahre</div>
+          </div>
+
+          <div className={styles.kpiCard}>
+            <div className={styles.kpiLabel}>Jahre (in Benutzung)</div>
+            <div className={styles.kpiValue}>{usedYearCount}</div>
+            <div className={styles.kpiHint}>Jahre mit Zuordnung zu Krankenhäusern</div>
+          </div>
+
+          <div className={styles.kpiCard}>
+            <div className={styles.kpiLabel}>Letztes Speichern (gesamt)</div>
+            <div className={styles.kpiValueSmall}>{latestSaveRunGlobal ? latestSaveRunGlobal.createdAt.toLocaleString("de-DE") : "—"}</div>
+            <div className={styles.kpiHint}>
+              {latestSaveRunGlobal ? (latestSaveRunGlobal.user?.email ?? latestSaveRunGlobal.user?.name ?? "—") : ""}
+            </div>
+          </div>
         </div>
       </div>
 

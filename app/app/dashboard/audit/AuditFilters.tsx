@@ -86,6 +86,14 @@ export default function AuditFilters(props: AuditFiltersProps) {
 
   const desiredQuery = useMemo(() => buildQueryFromState(state).toString(), [state]);
 
+  const yearSet = useMemo(() => new Set(props.years.map((y) => String(y))), [props.years]);
+
+  useEffect(() => {
+    if (!state.year) return;
+    if (yearSet.has(state.year)) return;
+    setState((s) => ({ ...s, year: "" }));
+  }, [state.year, yearSet]);
+
   const debounceRef = useRef<number | null>(null);
   const initialMount = useRef(true);
 

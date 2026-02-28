@@ -1,6 +1,10 @@
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { ConfirmSubmitButton } from "@/app/dashboard/_components/ConfirmSubmitButton";
 import styles from "./page.module.css";
+
+export const dynamic = "force-dynamic";
 
 async function createHospital(formData: FormData) {
   "use server";
@@ -19,6 +23,7 @@ async function createHospital(formData: FormData) {
     },
   });
 
+  revalidatePath("/dashboard/hospitals");
   redirect("/dashboard/hospitals");
 }
 
@@ -29,6 +34,8 @@ async function deleteHospital(formData: FormData) {
   if (!hospitalId) redirect("/dashboard/hospitals");
 
   await prisma.hospital.delete({ where: { id: hospitalId } });
+
+  revalidatePath("/dashboard/hospitals");
   redirect("/dashboard/hospitals");
 }
 
@@ -43,24 +50,58 @@ async function deleteHospitalYear(formData: FormData) {
   const period = await prisma.period.findUnique({ where: { year } });
   if (!period) redirect("/dashboard/hospitals");
 
-  await prisma.factValue.deleteMany({
+  await prisma.factChangeRun.deleteMany({
     where: {
       hospitalId,
       periodId: period.id,
     },
   });
 
-  redirect("/dashboard/hospitals");
+  const res = await prisma.factValue.deleteMany({
+    where: {
+      hospitalId,
+      periodId: period.id,
+    },
+  });
+
+  await prisma.hospitalPeriod.deleteMany({
+    where: {
+      hospitalId,
+      periodId: period.id,
+    },
+  });
+
+  revalidatePath("/dashboard/hospitals");
+  redirect(`/dashboard/hospitals?notice=${encodeURIComponent(`Jahr ${year} gelöscht (${res.count} Werte entfernt).`)}`);
 }
 
-export default async function HospitalsPage() {
+type HospitalsPageProps = {
+  searchParams?: Record<string, string | string[] | undefined>;
+};
+
+export default async function HospitalsPage({ searchParams }: HospitalsPageProps) {
   const hospitals = await prisma.hospital.findMany({
     orderBy: { name: "asc" },
   });
 
-  const periods = await prisma.period.findMany({
-    orderBy: { year: "desc" },
+  const hospitalPeriods = await prisma.hospitalPeriod.findMany({
+    include: { period: { select: { year: true } } },
   });
+
+  const yearsByHospitalId = new Map<string, number[]>();
+  for (const hp of hospitalPeriods) {
+    const list = yearsByHospitalId.get(hp.hospitalId);
+    if (list) list.push(hp.period.year);
+    else yearsByHospitalId.set(hp.hospitalId, [hp.period.year]);
+  }
+  for (const [hid, yrs] of yearsByHospitalId) {
+    yearsByHospitalId.set(
+      hid,
+      Array.from(new Set(yrs)).sort((a, b) => b - a)
+    );
+  }
+
+  const notice = typeof searchParams?.notice === "string" ? searchParams.notice : undefined;
 
   return (
     <section className={styles.page}>
@@ -68,6 +109,8 @@ export default async function HospitalsPage() {
         <h1 className={styles.title}>Hospitalverwaltung</h1>
         <p className={styles.subtitle}>Krankenhäuser anlegen und verwalten.</p>
       </header>
+
+      {notice ? <div className={styles.empty}>{notice}</div> : null}
 
       <div className={styles.grid}>
         <div className={styles.card}>
@@ -118,21 +161,25 @@ export default async function HospitalsPage() {
                   </div>
 
                   <div className={styles.listActions}>
-                    {periods.length === 0 ? (
-                      <div className={styles.actionsMeta}>Keine Jahre vorhanden.</div>
+                    {(yearsByHospitalId.get(h.id)?.length ?? 0) === 0 ? (
+                      <div className={styles.actionsMeta}>Keine Jahre mit Daten vorhanden.</div>
                     ) : (
                       <form action={deleteHospitalYear} className={styles.inlineForm}>
                         <input type="hidden" name="hospitalId" value={h.id} />
-                        <select name="year" className={styles.select} defaultValue={String(periods[0]?.year)}>
-                          {periods.map((p) => (
-                            <option key={p.id} value={String(p.year)}>
-                              {p.year}
+                        <select name="year" className={styles.select} defaultValue={String((yearsByHospitalId.get(h.id) ?? [])[0])}>
+                          {(yearsByHospitalId.get(h.id) ?? []).map((y) => (
+                            <option key={y} value={String(y)}>
+                              {y}
                             </option>
                           ))}
                         </select>
-                        <button className={styles.dangerSmall} type="submit">
+
+                        <ConfirmSubmitButton
+                          className={styles.dangerSmall}
+                          confirmMessage="Soll das ausgewählte Jahr wirklich gelöscht werden? Alle Eingaben für dieses Krankenhaus/Jahr werden entfernt."
+                        >
                           Jahr löschen
-                        </button>
+                        </ConfirmSubmitButton>
                       </form>
                     )}
 
