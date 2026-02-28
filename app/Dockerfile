@@ -2,6 +2,10 @@ FROM node:20-bookworm-slim AS builder
 
 WORKDIR /app
 
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends openssl ca-certificates \
+	&& rm -rf /var/lib/apt/lists/*
+
 COPY package.json package-lock.json* ./
 COPY scripts ./scripts
 COPY prisma ./prisma
@@ -10,7 +14,6 @@ RUN npm ci
 
 COPY . .
 RUN npm run build && npm prune --omit=dev
-
 
 FROM node:20-bookworm-slim AS runner
 
@@ -36,7 +39,8 @@ COPY --from=builder /app/scripts/validate-runtime-env.mjs ./scripts/validate-run
 COPY --from=builder /app/prisma ./prisma
 
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh \
+	&& chmod +x /usr/local/bin/docker-entrypoint.sh
 
 EXPOSE 3000
 
