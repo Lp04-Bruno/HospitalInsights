@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getServerAuthSession } from "@/lib/auth";
+import { statementLabel } from "@/lib/statements";
+import { getStatementCatalog } from "@/lib/statementCatalog";
 import { StatementType, Unit } from "@prisma/client";
 import styles from "./page.module.css";
 import { parseUserNumberDetailed } from "@/app/dashboard/data/numberParsing";
@@ -10,6 +12,16 @@ import { DirtySaveForm } from "@/app/dashboard/data/DirtySaveForm";
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
 };
+
+const BALANCE_TAB = "BALANCE" as const;
+type StatementTab = typeof BALANCE_TAB | StatementType;
+
+const STATEMENT_TABS: StatementTab[] = [
+  BALANCE_TAB,
+  StatementType.INCOME_STATEMENT_UKV,
+  StatementType.INCOME_STATEMENT_GKV,
+  StatementType.CASHFLOW,
+];
 
 function firstParam(v: string | string[] | undefined): string | undefined {
   if (typeof v === "string") return v;
@@ -32,6 +44,21 @@ function parseStatementType(raw: string | undefined): StatementType | undefined 
   return values.includes(raw) ? (raw as StatementType) : undefined;
 }
 
+function parseStatementTab(raw: string | undefined): StatementTab | undefined {
+  if (!raw) return undefined;
+  if (raw === BALANCE_TAB) return BALANCE_TAB;
+
+  const parsed = parseStatementType(raw);
+  if (!parsed) return undefined;
+  if (parsed === StatementType.BALANCE_ASSET || parsed === StatementType.BALANCE_LIAB) return BALANCE_TAB;
+  return parsed;
+}
+
+function tabLabel(tab: StatementTab): string {
+  if (tab === BALANCE_TAB) return "Bilanz";
+  return statementLabel(tab);
+}
+
 type SaveFactsState = {
   ok: boolean;
   message?: string;
@@ -43,10 +70,11 @@ type SaveFactsState = {
 };
 
 function formatNumberDE(value: number, unit: Unit): string {
-  const maximumFractionDigits = unit === Unit.COUNT ? 0 : 1;
+  const maximumFractionDigits = unit === Unit.PERCENT ? 2 : 0;
   return new Intl.NumberFormat("de-DE", {
+    useGrouping: false,
     maximumFractionDigits,
-    minimumFractionDigits: unit === Unit.COUNT ? 0 : 0,
+    minimumFractionDigits: 0,
   }).format(value);
 }
 
@@ -65,35 +93,10 @@ type FlatRow = {
   isInput: boolean;
   isSection: boolean;
   hasChildren: boolean;
+  isCollapsible: boolean;
   prettyValue: string;
+  suggestedPrettyValue?: string;
 };
-
-function nominalLevelFromLabel(label: string): number {
-  const t = label.trim();
-  if (/\(Summe\)/i.test(t)) return 0;
-  if (/^(Bilanz|GuV|Cashflow)\b/i.test(t)) return 0;
-  if (/^(I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)\./.test(t)) return 1;
-  if (/^[A-Z]\./.test(t)) return 0;
-  if (/^\d+\./.test(t)) return 2;
-  if (/^davon\b/i.test(t)) return 3;
-  return 2;
-}
-
-function isSectionLabel(label: string): boolean {
-  const t = label.trim();
-  return /\(Summe\)/i.test(t) || /^(Bilanz|GuV|Cashflow)\b/i.test(t) || /^[A-Z]\./.test(t);
-}
-
-type LabelKind = "top" | "roman" | "numeric" | "davon" | "other";
-
-function labelKind(label: string): LabelKind {
-  const t = label.trim();
-  if (/\(Summe\)/i.test(t) || /^(Bilanz|GuV|Cashflow)\b/i.test(t) || /^[A-Z]\./.test(t)) return "top";
-  if (/^(I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)\./.test(t)) return "roman";
-  if (/^\d+\./.test(t)) return "numeric";
-  if (/^davon\b/i.test(t)) return "davon";
-  return "other";
-}
 
 async function createPeriod(formData: FormData) {
   "use server";
@@ -117,7 +120,7 @@ async function createPeriod(formData: FormData) {
   const qs = new URLSearchParams();
   qs.set("hospitalId", hospitalId);
   qs.set("year", String(year));
-  if (parseStatementType(statementType)) qs.set("statementType", statementType);
+  if (parseStatementTab(statementType)) qs.set("statementType", statementType);
   redirect(`/dashboard/data?${qs.toString()}`);
 }
 
@@ -221,6 +224,9 @@ async function saveFacts(prevState: SaveFactsState, formData: FormData): Promise
 
   const now = new Date();
   const savedBy = session.user.email ?? session.user.name ?? "";
+  const sessionEmail = session.user.email ?? "";
+  const dbUser = sessionEmail ? await prisma.user.findUnique({ where: { email: sessionEmail }, select: { id: true } }) : null;
+  const dbUserId = dbUser?.id ?? null;
 
   try {
     await prisma.$transaction(async (tx) => {
@@ -229,7 +235,7 @@ async function saveFacts(prevState: SaveFactsState, formData: FormData): Promise
           hospitalId,
           periodId,
           statementType,
-          userId: session.user.id,
+          userId: dbUserId,
           createdAt: now,
         },
         select: { id: true },
@@ -267,7 +273,8 @@ async function saveFacts(prevState: SaveFactsState, formData: FormData): Promise
         });
       }
     });
-  } catch {
+  } catch (err) {
+    console.error("saveFacts failed", { hospitalId, periodId, statementType, userId: session.user.id }, err);
     return {
       ok: false,
       globalError: "Speichern fehlgeschlagen (Datenbankfehler). Es wurden keine Änderungen übernommen.",
@@ -281,23 +288,6 @@ async function saveFacts(prevState: SaveFactsState, formData: FormData): Promise
     savedBy: savedBy || undefined,
     changesApplied: changes.length,
   };
-}
-
-function statementLabel(st: StatementType) {
-  switch (st) {
-    case StatementType.BALANCE_ASSET:
-      return "Bilanz – Aktiva";
-    case StatementType.BALANCE_LIAB:
-      return "Bilanz – Passiva";
-    case StatementType.INCOME_STATEMENT_UKV:
-      return "GuV (UKV)";
-    case StatementType.INCOME_STATEMENT_GKV:
-      return "GuV (GKV)";
-    case StatementType.CASHFLOW:
-      return "Cashflow";
-    default:
-      return st;
-  }
 }
 
 export default async function DashboardDataPage({ searchParams }: PageProps) {
@@ -323,24 +313,35 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
       ? Number(firstParam(sp.year))
       : periods[0]?.year;
 
-  const selectedStatementType: StatementType = parseStatementType(firstParam(sp.statementType)) ?? StatementType.BALANCE_ASSET;
+  const selectedStatementTab: StatementTab = parseStatementTab(firstParam(sp.statementType)) ?? BALANCE_TAB;
 
   const selectedPeriod = selectedYear ? await prisma.period.findUnique({ where: { year: selectedYear } }) : null;
 
-  const lineItemsRaw = await prisma.lineItem.findMany({
-    where: { statementType: selectedStatementType },
-    orderBy: { sortOrder: "asc" },
-  });
+  const statementTypesToLoad: StatementType[] =
+    selectedStatementTab === BALANCE_TAB ? [StatementType.BALANCE_ASSET, StatementType.BALANCE_LIAB] : [selectedStatementTab];
 
-  // Defensive: avoid duplicate rows/inputs if line items contain duplicate codes.
-  const seenCodes = new Set<string>();
-  const lineItems = lineItemsRaw.filter((li) => {
-    if (seenCodes.has(li.code)) return false;
-    seenCodes.add(li.code);
-    return true;
-  });
+  const lineItemsByType = new Map<
+    StatementType,
+    Array<{ code: string; label: string; unit: Unit; isInput: boolean; parentCode: string | null; sortOrder: number }>
+  >();
+  for (const st of statementTypesToLoad) {
+    const lineItemsRaw = await prisma.lineItem.findMany({
+      where: { statementType: st },
+      orderBy: { sortOrder: "asc" },
+      select: { code: true, label: true, unit: true, isInput: true, parentCode: true, sortOrder: true },
+    });
 
-  const codes = lineItems.map((li) => li.code);
+    const seenCodes = new Set<string>();
+    const lineItems = lineItemsRaw.filter((li) => {
+      if (seenCodes.has(li.code)) return false;
+      seenCodes.add(li.code);
+      return true;
+    });
+
+    lineItemsByType.set(st, lineItems);
+  }
+
+  const codes = Array.from(lineItemsByType.values()).flatMap((items) => items.map((li) => li.code));
   const facts =
     selectedHospitalId && selectedPeriod
       ? await prisma.factValue.findMany({
@@ -358,48 +359,209 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
     factMap.set(f.lineItemCode, String(f.value));
   }
 
-  const provisional: Array<Omit<FlatRow, "hasChildren">> = [];
-  const stackCodes: Array<string | undefined> = [];
-  const stackKinds: Array<LabelKind | undefined> = [];
-  const isIncomeStatement =
-    selectedStatementType === StatementType.INCOME_STATEMENT_UKV || selectedStatementType === StatementType.INCOME_STATEMENT_GKV;
+  const { formulasByCode } = getStatementCatalog();
 
-  for (const li of lineItems) {
-    const nominal = nominalLevelFromLabel(li.label);
-    const kind = labelKind(li.label);
-    let level = nominal;
+  const alwaysExpanded = new Set<string>([
+    // UKV
+    "UKV__VVK",
+    "UKV__MAT",
+    "UKV__PER",
+    "UKV__STEUERN",
+    // GKV
+    "GKV__MAT",
+    "GKV__PER",
+    "GKV__STEUERN",
+  ]);
 
-    if (isIncomeStatement && nominal === 2) level = 0;
+  function buildFlatRows(st: StatementType): FlatRow[] {
+    const lineItems = lineItemsByType.get(st) ?? [];
+    const byCode = new Map(lineItems.map((li) => [li.code, li] as const));
+    const childrenByCode = new Map<string, string[]>();
 
-    const hasRomanLayer = stackKinds[1] === "roman";
-    if (kind === "numeric" && !hasRomanLayer && level === 2) level = 1;
-    if (kind === "davon" && !hasRomanLayer && level === 3) level = 2;
+    for (const li of lineItems) {
+      if (!li.parentCode) continue;
+      const arr = childrenByCode.get(li.parentCode) ?? [];
+      arr.push(li.code);
+      childrenByCode.set(li.parentCode, arr);
+    }
 
-    while (level > 0 && !stackCodes[level - 1]) level -= 1;
+    const depthMemo = new Map<string, number>();
+    const computeDepth = (code: string, visiting = new Set<string>()): number => {
+      const cached = depthMemo.get(code);
+      if (cached !== undefined) return cached;
 
-    const rawValue = factMap.get(li.code) ?? "";
-    provisional.push({
-      code: li.code,
-      depth: level,
-      label: li.label,
-      unit: li.unit,
-      isInput: li.isInput,
-      isSection: isSectionLabel(li.label),
-      prettyValue: displayValue(rawValue, li.unit),
+      if (visiting.has(code)) {
+        depthMemo.set(code, 0);
+        return 0;
+      }
+
+      const li = byCode.get(code);
+      if (!li?.parentCode) {
+        depthMemo.set(code, 0);
+        return 0;
+      }
+
+      visiting.add(code);
+      const out = computeDepth(li.parentCode, visiting) + 1;
+      visiting.delete(code);
+      depthMemo.set(code, out);
+      return out;
+    };
+
+    const overrideNumericByCode = new Map<string, number>();
+    for (const li of lineItems) {
+      const raw = factMap.get(li.code);
+      if (!raw) continue;
+      const n = Number(raw);
+      if (!Number.isFinite(n)) continue;
+      overrideNumericByCode.set(li.code, n);
+    }
+
+    const hasChildrenByCode = new Map<string, boolean>();
+    const hasFormulaByCode = new Map<string, boolean>();
+    const childrenAllDavonByCode = new Map<string, boolean>();
+    const isEditableByCode = new Map<string, boolean>();
+    for (const li of lineItems) {
+      const hasChildren = (childrenByCode.get(li.code)?.length ?? 0) > 0;
+      const hasFormula = (formulasByCode.get(li.code)?.length ?? 0) > 0;
+
+      const children = childrenByCode.get(li.code) ?? [];
+      const eurChildren = children
+        .map((childCode) => byCode.get(childCode))
+        .filter((c): c is NonNullable<typeof c> => !!c)
+        .filter((c) => c.unit === Unit.EUR);
+      const childrenAllDavon =
+        eurChildren.length > 0 &&
+        eurChildren.every((child) => {
+          const label = child.label?.trim() ?? "";
+          return /^davon\b/i.test(label);
+        });
+
+      hasChildrenByCode.set(li.code, hasChildren);
+      hasFormulaByCode.set(li.code, hasFormula);
+
+      childrenAllDavonByCode.set(li.code, childrenAllDavon);
+
+      const isEditable = li.isInput && (!hasChildren || childrenAllDavon) && (!hasFormula || childrenAllDavon);
+      isEditableByCode.set(li.code, isEditable);
+    }
+
+    const computedCache = new Map<string, number | null>();
+    const computeValue = (code: string, visiting = new Set<string>()): number | null => {
+      if (computedCache.has(code)) return computedCache.get(code) ?? null;
+
+      if (isEditableByCode.get(code)) {
+        const override = overrideNumericByCode.get(code);
+        if (override !== undefined) {
+          computedCache.set(code, override);
+          return override;
+        }
+      }
+
+      if (visiting.has(code)) {
+        computedCache.set(code, null);
+        return null;
+      }
+
+      visiting.add(code);
+
+      const li = byCode.get(code);
+      if (!li) {
+        visiting.delete(code);
+        computedCache.set(code, null);
+        return null;
+      }
+
+      const formula = formulasByCode.get(code);
+      if (formula?.length) {
+        let sum = 0;
+        let hasAny = false;
+        for (const ref of formula) {
+          const v = computeValue(ref.code, visiting);
+          if (v === null) continue;
+          sum += v * ref.weight;
+          hasAny = true;
+        }
+
+        const out = hasAny ? sum : null;
+        visiting.delete(code);
+        computedCache.set(code, out);
+        return out;
+      }
+
+      if (li.unit !== Unit.EUR) {
+        visiting.delete(code);
+        computedCache.set(code, null);
+        return null;
+      }
+
+      const children = childrenByCode.get(code) ?? [];
+      if (children.length === 0) {
+        visiting.delete(code);
+        computedCache.set(code, null);
+        return null;
+      }
+
+      if (childrenAllDavonByCode.get(code)) {
+        visiting.delete(code);
+        computedCache.set(code, null);
+        return null;
+      }
+
+      let sum = 0;
+      let hasAny = false;
+      for (const childCode of children) {
+        const child = byCode.get(childCode);
+        if (!child || child.unit !== Unit.EUR) continue;
+        const v = computeValue(childCode, visiting);
+        if (v === null) continue;
+        sum += v;
+        hasAny = true;
+      }
+
+      const out = hasAny ? sum : null;
+      visiting.delete(code);
+      computedCache.set(code, out);
+      return out;
+    };
+
+    const rows: FlatRow[] = lineItems.map((li) => {
+      const depth = computeDepth(li.code);
+      const hasChildren = hasChildrenByCode.get(li.code) ?? false;
+      const isEditable = isEditableByCode.get(li.code) ?? false;
+      const overrideRaw = isEditable ? factMap.get(li.code) : undefined;
+      const computed = computeValue(li.code);
+
+      const isCollapsible = hasChildren && !alwaysExpanded.has(li.code);
+
+      const prettyValue = isEditable ? displayValue(overrideRaw, li.unit) : computed === null ? "" : formatNumberDE(computed, li.unit);
+
+      const suggestedPrettyValue =
+        isEditable && !overrideRaw && li.unit === Unit.EUR
+          ? computed === null
+            ? undefined
+            : formatNumberDE(computed, li.unit)
+          : undefined;
+
+      return {
+        code: li.code,
+        depth,
+        label: li.label,
+        unit: li.unit,
+        isInput: isEditable,
+        isSection: hasChildren && depth <= 1,
+        hasChildren,
+        isCollapsible,
+        prettyValue,
+        suggestedPrettyValue,
+      };
     });
 
-    stackCodes.length = level;
-    stackCodes[level] = li.code;
-
-    stackKinds.length = level;
-    stackKinds[level] = kind;
+    return rows;
   }
 
-  const flatRows: FlatRow[] = provisional.map((r, idx) => {
-    const next = provisional[idx + 1];
-    const hasChildren = !!next && next.depth > r.depth;
-    return { ...r, hasChildren };
-  });
+  const selectedPrimaryStatementType: StatementType =
+    selectedStatementTab === BALANCE_TAB ? StatementType.BALANCE_ASSET : selectedStatementTab;
 
   return (
     <section className={styles.page}>
@@ -448,7 +610,7 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
                   </select>
                 </label>
 
-                <input type="hidden" name="statementType" value={selectedStatementType} />
+                <input type="hidden" name="statementType" value={selectedStatementTab} />
 
                 <div className={styles.filterActions}>
                   <button className={styles.button} type="submit">
@@ -460,15 +622,15 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
 
             {selectedHospitalId ? (
               <div className={styles.tabs}>
-                {Object.values(StatementType).map((st) => {
+                {STATEMENT_TABS.map((tab) => {
                   const qs = new URLSearchParams();
                   qs.set("hospitalId", selectedHospitalId);
                   if (selectedYear) qs.set("year", String(selectedYear));
-                  qs.set("statementType", st);
-                  const active = st === selectedStatementType;
+                  qs.set("statementType", tab);
+                  const active = tab === selectedStatementTab;
                   return (
-                    <Link key={st} href={`/dashboard/data?${qs.toString()}`} className={`${styles.tab} ${active ? styles.tabActive : ""}`}>
-                      {statementLabel(st)}
+                    <Link key={tab} href={`/dashboard/data?${qs.toString()}`} className={`${styles.tab} ${active ? styles.tabActive : ""}`}>
+                      {tabLabel(tab)}
                     </Link>
                   );
                 })}
@@ -478,7 +640,7 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
             {selectedHospitalId ? (
               <form action={createPeriod} className={styles.createYear}>
                 <input type="hidden" name="hospitalId" value={selectedHospitalId} />
-                <input type="hidden" name="statementType" value={selectedStatementType} />
+                <input type="hidden" name="statementType" value={selectedStatementTab} />
                 <label className={styles.field}>
                   Jahr anlegen
                   <input name="year" className={styles.input} placeholder="z.B. 2024" />
@@ -494,15 +656,61 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
 
           {!selectedPeriod ? (
             <div className={styles.notice}>Bitte wähle ein Jahr aus (oder lege eins an).</div>
-          ) : lineItems.length === 0 ? (
-            <div className={styles.notice}>
-              Keine Positionen vorhanden für {statementLabel(selectedStatementType)}. (Seed noch nicht gelaufen?)
-            </div>
+          ) : selectedStatementTab === BALANCE_TAB ? (
+            <>
+              {([StatementType.BALANCE_ASSET, StatementType.BALANCE_LIAB] as const).every(
+                (st) => (lineItemsByType.get(st)?.length ?? 0) === 0
+              ) ? (
+                <div className={styles.notice}>Keine Positionen vorhanden für Bilanz. (Seed noch nicht gelaufen?)</div>
+              ) : (
+                <>
+                  <div className={styles.card}>
+                    <div className={styles.cardHeader}>
+                      <div>
+                        <div className={styles.cardTitle}>Bilanz · Aktiva</div>
+                        <div className={styles.cardHint}>
+                          {selectedYear} · {hospitals.find((h) => h.id === selectedHospitalId)?.name}
+                        </div>
+                      </div>
+                    </div>
+
+                    <DirtySaveForm
+                      key={`${selectedHospitalId}:${selectedPeriod.id}:${StatementType.BALANCE_ASSET}`}
+                      saveAction={saveFacts}
+                      hospitalId={selectedHospitalId}
+                      periodId={selectedPeriod.id}
+                      statementType={StatementType.BALANCE_ASSET}
+                      rows={buildFlatRows(StatementType.BALANCE_ASSET)}
+                    />
+                  </div>
+
+                  <div className={styles.card}>
+                    <div className={styles.cardHeader}>
+                      <div>
+                        <div className={styles.cardTitle}>Bilanz · Passiva</div>
+                        <div className={styles.cardHint}>
+                          {selectedYear} · {hospitals.find((h) => h.id === selectedHospitalId)?.name}
+                        </div>
+                      </div>
+                    </div>
+
+                    <DirtySaveForm
+                      key={`${selectedHospitalId}:${selectedPeriod.id}:${StatementType.BALANCE_LIAB}`}
+                      saveAction={saveFacts}
+                      hospitalId={selectedHospitalId}
+                      periodId={selectedPeriod.id}
+                      statementType={StatementType.BALANCE_LIAB}
+                      rows={buildFlatRows(StatementType.BALANCE_LIAB)}
+                    />
+                  </div>
+                </>
+              )}
+            </>
           ) : (
             <div className={styles.card}>
               <div className={styles.cardHeader}>
                 <div>
-                  <div className={styles.cardTitle}>{statementLabel(selectedStatementType)}</div>
+                  <div className={styles.cardTitle}>{statementLabel(selectedPrimaryStatementType)}</div>
                   <div className={styles.cardHint}>
                     {selectedYear} · {hospitals.find((h) => h.id === selectedHospitalId)?.name}
                   </div>
@@ -510,12 +718,12 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
               </div>
 
               <DirtySaveForm
-                key={`${selectedHospitalId}:${selectedPeriod.id}:${selectedStatementType}`}
+                key={`${selectedHospitalId}:${selectedPeriod.id}:${selectedPrimaryStatementType}`}
                 saveAction={saveFacts}
                 hospitalId={selectedHospitalId}
                 periodId={selectedPeriod.id}
-                statementType={selectedStatementType}
-                rows={flatRows}
+                statementType={selectedPrimaryStatementType}
+                rows={buildFlatRows(selectedPrimaryStatementType)}
               />
             </div>
           )}

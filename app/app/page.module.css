@@ -48,12 +48,13 @@
   color: var(--hi-button-outline-fg);
   text-decoration: none;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1;
 }
 
-.button:hover {
+.button:not(.primary):hover {
   background: var(--hi-hover-bg);
+  border-color: var(--hi-accent);
 }
 
 .button:focus-visible {
@@ -64,12 +65,15 @@
 
 .primary {
   border-color: rgba(255, 255, 255, 0);
-  background: var(--hi-button-bg);
+  background: linear-gradient(135deg, var(--hi-accent) 0%, var(--hi-accent-2) 100%);
   color: var(--hi-button-fg);
 }
 
 .primary:hover {
-  filter: brightness(1.06);
+  filter: brightness(1.08);
+  box-shadow: 0 0 0 4px var(--hi-focus-ring);
+  outline: 2px solid var(--hi-button-fg);
+  outline-offset: 2px;
 }
 
 .title {

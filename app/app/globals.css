@@ -29,11 +29,11 @@
   --hi-glass-strong: rgba(255, 255, 255, 0.9);
   --hi-glass-soft: rgba(255, 255, 255, 0.75);
   --hi-glass-topbar: rgba(255, 255, 255, 0.72);
-  --hi-hover-bg: rgba(255, 255, 255, 0.9);
+  --hi-hover-bg: var(--hi-surface-2);
 
   --hi-button-bg: #111827;
   --hi-button-fg: #ffffff;
-  --hi-button-outline-bg: #ffffff;
+  --hi-button-outline-bg: var(--hi-surface-2);
   --hi-button-outline-fg: #111827;
 
   --hi-focus-border: #18181b;

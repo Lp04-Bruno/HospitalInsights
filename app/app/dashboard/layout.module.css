@@ -56,7 +56,7 @@
   font-weight: 650;
 }
 
-.navLink:hover {
+.navLink:not(.navLinkActive):hover {
   background: var(--hi-hover-bg);
   border-color: var(--hi-border);
 }

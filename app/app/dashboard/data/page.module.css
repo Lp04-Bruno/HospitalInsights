@@ -191,7 +191,7 @@
   font-weight: 800;
 }
 
-.tab:hover {
+.tab:not(.tabActive):hover {
   background: var(--hi-hover-bg);
 }
 
@@ -430,6 +430,21 @@
 .valueCell {
   display: grid;
   gap: 6px;
+}
+
+.valueInputWrap {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.valueSuffix {
+  font-size: 14px;
+  font-weight: 850;
+  color: var(--hi-text-muted);
+  min-width: 16px;
+  text-align: left;
 }
 
 .valueInputInvalid {
