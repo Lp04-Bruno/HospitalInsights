@@ -3,7 +3,18 @@ import { createReadStream } from "node:fs";
 import { mkdir, readdir, rename, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-export type BackupKind = "daily" | "manual" | "upload" | "unknown";
+export type BackupKind = "daily" | "manual" | "upload" | "data" | "unknown";
+
+export type RestoreMode = "replace" | "append";
+
+export type BackupAnalysis = {
+  filename: string;
+  kind: BackupKind;
+  format: "custom" | "unknown";
+  hasSchema: boolean;
+  hasData: boolean;
+  tableData: Array<{ schema: string; table: string }>;
+};
 
 export type BackupInfo = {
   filename: string;
@@ -75,6 +86,7 @@ function todayKey() {
 }
 
 function backupKindFromFilename(filename: string): BackupKind {
+  if (filename.includes("data_export_")) return "data";
   if (filename.includes("_daily_")) return "daily";
   if (filename.includes("_manual_")) return "manual";
   if (filename.includes("_upload_")) return "upload";
@@ -113,6 +125,46 @@ function run(cmd: string, args: string[], env: Record<string, string | undefined
     });
     child.on("close", (code) => {
       if (code === 0) return resolve();
+      reject(new Error(`${cmd} exited with ${code}: ${stderr.trim() || "(no stderr)"}`));
+    });
+  });
+}
+
+function runCapture(cmd: string, args: string[], env: Record<string, string | undefined>) {
+  return new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
+    const child = spawn(cmd, args, {
+      env: { ...process.env, ...env },
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    let stdout = "";
+    let stderr = "";
+
+    child.stdout.on("data", (d) => {
+      stdout += String(d);
+      if (stdout.length > 200_000) stdout = stdout.slice(-200_000);
+    });
+
+    child.stderr.on("data", (d) => {
+      stderr += String(d);
+      if (stderr.length > 16_000) stderr = stderr.slice(-16_000);
+    });
+
+    child.on("error", (err) => {
+      const anyErr = err as unknown as { code?: string; message?: string };
+      if (anyErr?.code === "ENOENT") {
+        reject(
+          new Error(
+            `${cmd} not found (ENOENT). Install PostgreSQL client tools in the runtime image (pg_dump/pg_restore/psql). In dev via docker-compose, rebuild the app image.`
+          )
+        );
+        return;
+      }
+      reject(err);
+    });
+
+    child.on("close", (code) => {
+      if (code === 0) return resolve({ stdout, stderr });
       reject(new Error(`${cmd} exited with ${code}: ${stderr.trim() || "(no stderr)"}`));
     });
   });
@@ -185,6 +237,48 @@ export async function createBackup(kind: Exclude<BackupKind, "unknown">): Promis
   });
 }
 
+export async function createDataExport(): Promise<string> {
+  if (!backupsFeatureEnabled()) throw new Error("Backups are disabled.");
+
+  return withLock(async () => {
+    await ensureBackupDir();
+
+    const dbUrl = requireEnv("DATABASE_URL");
+    const { user, password, host, port, dbName } = parseDatabaseUrl(dbUrl);
+
+    const ts = new Date().toISOString().replace(/[:.]/g, "-");
+    const filename = `data_export_${ts}.dump`;
+
+    const outPath = path.join(getBackupDir(), filename);
+    const tmpPath = path.join(getBackupDir(), `${filename}.tmp`);
+
+    const tables = ['public."Hospital"', 'public."Period"', 'public."HospitalPeriod"', 'public."FactValue"'];
+
+    const args = [
+      "-h",
+      host,
+      "-p",
+      String(port),
+      "-U",
+      user,
+      "-d",
+      dbName,
+      "-Fc",
+      "--data-only",
+      "--no-owner",
+      "--no-privileges",
+      ...tables.flatMap((t) => ["--table", t]),
+      "-f",
+      tmpPath,
+    ];
+
+    await run("pg_dump", args, { PGPASSWORD: password });
+
+    await rename(tmpPath, outPath);
+    return filename;
+  });
+}
+
 export async function ensureDailyBackup(): Promise<{ created: boolean; filename?: string }> {
   if (!backupsFeatureEnabled() || !backupsAutoDailyEnabled()) return { created: false };
 
@@ -213,6 +307,107 @@ export async function deleteBackup(filename: string): Promise<void> {
   });
 }
 
+async function terminateOtherDbConnections() {
+  const dbUrl = requireEnv("DATABASE_URL");
+  const { user, password, host, port, dbName } = parseDatabaseUrl(dbUrl);
+  await run(
+    "psql",
+    [
+      "-h",
+      host,
+      "-p",
+      String(port),
+      "-U",
+      user,
+      "-d",
+      dbName,
+      "-c",
+      "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid();",
+    ],
+    { PGPASSWORD: password }
+  );
+}
+
+async function runPgRestore(args: string[]) {
+  const dbUrl = requireEnv("DATABASE_URL");
+  const { user, password, host, port, dbName } = parseDatabaseUrl(dbUrl);
+
+  await run("pg_restore", ["-h", host, "-p", String(port), "-U", user, "-d", dbName, ...args], { PGPASSWORD: password });
+}
+
+async function runPsqlSql(sql: string) {
+  const dbUrl = requireEnv("DATABASE_URL");
+  const { user, password, host, port, dbName } = parseDatabaseUrl(dbUrl);
+  await run("psql", ["-h", host, "-p", String(port), "-U", user, "-d", dbName, "-v", "ON_ERROR_STOP=1", "-c", sql], {
+    PGPASSWORD: password,
+  });
+}
+
+export async function analyzeBackup(filename: string): Promise<BackupAnalysis> {
+  const safe = safeFilename(filename);
+  const dumpPath = path.join(getBackupDir(), safe);
+  await stat(dumpPath);
+
+  const kind = backupKindFromFilename(safe);
+
+  try {
+    const { stdout } = await runCapture("pg_restore", ["-l", dumpPath], {});
+
+    const tableData: Array<{ schema: string; table: string }> = [];
+    let hasSchema = false;
+    let hasData = false;
+
+    const lines = stdout.split(/\r?\n/);
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line) continue;
+      if (line.startsWith(";")) continue;
+
+      const idx = line.indexOf(";");
+      const rest = idx >= 0 ? line.slice(idx + 1).trim() : line;
+
+      if (rest.includes("TABLE DATA")) {
+        hasData = true;
+        const m = rest.match(/TABLE DATA\s+(\S+)\s+(.+)$/);
+        if (m) {
+          const schema = m[1];
+          const table = m[2].trim();
+          tableData.push({ schema, table });
+        }
+        continue;
+      }
+
+      if (
+        rest.includes("TABLE ") ||
+        rest.includes("SCHEMA") ||
+        rest.includes("TYPE ") ||
+        rest.includes("FUNCTION") ||
+        rest.includes("SEQUENCE")
+      ) {
+        hasSchema = true;
+      }
+    }
+
+    return {
+      filename: safe,
+      kind,
+      format: "custom",
+      hasSchema,
+      hasData,
+      tableData,
+    };
+  } catch {
+    return {
+      filename: safe,
+      kind,
+      format: "unknown",
+      hasSchema: false,
+      hasData: false,
+      tableData: [],
+    };
+  }
+}
+
 export async function restoreBackup(filename: string): Promise<void> {
   if (!backupsFeatureEnabled()) throw new Error("Backups are disabled.");
   if (!backupsRestoreEnabled()) throw new Error("Restore is disabled.");
@@ -223,46 +418,41 @@ export async function restoreBackup(filename: string): Promise<void> {
   return withLock(async () => {
     await stat(dumpPath);
 
-    const dbUrl = requireEnv("DATABASE_URL");
-    const { user, password, host, port, dbName } = parseDatabaseUrl(dbUrl);
+    await terminateOtherDbConnections();
 
-    await run(
-      "psql",
-      [
-        "-h",
-        host,
-        "-p",
-        String(port),
-        "-U",
-        user,
-        "-d",
-        dbName,
-        "-c",
-        "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid();",
-      ],
-      { PGPASSWORD: password }
-    );
+    await runPgRestore(["--clean", "--if-exists", "--no-owner", "--no-privileges", "--single-transaction", dumpPath]);
+  });
+}
 
-    await run(
-      "pg_restore",
-      [
-        "-h",
-        host,
-        "-p",
-        String(port),
-        "-U",
-        user,
-        "-d",
-        dbName,
-        "--clean",
-        "--if-exists",
-        "--no-owner",
-        "--no-privileges",
-        "--single-transaction",
-        dumpPath,
-      ],
-      { PGPASSWORD: password }
-    );
+export async function importBackup(filename: string, mode: RestoreMode): Promise<void> {
+  if (!backupsFeatureEnabled()) throw new Error("Backups are disabled.");
+  if (!backupsRestoreEnabled()) throw new Error("Restore is disabled.");
+
+  const safe = safeFilename(filename);
+  const dumpPath = path.join(getBackupDir(), safe);
+  const kind = backupKindFromFilename(safe);
+
+  return withLock(async () => {
+    await stat(dumpPath);
+
+    const shouldTerminateConnections = mode === "replace" && kind !== "data";
+    if (shouldTerminateConnections) {
+      await terminateOtherDbConnections();
+    }
+
+    if (mode === "replace") {
+      if (kind === "data") {
+        await runPsqlSql('TRUNCATE TABLE public."Hospital", public."Period" CASCADE');
+
+        await runPgRestore(["--data-only", "--no-owner", "--no-privileges", "--single-transaction", dumpPath]);
+        return;
+      }
+
+      await runPgRestore(["--clean", "--if-exists", "--no-owner", "--no-privileges", "--single-transaction", dumpPath]);
+      return;
+    }
+
+    await runPgRestore(["--data-only", "--no-owner", "--no-privileges", "--single-transaction", dumpPath]);
   });
 }
 
@@ -273,7 +463,10 @@ export async function uploadBackup(file: File): Promise<string> {
     await ensureBackupDir();
 
     const ts = new Date().toISOString().replace(/[:.]/g, "-");
-    const filename = safeFilename(`backup_upload_${ts}_${file.name || "upload"}.dump`);
+
+    const original = safeFilename(file.name || "upload");
+    const base = original.replace(/\.dump$/i, "");
+    const filename = safeFilename(`backup_upload_${ts}_${base}.dump`);
     const outPath = path.join(getBackupDir(), filename);
 
     const buf = Buffer.from(await file.arrayBuffer());

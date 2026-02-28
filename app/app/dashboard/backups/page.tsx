@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
@@ -8,13 +7,14 @@ import {
   backupsFeatureEnabled,
   backupsRestoreEnabled,
   createBackup,
+  createDataExport,
   deleteBackup,
   ensureDailyBackup,
+  importBackup,
   listBackups,
-  restoreBackup,
   uploadBackup,
 } from "@/lib/dbBackups";
-import { PendingActionButton, UploadBackupForm } from "./BackupsClient";
+import { NoticeBanner, PendingActionButton, RestoreWithPreview, UploadBackupForm } from "./BackupsClient";
 
 import styles from "./page.module.css";
 
@@ -33,7 +33,7 @@ function formatBytes(bytes: number) {
 }
 
 type PageProps = {
-  searchParams?: Record<string, string | string[] | undefined>;
+  searchParams?: Record<string, string | string[] | undefined> | Promise<Record<string, string | string[] | undefined>>;
 };
 
 async function requireAdmin(callbackUrl: string) {
@@ -84,6 +84,24 @@ async function ensureDailyBackupAction() {
   redirect(`/dashboard/backups?notice=${encodeURIComponent(`Daily-Backup ist für heute bereits vorhanden.`)}`);
 }
 
+async function createDataExportAction() {
+  "use server";
+  await requireAdmin("/dashboard/backups");
+
+  if (!backupsFeatureEnabled()) redirect("/dashboard/backups?notice=Backups%20sind%20deaktiviert.");
+
+  let filename: string;
+  try {
+    filename = await createDataExport();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Datenexport fehlgeschlagen.";
+    redirect(`/dashboard/backups?notice=${encodeURIComponent(`Datenexport fehlgeschlagen: ${msg}`)}`);
+  }
+
+  revalidatePath("/dashboard/backups");
+  redirect(`/dashboard/backups?notice=${encodeURIComponent(`Datenexport erstellt: ${filename}`)}`);
+}
+
 async function deleteBackupAction(formData: FormData) {
   "use server";
   await requireAdmin("/dashboard/backups");
@@ -108,6 +126,8 @@ async function restoreBackupAction(formData: FormData) {
   await requireAdmin("/dashboard/backups");
 
   const filename = String(formData.get("filename") ?? "").trim();
+  const modeRaw = String(formData.get("mode") ?? "replace").trim();
+  const mode = modeRaw === "append" ? "append" : "replace";
   const confirmed = String(formData.get("confirmed") ?? "").trim();
   if (!filename || confirmed !== "1") redirect("/dashboard/backups");
 
@@ -116,14 +136,18 @@ async function restoreBackupAction(formData: FormData) {
   }
 
   try {
-    await restoreBackup(filename);
+    await importBackup(filename, mode);
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Restore fehlgeschlagen.";
     redirect(`/dashboard/backups?notice=${encodeURIComponent(`Restore fehlgeschlagen: ${msg}`)}`);
   }
 
   revalidatePath("/dashboard/backups");
-  redirect(`/dashboard/backups?notice=${encodeURIComponent(`DB wiederhergestellt aus: ${filename}`)}`);
+  redirect(
+    `/dashboard/backups?notice=${encodeURIComponent(
+      mode === "append" ? `Daten importiert aus: ${filename}` : `DB wiederhergestellt aus: ${filename}`
+    )}`
+  );
 }
 
 async function uploadBackupAction(formData: FormData) {
@@ -152,7 +176,8 @@ export default async function BackupsPage({ searchParams }: PageProps) {
   const restoreEnabled = backupsRestoreEnabled();
   const autoDailyEnabled = backupsAutoDailyEnabled();
 
-  const notice = typeof searchParams?.notice === "string" ? searchParams.notice : undefined;
+  const resolvedSearchParams = await searchParams;
+  const notice = typeof resolvedSearchParams?.notice === "string" ? resolvedSearchParams.notice : undefined;
 
   const backups = enabled ? await listBackups() : [];
 
@@ -163,7 +188,7 @@ export default async function BackupsPage({ searchParams }: PageProps) {
         <p className={styles.subtitle}>Datenbank-Backups erstellen, verwalten und wiederherstellen.</p>
       </header>
 
-      {notice ? <div className={styles.notice}>{notice}</div> : null}
+      <NoticeBanner notice={notice} />
 
       <div className={styles.grid}>
         <div className={styles.card}>
@@ -176,6 +201,12 @@ export default async function BackupsPage({ searchParams }: PageProps) {
               <form action={createManualBackup}>
                 <PendingActionButton className={styles.button} pendingText="Backup wird erstellt…">
                   Backup erstellen
+                </PendingActionButton>
+              </form>
+
+              <form action={createDataExportAction}>
+                <PendingActionButton className={styles.secondary} pendingText="Datenexport wird erstellt…">
+                  Datenexport erstellen
                 </PendingActionButton>
               </form>
 
@@ -217,23 +248,11 @@ export default async function BackupsPage({ searchParams }: PageProps) {
                 </div>
 
                 <div className={styles.rowActions}>
-                  <Link className={styles.link} href={`/api/admin/backups/download?file=${encodeURIComponent(b.filename)}`}>
+                  <a className={styles.link} href={`/api/admin/backups/download?file=${encodeURIComponent(b.filename)}`} download>
                     Download
-                  </Link>
+                  </a>
 
-                  {restoreEnabled ? (
-                    <form action={restoreBackupAction}>
-                      <input type="hidden" name="filename" value={b.filename} />
-                      <input type="hidden" name="confirmed" value="1" />
-                      <PendingActionButton
-                        className={styles.secondary}
-                        pendingText="Restore läuft…"
-                        confirmMessage={`DB wirklich durch ${b.filename} ersetzen? Das kann nicht rückgängig gemacht werden.`}
-                      >
-                        Restore
-                      </PendingActionButton>
-                    </form>
-                  ) : null}
+                  {restoreEnabled ? <RestoreWithPreview filename={b.filename} kind={b.kind} action={restoreBackupAction} /> : null}
 
                   <form action={deleteBackupAction}>
                     <input type="hidden" name="filename" value={b.filename} />
