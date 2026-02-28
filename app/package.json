@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "npx prisma generate && node scripts/fix-prisma-client-windows.mjs && node scripts/bootstrap-dev-db.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -41,6 +42,6 @@
     "typescript": "^5"
   },
   "prisma": {
-    "seed": "prisma generate && node scripts/fix-prisma-client-windows.mjs && ts-node --transpile-only -P prisma/tsconfig.seed.json prisma/seed.ts"
+    "seed": "prisma generate && node scripts/fix-prisma-client-windows.mjs && npx ts-node --transpile-only -P prisma/tsconfig.seed.json prisma/seed.ts"
   }
 }

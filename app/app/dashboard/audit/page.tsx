@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 import { getServerAuthSession } from "@/lib/auth";
+import { statementLabel } from "@/lib/statements";
 import { Prisma, StatementType, Unit } from "@prisma/client";
 
 import styles from "./page.module.css";
@@ -85,8 +86,9 @@ function unitSuffix(unit: Unit) {
 }
 
 function formatNumberDE(value: number, unit: Unit): string {
-  const maximumFractionDigits = unit === Unit.COUNT ? 0 : 2;
+  const maximumFractionDigits = unit === Unit.PERCENT ? 2 : 0;
   return new Intl.NumberFormat("de-DE", {
+    useGrouping: false,
     maximumFractionDigits,
     minimumFractionDigits: 0,
   }).format(value);
@@ -97,23 +99,6 @@ function formatMaybeDecimal(value: unknown, unit: Unit): string {
   const n = Number(String(value));
   if (!Number.isFinite(n)) return String(value);
   return `${formatNumberDE(n, unit)} ${unitSuffix(unit)}`.trim();
-}
-
-function statementLabel(st: StatementType) {
-  switch (st) {
-    case StatementType.BALANCE_ASSET:
-      return "Bilanz – Aktiva";
-    case StatementType.BALANCE_LIAB:
-      return "Bilanz – Passiva";
-    case StatementType.INCOME_STATEMENT_UKV:
-      return "GuV (UKV)";
-    case StatementType.INCOME_STATEMENT_GKV:
-      return "GuV (GKV)";
-    case StatementType.CASHFLOW:
-      return "Cashflow";
-    default:
-      return st;
-  }
 }
 
 const changeInclude = {

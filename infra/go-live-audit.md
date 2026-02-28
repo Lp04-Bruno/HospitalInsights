@@ -53,7 +53,8 @@ Praktisch zum Generieren (lokal/VPS):
 
 ## 8) Prod-like Test lokal
 
-- `docker compose --env-file infra/.env.prod.example -f infra/docker-compose.prod.yml up -d --build`
+- `cp infra/.env.prod.example infra/.env.prod`
+- `docker compose --env-file infra/.env.prod -f infra/docker-compose.prod.yml up -d --build`
 - Danach:
-  - `docker compose -f infra/docker-compose.prod.yml logs -f app`
+  - `docker compose --env-file infra/.env.prod -f infra/docker-compose.prod.yml logs -f app`
   - `curl http://localhost:3000/api/health`

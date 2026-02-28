@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Unit, type StatementType } from "@prisma/client";
 
@@ -15,7 +16,9 @@ type FlatRow = {
   isInput: boolean;
   isSection: boolean;
   hasChildren: boolean;
+  isCollapsible: boolean;
   prettyValue: string;
+  suggestedPrettyValue?: string;
 };
 
 type DirtySaveFormProps = {
@@ -99,6 +102,7 @@ function DirtyBottomBar({
 const INITIAL_STATE: SaveFactsState = { ok: true };
 
 export function DirtySaveForm({ saveAction, hospitalId, periodId, statementType, rows }: DirtySaveFormProps) {
+  const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const baselineRef = useRef<Map<string, string>>(new Map());
   const dirtyFieldsRef = useRef<Set<string>>(new Set());
@@ -209,11 +213,13 @@ export function DirtySaveForm({ saveAction, hospitalId, periodId, statementType,
 
         baselineRef.current = snapshotValues(formRef.current);
         clearDirty();
+
+        router.refresh();
       } else {
         setServerFieldErrors(res.fieldErrors ?? {});
       }
     },
-    [clearDirty]
+    [clearDirty, router]
   );
 
   const onInput = useCallback(

@@ -14,17 +14,19 @@ type FlatRow = {
   isInput: boolean;
   isSection: boolean;
   hasChildren: boolean;
+  isCollapsible: boolean;
   prettyValue: string;
+  suggestedPrettyValue?: string;
 };
 
 function unitSuffix(unit: Unit) {
   switch (unit) {
     case Unit.EUR:
-      return "EUR";
+      return "€";
     case Unit.PERCENT:
       return "%";
     case Unit.COUNT:
-      return "Anzahl";
+      return "";
     default:
       return "";
   }
@@ -48,7 +50,7 @@ export function ValueEntryTable({
   const defaultCollapsed = useMemo(() => {
     const s = new Set<string>();
     for (const r of rows) {
-      if (r.hasChildren && shouldDefaultCollapse(r)) s.add(r.code);
+      if (r.hasChildren && r.isCollapsible && shouldDefaultCollapse(r)) s.add(r.code);
     }
     return s;
   }, [rows]);
@@ -60,7 +62,7 @@ export function ValueEntryTable({
   const collapseAll = () => {
     const next = new Set<string>();
     for (const r of rows) {
-      if (r.hasChildren) next.add(r.code);
+      if (r.hasChildren && r.isCollapsible) next.add(r.code);
     }
     setCollapsed(next);
   };
@@ -80,7 +82,7 @@ export function ValueEntryTable({
         const hidden = collapsedDepths.length > 0;
         out.push({ row: r, hidden });
 
-        if (!hidden && r.hasChildren && collapsed.has(r.code)) {
+        if (!hidden && r.hasChildren && r.isCollapsible && collapsed.has(r.code)) {
           collapsedDepths.push(r.depth);
         }
       }
@@ -153,7 +155,6 @@ export function ValueEntryTable({
           <thead>
             <tr>
               <th className={`${styles.th} ${styles.thLabel}`}>Position</th>
-              <th className={`${styles.th} ${styles.thUnit}`}>Einheit</th>
               <th className={`${styles.th} ${styles.thValue}`}>Wert</th>
             </tr>
           </thead>
@@ -165,11 +166,12 @@ export function ValueEntryTable({
               const paddingLeft = 8 + r.depth * 18;
               const isCollapsed = collapsed.has(r.code);
               const fieldError = errorByCode?.[r.code];
+              const suffix = unitSuffix(r.unit);
               return (
                 <tr key={r.code} className={rowClass} style={hidden ? { display: "none" } : undefined}>
                   <td className={styles.td}>
                     <div className={styles.itemLabel} style={{ paddingLeft }}>
-                      {r.hasChildren ? (
+                      {r.hasChildren && r.isCollapsible ? (
                         <button
                           type="button"
                           className={styles.caret}
@@ -192,23 +194,23 @@ export function ValueEntryTable({
                     </div>
                   </td>
                   <td className={styles.td}>
-                    <span className={styles.unitPill}>{unitSuffix(r.unit)}</span>
-                  </td>
-                  <td className={styles.td}>
                     {r.isInput ? (
                       <div className={styles.valueCell}>
-                        <FormattedValueInput
-                          name={valueKey}
-                          className={`${styles.valueInput} ${fieldError ? styles.valueInputInvalid : ""}`}
-                          defaultValue={r.prettyValue}
-                          placeholder={r.unit === Unit.PERCENT ? "z.B. 39" : ""}
-                          unit={r.unit}
-                          invalid={!!fieldError}
-                        />
+                        <div className={styles.valueInputWrap}>
+                          <FormattedValueInput
+                            name={valueKey}
+                            className={`${styles.valueInput} ${fieldError ? styles.valueInputInvalid : ""}`}
+                            defaultValue={r.prettyValue}
+                            placeholder={r.prettyValue ? "" : (r.suggestedPrettyValue ?? (r.unit === Unit.PERCENT ? "z.B. 39" : ""))}
+                            unit={r.unit}
+                            invalid={!!fieldError}
+                          />
+                          {suffix ? <span className={styles.valueSuffix}>{suffix}</span> : null}
+                        </div>
                         {fieldError ? <div className={styles.fieldError}>{fieldError}</div> : null}
                       </div>
                     ) : (
-                      <div className={styles.readonlyValue}>{r.prettyValue || "—"}</div>
+                      <div className={styles.readonlyValue}>{r.prettyValue ? `${r.prettyValue}${suffix ? ` ${suffix}` : ""}` : "—"}</div>
                     )}
                   </td>
                 </tr>
