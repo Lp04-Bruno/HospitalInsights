@@ -154,7 +154,6 @@ export default async function AuditLogPage({ searchParams }: PageProps) {
   const sp = await resolveSearchParams(searchParams);
 
   const hospitals = await prisma.hospital.findMany({ orderBy: { name: "asc" } });
-  const periods = await prisma.period.findMany({ orderBy: { year: "desc" } });
   const users = await prisma.user.findMany({
     orderBy: { email: "asc" },
     select: { id: true, email: true, name: true },
@@ -162,8 +161,29 @@ export default async function AuditLogPage({ searchParams }: PageProps) {
 
   const selectedHospitalId = firstParam(sp.hospitalId) || "";
   const yearRaw = firstParam(sp.year);
-  const selectedYear = yearRaw && Number.isFinite(Number(yearRaw)) ? Number(yearRaw) : undefined;
+  const requestedYear = yearRaw && Number.isFinite(Number(yearRaw)) ? Number(yearRaw) : undefined;
   const selectedStatementType = parseStatementType(firstParam(sp.statementType));
+
+  const years = await (async () => {
+    if (selectedHospitalId) {
+      const hospitalPeriods = await prisma.hospitalPeriod.findMany({
+        where: { hospitalId: selectedHospitalId },
+        include: { period: { select: { year: true } } },
+        orderBy: { period: { year: "desc" } },
+      });
+      return hospitalPeriods.map((hp) => hp.period.year);
+    }
+
+    const periodsInUse = await prisma.period.findMany({
+      where: { hospitals: { some: {} } },
+      orderBy: { year: "desc" },
+      select: { year: true },
+    });
+    return periodsInUse.map((p) => p.year);
+  })();
+
+  const availableYears = new Set(years);
+  const selectedYear = requestedYear !== undefined && availableYears.has(requestedYear) ? requestedYear : undefined;
 
   const selectedUserId = firstParam(sp.userId) || "";
 
@@ -323,7 +343,7 @@ export default async function AuditLogPage({ searchParams }: PageProps) {
       <AuditFilters
         hospitals={hospitals.map((h) => ({ value: h.id, label: h.name }))}
         users={users.map((u) => ({ value: u.id, label: u.email ?? u.name ?? u.id }))}
-        years={periods.map((p) => p.year)}
+        years={years}
         statementOptions={Object.values(StatementType).map((st) => ({
           value: st,
           label: statementLabel(st),

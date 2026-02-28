@@ -42,6 +42,13 @@ services:
       METABASE_DASHBOARD_CATALOG: ${METABASE_DASHBOARD_CATALOG}
       METABASE_EMBED_HOSPITAL_PARAM: ${METABASE_EMBED_HOSPITAL_PARAM:-hospitalId}
       SKIP_DB_MIGRATIONS: "${SKIP_DB_MIGRATIONS:-false}"
+      BACKUP_DIR: ${BACKUP_DIR:?}
+      BACKUP_ENABLED: ${BACKUP_ENABLED:?}
+      BACKUP_RESTORE_ENABLED: ${BACKUP_RESTORE_ENABLED:?}
+      BACKUP_AUTO_DAILY: ${BACKUP_AUTO_DAILY:?}
+      BACKUP_AUTO_ON_HEALTH: ${BACKUP_AUTO_ON_HEALTH:?}
+    volumes:
+      - db_backups:/backups
     healthcheck:
       test:
         ["CMD", "node", "-e", "fetch('http://localhost:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]

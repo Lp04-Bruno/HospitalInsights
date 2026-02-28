@@ -26,6 +26,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
           { href: "/dashboard/audit/manage", label: "Audit Log – Management" },
           { href: "/dashboard/hospitals", label: "Hospitalverwaltung" },
           { href: "/dashboard/users", label: "Benutzerverwaltung" },
+          { href: "/dashboard/backups", label: "Backups" },
         ]
       : role === "EDITOR"
         ? [
@@ -56,7 +57,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
             <Link href="/" className={styles.footerLink}>
               Startseite
             </Link>
-            <Link href="/api/auth/signout?callbackUrl=/" className={styles.footerLink}>
+            <Link href="/logout?callbackUrl=/" className={styles.footerLink}>
               Abmelden
             </Link>
           </div>

@@ -49,11 +49,17 @@ services:
       METABASE_DASHBOARD_CATALOG: ${METABASE_DASHBOARD_CATALOG}
       METABASE_EMBED_HOSPITAL_PARAM: ${METABASE_EMBED_HOSPITAL_PARAM:-hospitalId}
       WATCHPACK_POLLING: ${WATCHPACK_POLLING:-true}
+      BACKUP_DIR: ${BACKUP_DIR:?}
+      BACKUP_ENABLED: ${BACKUP_ENABLED:?}
+      BACKUP_RESTORE_ENABLED: ${BACKUP_RESTORE_ENABLED:?}
+      BACKUP_AUTO_DAILY: ${BACKUP_AUTO_DAILY:?}
+      BACKUP_AUTO_ON_HEALTH: ${BACKUP_AUTO_ON_HEALTH:?}
     volumes:
       - ../app:/app
       - app_node_modules:/app/node_modules
       - app_next_cache:/app/.next
       - app_turbo_cache:/app/.turbo
+      - db_backups:/backups
     command: npm run dev --no-turbo
 
 volumes:
@@ -62,3 +68,4 @@ volumes:
   app_next_cache:
   app_turbo_cache:
   metabase_data:
+  db_backups:

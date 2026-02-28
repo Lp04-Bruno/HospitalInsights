@@ -111,10 +111,17 @@ async function createPeriod(formData: FormData) {
     redirect(`/dashboard/data?hospitalId=${encodeURIComponent(hospitalId)}`);
   }
 
-  await prisma.period.upsert({
+  const period = await prisma.period.upsert({
     where: { year },
     update: {},
     create: { year },
+    select: { id: true, year: true },
+  });
+
+  await prisma.hospitalPeriod.upsert({
+    where: { hospitalId_periodId: { hospitalId, periodId: period.id } },
+    update: {},
+    create: { hospitalId, periodId: period.id },
   });
 
   const qs = new URLSearchParams();
@@ -139,6 +146,16 @@ async function saveFacts(prevState: SaveFactsState, formData: FormData): Promise
 
   if (!hospitalId || !periodId || !statementType) {
     return { ok: false, globalError: "Ungültige Anfrage." };
+  }
+
+  try {
+    await prisma.hospitalPeriod.upsert({
+      where: { hospitalId_periodId: { hospitalId, periodId } },
+      update: {},
+      create: { hospitalId, periodId },
+    });
+  } catch {
+    // ignore
   }
 
   const inputItemsRaw = await prisma.lineItem.findMany({
@@ -306,16 +323,26 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
   const selectedHospitalId =
     typeof firstParam(sp.hospitalId) === "string" && firstParam(sp.hospitalId) ? (firstParam(sp.hospitalId) as string) : hospitals[0]?.id;
 
-  const periods = await prisma.period.findMany({ orderBy: { year: "desc" } });
+  const hospitalPeriods = selectedHospitalId
+    ? await prisma.hospitalPeriod.findMany({
+        where: { hospitalId: selectedHospitalId },
+        include: { period: { select: { id: true, year: true } } },
+        orderBy: { period: { year: "desc" } },
+      })
+    : [];
 
-  const selectedYear =
-    typeof firstParam(sp.year) === "string" && Number.isFinite(Number(firstParam(sp.year)))
-      ? Number(firstParam(sp.year))
-      : periods[0]?.year;
+  const periods = hospitalPeriods.map((hp) => hp.period);
+  const availableYears = new Set(periods.map((p) => p.year));
+
+  const requestedYearRaw = firstParam(sp.year);
+  const requestedYear =
+    typeof requestedYearRaw === "string" && Number.isFinite(Number(requestedYearRaw)) ? Number(requestedYearRaw) : undefined;
+
+  const selectedYear = requestedYear !== undefined && availableYears.has(requestedYear) ? requestedYear : periods[0]?.year;
 
   const selectedStatementTab: StatementTab = parseStatementTab(firstParam(sp.statementType)) ?? BALANCE_TAB;
 
-  const selectedPeriod = selectedYear ? await prisma.period.findUnique({ where: { year: selectedYear } }) : null;
+  const selectedPeriod = selectedYear ? (periods.find((p) => p.year === selectedYear) ?? null) : null;
 
   const statementTypesToLoad: StatementType[] =
     selectedStatementTab === BALANCE_TAB ? [StatementType.BALANCE_ASSET, StatementType.BALANCE_LIAB] : [selectedStatementTab];

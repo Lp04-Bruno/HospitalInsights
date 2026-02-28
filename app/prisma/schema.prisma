@@ -35,6 +35,8 @@ model Hospital {
 
   facts     FactValue[]
 
+  periods   HospitalPeriod[]
+
   factChangeRuns FactChangeRun[]
 }
 
@@ -46,9 +48,23 @@ model Period {
 
   facts     FactValue[]
 
+  hospitals HospitalPeriod[]
+
   factChangeRuns FactChangeRun[]
 
   @@unique([year])
+}
+
+model HospitalPeriod {
+  hospitalId String
+  periodId   String
+  createdAt  DateTime @default(now())
+
+  hospital   Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  period     Period   @relation(fields: [periodId], references: [id], onDelete: Cascade)
+
+  @@id([hospitalId, periodId])
+  @@index([periodId])
 }
 
 enum StatementType {

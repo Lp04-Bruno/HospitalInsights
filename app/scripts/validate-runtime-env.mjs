@@ -6,6 +6,15 @@ function requireEnv(name) {
   return value;
 }
 
+function requireBoolEnv(name) {
+  const value = requireEnv(name);
+  const normalized = String(value).trim().toLowerCase();
+  if (normalized !== "true" && normalized !== "false") {
+    throw new Error(`Invalid boolean env var: ${name} (expected 'true' or 'false')`);
+  }
+  return normalized;
+}
+
 function hasEnv(name) {
   return Boolean(process.env[name] && String(process.env[name]).trim());
 }
@@ -20,6 +29,11 @@ function main() {
   requireEnv("DATABASE_URL");
   requireEnv("NEXTAUTH_URL");
   requireEnv("NEXTAUTH_SECRET");
+  requireEnv("BACKUP_DIR");
+  requireBoolEnv("BACKUP_ENABLED");
+  requireBoolEnv("BACKUP_RESTORE_ENABLED");
+  requireBoolEnv("BACKUP_AUTO_DAILY");
+  requireBoolEnv("BACKUP_AUTO_ON_HEALTH");
 
   const hasSiteUrl = hasEnv("METABASE_SITE_URL");
   const hasEmbedSecret = hasEnv("METABASE_EMBED_SECRET");
