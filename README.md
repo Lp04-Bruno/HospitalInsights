@@ -2,122 +2,116 @@
 
 HospitalInsights ist eine Web-Plattform, die Jahresabschlüsse/Bilanzen von Krankenhäusern verständlich aufbereitet und vergleichbar macht (Benchmarking).
 
-Dev-Stack:
+## Dev-Stack
 
 - Next.js (App Router) als Portal (öffentlich + Admin/Editor Bereiche)
-- PostgreSQL als zentrale Datenbank
-- Prisma für Schema/Migrations/Import-Pipelines
+- PostgreSQL (Docker) als zentrale Datenbank
+- Prisma für Schema/Migrations/Seed
 - Metabase als BI (Dashboards) direkt auf Postgres
-- Öffentliche Darstellung über kontrolliertes Metabase Signed Embedding (Metabase bleibt idealerweise intern)
+- Öffentliche Darstellung über kontrolliertes Metabase Signed Embedding
 
-**Quickstart (lokal, Development)**
+## Quickstart (lokal, Development)
 
-- Voraussetzungen installieren: Docker Desktop (Compose v2), Git
-- Env-Datei anlegen:
-  - `cp infra/.env.example infra/.env`
-- Stack starten:
-  - `docker compose --env-file infra/.env -f infra/docker-compose.dev.yml up -d --build`
-- Migration/Seed (einmalig oder nach Reset):
-  - `docker compose --env-file infra/.env -f infra/docker-compose.dev.yml exec -T app npx prisma migrate deploy`
-  - `docker compose --env-file infra/.env -f infra/docker-compose.dev.yml exec -T app npx prisma db seed`
-- Öffnen:
-  - App: `http://localhost:3000`
-  - Sign-in: `http://localhost:3000/signin`
-  - Metabase UI: `http://localhost:3001`
+Voraussetzungen:
 
-**Wichtige URLs (Dev)**
+- Docker Desktop (Compose v2)
+- Git
+
+1. Env-Datei anlegen:
+
+- PowerShell: `Copy-Item infra/.env.example infra/.env`
+- Bash: `cp infra/.env.example infra/.env`
+
+2. Stack starten:
+
+- `docker compose --env-file infra/.env -f infra/docker-compose.dev.yml up -d --build`
+
+3. Migration + Seed (einmalig oder nach Reset):
+
+- `docker compose --env-file infra/.env -f infra/docker-compose.dev.yml exec -T app npx prisma migrate deploy`
+- `docker compose --env-file infra/.env -f infra/docker-compose.dev.yml exec -T app npx prisma db seed`
+
+4. Öffnen:
+
+- App: `http://localhost:3000`
+- Sign-in: `http://localhost:3000/signin`
+- Metabase UI: `http://localhost:3001`
+
+## Wichtige URLs (Dev)
 
 - App (Portal): `http://localhost:3000`
 - Dashboard (geschützt): `http://localhost:3000/dashboard`
-- Metabase UI (Admin/BI): `http://localhost:3001`
-- Postgres (Host-Port): `localhost:5432`
-- Embed API (Next.js): `http://localhost:3000/api/metabase/embed/dashboard/:dashboardId`
+- Metabase UI (Dev): `http://localhost:3001`
+- Postgres (Host-Port): `localhost:5433`
 
-**Hinweis: CSP-Warnungen im Browser (Dev)**
-
-- Die "Content Security Policy"-Warnungen kommen typischerweise aus dem Metabase-Embed selbst (Metabase liefert für `/embed/...` eine sehr restriktive CSP aus).
-- Im Dev-Compose läuft Metabase deshalb hinter einem kleinen Nginx-Proxy auf `http://localhost:3001`, der die CSP-Header entfernt (nur Dev), damit die Console sauber bleibt.
-- Datei: `infra/nginx.metabase.dev.conf` (nicht für Production verwenden).
-
-**Metabase initial einrichten (Signed Embedding)**
-
-1. Öffnen: `http://localhost:3001` und Admin anlegen (Dummy-Mail ist ok für lokales Dev)
-2. Datenbank hinzufügen (Postgres):
-   - Host: `db`
-   - Port: `5432`
-   - Database: `hospitalinsights`
-   - User: `hospitalinsights`
-   - Password: `hospitalinsights_pw`
-3. Admin → Settings → Embedding:
-   - "Embedding secret key" setzen (entweder in Metabase generieren und in `infra/.env` setzen)
-   - "Enable guest embeds" aktivieren (sonst zeigt das iFrame ggf. „Embedding is not enabled…“)
-4. Dashboard erstellen und ID merken (z.B. URL enthält `/dashboard/2-...` → ID=2)
-5. Dashboard-ID in `infra/.env` setzen:
-   - `METABASE_DASHBOARD_ID=2`
-
-**Default Admin (Dev-only, NextAuth Credentials)**
+## Default Admin (Dev-only, NextAuth Credentials)
 
 - Email: `admin@hospitalinsights.local`
 - Passwort: `admin1234`
 
-In Production solltet ihr **keine** festen Default-Credentials verwenden.
-Wenn ihr initial einen Admin anlegen wollt, nutzt entweder die App-UI/DB oder führt `prisma db seed` mit
-`SEED_ADMIN_EMAIL` + `SEED_ADMIN_PASSWORD` aus.
+In Production keine festen Default-Credentials verwenden.
+Wenn ihr initial einen Admin anlegen wollt, setzt `SEED_ADMIN_EMAIL` + `SEED_ADMIN_PASSWORD` und führt danach `prisma db seed` aus.
 
-**Rollen & Zugriff (Dev)**
+## Entwickler-Workflow (Start/Stop/Restart)
 
-- `/dashboard` ist geschützt: nur `ADMIN` und `EDITOR` dürfen sich einloggen.
-
-**Entwickler-Workflow (Start/Stop/Restart)**
-Die Compose-Kommandos bitte aus dem Repo-Root (`HospitalInsights/`) ausführen, damit Pfade wie `infra/.env` stimmen.
+Compose-Kommandos immer aus dem Repo-Root ausführen.
 
 - Start/Rebuild: `docker compose --env-file infra/.env -f infra/docker-compose.dev.yml up -d --build`
-- Logs: `docker compose --env-file infra/.env -f infra/docker-compose.dev.yml logs -f app`
+- Logs (App): `docker compose --env-file infra/.env -f infra/docker-compose.dev.yml logs -f app`
 - Restart nur App: `docker compose --env-file infra/.env -f infra/docker-compose.dev.yml restart app`
 - Stop (Container aus, Volumes behalten): `docker compose --env-file infra/.env -f infra/docker-compose.dev.yml down`
 - Komplett-Reset (DB + Metabase Setup löschen!): `docker compose --env-file infra/.env -f infra/docker-compose.dev.yml down -v`
 
-**Dev vs Production - Konzept**
-Aktuell ist dieses Repo auf lokalen Dev ausgelegt.
+## Metabase (Signed Embedding) – Setup (Dev)
 
-Für später „Production“ empfiehlt sich:
+1. Metabase öffnen: `http://localhost:3001` und Admin anlegen (Dummy-Mail ist ok)
+2. Datenbank hinzufügen (Postgres):
 
-- Separate Compose-Datei (z.B. `infra/docker-compose.prod.yml`) + eigenes Env (z.B. `infra/.env.prod` oder Dokploy Env Vars)
-- Keine Bind-Mounts (kein `../app:/app`), stattdessen gebautes Image
+- Host: `db`
+- Port: `5432`
+- Database: `hospitalinsights`
+- User: `hospitalinsights`
+- Password: `hospitalinsights_pw`
+
+3. Admin → Settings → Embedding:
+
+- "Embedding secret key" setzen (Metabase generieren und in `infra/.env` als `METABASE_EMBED_SECRET` eintragen)
+- "Enable guest embeds" aktivieren
+
+4. Dashboard/Question erstellen und ID merken (URL enthält z.B. `/dashboard/2-...` → ID=2)
+5. In `infra/.env` setzen:
+
+- `METABASE_DASHBOARD_ID=2`
+- optional: `METABASE_DASHBOARD_CATALOG=[{"type":"question","id":38,"name":"..."}]`
+
+## Hinweis: CSP-Warnungen im Browser (Dev)
+
+Metabase liefert für `/embed/...` eine restriktive CSP aus. Im Dev-Stack läuft Metabase daher hinter einem kleinen Nginx-Proxy auf `http://localhost:3001`, der CSP-Header entfernt (nur Dev).
+Datei: `infra/nginx.metabase.dev.conf` (nicht für Production verwenden).
+
+## Rollen & Zugriff (Dev)
+
+- `/dashboard` ist geschützt: nur `ADMIN` und `EDITOR`.
+
+## Dev vs Production (Kurzüberblick)
+
+Für Production:
+
+- eigene Compose-Datei (z.B. `infra/docker-compose.prod.yml`) + eigenes Env
 - `next build` + `next start` (statt `next dev`)
-- Echte Secrets (`NEXTAUTH_SECRET`, `METABASE_EMBED_SECRET`) und echte `NEXTAUTH_URL`
-- Metabase in Production **ohne** den Dev-Nginx-Proxy betreiben (Dokploy/Traefik übernimmt Routing)
-- Datenbank in Production **keine** Host-Ports nach außen mappen (Zugriff nur intern + SSH-Tunnel bei Bedarf)
+- echte Secrets (`NEXTAUTH_SECRET`, `METABASE_EMBED_SECRET`) und echte `NEXTAUTH_URL`
+- Metabase in Production ohne den Dev-Proxy betreiben
 
-### Production Dateien (Repo)
+Production Artefakte im Repo:
 
-- App Dockerfile (Production): `app/Dockerfile`
-- App Dockerfile (Development): `app/Dockerfile.dev`
+- App Dockerfile (Prod): `app/Dockerfile`
+- App Dockerfile (Dev): `app/Dockerfile.dev`
 - Prod Compose Template: `infra/docker-compose.prod.yml`
 - Prod Env Template: `infra/.env.prod.example`
 
-### Dokploy Setup
+## Metabase Datenhaltung (Dev)
 
-- Checkliste: `infra/dokploy-setup.md`
-
-### Go-Live Audit
-
-- Checkliste: `infra/go-live-audit.md`
-
-### Metabase in Production (vereinfacht)
-
-- Lokal (Dev): `METABASE_SITE_URL=http://localhost:3001`
-- Server (Prod): `METABASE_SITE_URL=https://metabase.hospitalinsights.de` (muss im Browser erreichbar sein, da iFrame-URL)
-- `METABASE_EMBED_SECRET`, `METABASE_DASHBOARD_ID` und optional `METABASE_DASHBOARD_CATALOG` setzt ihr am besten erst,
-  nachdem Metabase auf dem Server läuft und ihr Embedding aktiviert + Dashboards erstellt/importiert habt.
-
-**Hinweis: Metabase Accounts & Contributors (lokales Dev)**
-
-- Jeder Contributor hat lokal seine eigene Metabase-Instanz (Docker Volume `metabase_data`) → eigene User/Passwörter.
-- Dummy-Mails (z.B. `dev@local.test`) sind für lokale Tests völlig ausreichend.
-
-**Wichtiger Hinweis (DB Trennung)**
-Metabase nutzt eine eigene interne DB (Volume `metabase_data`). So bleibt die App-Datenbank frei von Metabase-Systemtabellen und Prisma-Migrations funktionieren sauber.
+Metabase nutzt ein eigenes Volume `metabase_data` (interne Metabase DB). Dadurch bleibt die App-Datenbank sauber für Prisma-Migrations.
 
 ## Prod → Dev DB Sync
 

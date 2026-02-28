@@ -1,28 +1,38 @@
 import { redirect } from "next/navigation";
-import { StatementType } from "@prisma/client";
+import { StatementType, Unit } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { getServerAuthSession } from "@/lib/auth";
+import { statementLabel } from "@/lib/statements";
 
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
 
-function statementLabel(st: StatementType) {
-  switch (st) {
-    case StatementType.BALANCE_ASSET:
-      return "Bilanz – Aktiva";
-    case StatementType.BALANCE_LIAB:
-      return "Bilanz – Passiva";
-    case StatementType.INCOME_STATEMENT_UKV:
-      return "GuV (UKV)";
-    case StatementType.INCOME_STATEMENT_GKV:
-      return "GuV (GKV)";
-    case StatementType.CASHFLOW:
-      return "Cashflow";
-    default:
-      return st;
+type PageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
+};
+
+function firstParam(v: string | string[] | undefined): string | undefined {
+  if (typeof v === "string") return v;
+  if (Array.isArray(v)) return v[0];
+  return undefined;
+}
+
+async function resolveSearchParams(searchParams: PageProps["searchParams"]): Promise<Record<string, string | string[] | undefined>> {
+  if (!searchParams) return {};
+  const maybePromise = searchParams as unknown as { then?: unknown };
+  if (typeof maybePromise.then === "function") {
+    return (await (searchParams as Promise<Record<string, string | string[] | undefined>>)) ?? {};
   }
+  return (searchParams as Record<string, string | string[] | undefined>) ?? {};
+}
+
+function parseYear(raw: string | undefined): number | undefined {
+  if (!raw) return undefined;
+  const year = Number(raw);
+  if (!Number.isInteger(year) || year < 1900 || year > 2100) return undefined;
+  return year;
 }
 
 function clampPercent(value: number) {
@@ -30,28 +40,65 @@ function clampPercent(value: number) {
   return Math.max(0, Math.min(100, value));
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }: PageProps) {
   const session = await getServerAuthSession();
   if (!session) redirect("/signin?callbackUrl=/dashboard");
 
   const isAdmin = session.user.role === "ADMIN";
 
-  const [hospitalCount, periodLatest, periodCount, inputItems, latestSaveRun] = await Promise.all([
-    prisma.hospital.count(),
-    prisma.period.findFirst({ orderBy: { year: "desc" }, select: { id: true, year: true } }),
-    prisma.period.count(),
-    prisma.lineItem.findMany({
-      where: { isInput: true },
-      select: { code: true, statementType: true },
-    }),
-    prisma.factChangeRun.findFirst({
-      orderBy: { createdAt: "desc" },
-      include: { user: { select: { email: true, name: true } } },
-    }),
-  ]);
+  const sp = await resolveSearchParams(searchParams);
+  const selectedHospitalId = firstParam(sp.hospitalId);
+  const selectedYear = parseYear(firstParam(sp.year));
+
+  const [hospitalCount, singleHospital, selectedHospital, periodSelected, periodLatest, periodCount, allLineItems, latestSaveRun] =
+    await Promise.all([
+      prisma.hospital.count(),
+      prisma.hospital.findFirst({ select: { name: true }, orderBy: { name: "asc" } }),
+      selectedHospitalId
+        ? prisma.hospital.findUnique({ where: { id: selectedHospitalId }, select: { id: true, name: true } })
+        : Promise.resolve(null),
+      selectedYear ? prisma.period.findFirst({ where: { year: selectedYear }, select: { id: true, year: true } }) : Promise.resolve(null),
+      prisma.period.findFirst({ orderBy: { year: "desc" }, select: { id: true, year: true } }),
+      prisma.period.count(),
+      prisma.lineItem.findMany({
+        select: { code: true, statementType: true, label: true, parentCode: true, unit: true, isInput: true },
+      }),
+      prisma.factChangeRun.findFirst({
+        orderBy: { createdAt: "desc" },
+        include: { user: { select: { email: true, name: true } } },
+      }),
+    ]);
+
+  const periodActive = periodSelected ?? periodLatest;
+
+  const childrenByCode = new Map<string, string[]>();
+  for (const li of allLineItems) {
+    if (!li.parentCode) continue;
+    const arr = childrenByCode.get(li.parentCode) ?? [];
+    arr.push(li.code);
+    childrenByCode.set(li.parentCode, arr);
+  }
+
+  const byCode = new Map(allLineItems.map((li) => [li.code, li] as const));
+
+  const optionalBreakdownChildCodes = new Set<string>();
+  for (const li of allLineItems) {
+    if (!li.isInput) continue;
+    const children = childrenByCode.get(li.code) ?? [];
+    for (const childCode of children) {
+      const child = byCode.get(childCode);
+      if (!child) continue;
+      if (child.unit !== Unit.EUR) continue;
+      const label = (child.label ?? "").trim();
+      if (!/^davon\b/i.test(label)) continue;
+      optionalBreakdownChildCodes.add(childCode);
+    }
+  }
 
   const codesByStatement = new Map<StatementType, string[]>();
-  for (const li of inputItems) {
+  for (const li of allLineItems) {
+    if (!li.isInput) continue;
+    if (optionalBreakdownChildCodes.has(li.code)) continue;
     const list = codesByStatement.get(li.statementType) ?? [];
     list.push(li.code);
     codesByStatement.set(li.statementType, list);
@@ -60,7 +107,8 @@ export default async function DashboardPage() {
   const statementTypes = Object.values(StatementType);
 
   const completion = await (async () => {
-    if (!periodLatest || hospitalCount === 0) {
+    const effectiveHospitals = selectedHospital ? 1 : hospitalCount;
+    if (!periodActive || effectiveHospitals === 0) {
       return statementTypes.map((st) => ({
         statementType: st,
         expected: 0,
@@ -77,14 +125,15 @@ export default async function DashboardPage() {
     }>;
     for (const st of statementTypes) {
       const codes = codesByStatement.get(st) ?? [];
-      const expected = hospitalCount * codes.length;
+      const expected = effectiveHospitals * codes.length;
       const actual =
         expected === 0
           ? 0
           : await prisma.factValue.count({
               where: {
-                periodId: periodLatest.id,
+                periodId: periodActive.id,
                 value: { not: null },
+                ...(selectedHospital ? { hospitalId: selectedHospital.id } : {}),
                 lineItemCode: { in: codes.length > 0 ? codes : ["__none__"] },
               },
             });
@@ -105,9 +154,25 @@ export default async function DashboardPage() {
       <div className={styles.header}>
         <h1 className={styles.title}>Übersicht</h1>
         <div className={styles.subtitle}>
-          {periodLatest ? (
+          {periodActive ? (
             <span>
-              Aktuelles Jahr: <strong>{periodLatest.year}</strong>
+              Jahr: <strong>{periodActive.year}</strong>
+              {selectedHospital?.name ? (
+                <>
+                  {" "}
+                  · Krankenhaus: <strong>{selectedHospital.name}</strong>
+                </>
+              ) : hospitalCount === 1 && singleHospital?.name ? (
+                <>
+                  {" "}
+                  · Krankenhaus: <strong>{singleHospital.name}</strong>
+                </>
+              ) : hospitalCount > 1 ? (
+                <>
+                  {" "}
+                  · Krankenhäuser: <strong>{hospitalCount}</strong>
+                </>
+              ) : null}
             </span>
           ) : (
             <span>Kein Jahr angelegt</span>
@@ -125,7 +190,7 @@ export default async function DashboardPage() {
           <div className={styles.kpiValue}>{periodCount}</div>
         </div>
         <div className={styles.kpiCard}>
-          <div className={styles.kpiLabel}>Eingaben offen (aktuelles Jahr)</div>
+          <div className={styles.kpiLabel}>Eingaben offen</div>
           <div className={styles.kpiValue}>{missingTotal}</div>
           <div className={styles.kpiHint}>{expectedTotal > 0 ? `${actualTotal}/${expectedTotal} ausgefüllt` : "—"}</div>
         </div>
@@ -137,7 +202,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className={styles.section}>
-        <div className={styles.sectionTitle}>Datenvollständigkeit (aktuelles Jahr)</div>
+        <div className={styles.sectionTitle}>Datenvollständigkeit</div>
         <div className={styles.progressList}>
           {completion.map((row) => {
             const missing = Math.max(0, row.expected - row.actual);
