@@ -19,7 +19,7 @@ function formatForEditing(value: number, unit: Unit): string {
 }
 
 function formatForDisplay(value: number, unit: Unit): string {
-  return formatNumberDE(value, unit, false);
+  return formatNumberDE(value, unit, true);
 }
 
 export type FormattedValueInputProps = {
