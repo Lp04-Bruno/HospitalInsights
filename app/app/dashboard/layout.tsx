@@ -41,7 +41,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
     <div className={styles.shell}>
       <aside className={styles.sidebar}>
         <div className={styles.brand}>
-          <div className={styles.brandTitle}>HospitalInsights</div>
+          <div className={styles.brandTitle}>Hospitalinsights</div>
           <div className={styles.brandSubtitle}>Dashboard</div>
         </div>
 

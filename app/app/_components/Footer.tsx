@@ -6,7 +6,7 @@ export default function Footer() {
 
   return (
     <footer className={styles.footer} aria-label="Footer">
-      <div>© {year} HospitalInsights</div>
+      <div>© {year} Hospitalinsights</div>
       <div className={styles.links}>
         <Link className={styles.link} href="/datenschutz">
           Datenschutz

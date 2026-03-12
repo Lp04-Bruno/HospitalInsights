@@ -1,4 +1,4 @@
-# HospitalInsights (App)
+# Hospitalinsights (App)
 
 Dieses Verzeichnis enthält die Next.js App (Portal).
 
