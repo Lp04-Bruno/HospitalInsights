@@ -18,7 +18,7 @@ export default function DatenschutzPage() {
             <p>
               Verantwortlich für die Verarbeitung personenbezogener Daten auf dieser Website ist:
               <br />
-              <strong>HospitalInsights (Studienprojekt)</strong>
+              <strong>Hospitalinsights (Studienprojekt)</strong>
               <br />
               Rombergstraße 40, 49377 Vechta, Deutschland
               <br />
@@ -30,7 +30,7 @@ export default function DatenschutzPage() {
             </p>
 
             <h2>2. Projektkontext</h2>
-            <p>HospitalInsights ist ein Studienprojekt an der Privaten Hochschule für Wirtschaft und Technik (PHWT), Standort Vechta.</p>
+            <p>Hospitalinsights ist ein Studienprojekt an der Privaten Hochschule für Wirtschaft und Technik (PHWT), Standort Vechta.</p>
 
             <h2>3. Wissenschaftliche Betreuung (Kontakt an der PHWT)</h2>
             <p>

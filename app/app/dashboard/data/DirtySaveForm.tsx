@@ -39,6 +39,30 @@ export type SaveFactsState = {
   fieldErrors?: Record<string, string>;
 };
 
+function canonicalizeNumber(raw: string, unit: Unit): { kind: "empty" } | { kind: "invalid" } | { kind: "value"; value: number } {
+  const parsed = parseUserNumberDetailed(raw, unit);
+  if (parsed.kind !== "value") return parsed;
+  const rounded = Math.round(parsed.value * 100) / 100;
+  return { kind: "value", value: rounded };
+}
+
+function canonicalEquals(a: ReturnType<typeof canonicalizeNumber>, b: ReturnType<typeof canonicalizeNumber>): boolean {
+  if (a.kind !== b.kind) return false;
+
+  switch (a.kind) {
+    case "empty":
+      return true;
+    case "invalid":
+      return false;
+    case "value": {
+      const bv = b as Extract<ReturnType<typeof canonicalizeNumber>, { kind: "value" }>;
+      return a.value === bv.value;
+    }
+  }
+
+  return false;
+}
+
 function snapshotValues(form: HTMLFormElement | null) {
   const map = new Map<string, string>();
   if (!form) return map;
@@ -252,7 +276,10 @@ export function DirtySaveForm({ saveAction, hospitalId, periodId, statementType,
       }
 
       const baseline = baselineRef.current.get(target.name) ?? "";
-      const isDirty = target.value !== baseline;
+      const isDirty =
+        row?.isInput && row.unit
+          ? !canonicalEquals(canonicalizeNumber(target.value, row.unit), canonicalizeNumber(baseline, row.unit))
+          : target.value !== baseline;
 
       if (isDirty) dirtyFieldsRef.current.add(target.name);
       else dirtyFieldsRef.current.delete(target.name);

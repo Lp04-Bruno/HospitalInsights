@@ -72,7 +72,7 @@ type SaveFactsState = {
 function formatNumberDE(value: number, unit: Unit): string {
   const maximumFractionDigits = unit === Unit.PERCENT ? 2 : 0;
   return new Intl.NumberFormat("de-DE", {
-    useGrouping: false,
+    useGrouping: true,
     maximumFractionDigits,
     minimumFractionDigits: 0,
   }).format(value);

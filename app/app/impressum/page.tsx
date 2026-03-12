@@ -16,7 +16,7 @@ export default function ImpressumPage() {
           <div className={styles.body}>
             <h2>Anbieter (Betreiber der Website)</h2>
             <p>
-              <strong>HospitalInsights (Studienprojekt)</strong>
+              <strong>Hospitalinsights (Studienprojekt)</strong>
               <br />
               Rombergstraße 40
               <br />
@@ -39,7 +39,7 @@ export default function ImpressumPage() {
             </p>
 
             <h2>Projektkontext</h2>
-            <p>HospitalInsights ist ein Studienprojekt an der Privaten Hochschule für Wirtschaft und Technik (PHWT), Standort Vechta.</p>
+            <p>Hospitalinsights ist ein Studienprojekt an der Privaten Hochschule für Wirtschaft und Technik (PHWT), Standort Vechta.</p>
 
             <h2>Haftungshinweis</h2>
             <p>

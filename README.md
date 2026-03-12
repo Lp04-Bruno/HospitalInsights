@@ -1,6 +1,6 @@
-# HospitalInsights
+# Hospitalinsights
 
-HospitalInsights ist eine Web-Plattform, die Jahresabschlüsse/Bilanzen von Krankenhäusern verständlich aufbereitet und vergleichbar macht (Benchmarking).
+Hospitalinsights ist eine Web-Plattform, die Jahresabschlüsse/Bilanzen von Krankenhäusern verständlich aufbereitet und vergleichbar macht (Benchmarking).
 
 ## Dev-Stack
 

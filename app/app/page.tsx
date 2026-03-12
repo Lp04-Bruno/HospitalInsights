@@ -63,7 +63,7 @@ export default async function Home() {
       <div className={styles.page}>
         <header className={styles.header}>
           <div className={styles.brand}>
-            <h1 className={styles.title}>HospitalInsights</h1>
+            <h1 className={styles.title}>Hospitalinsights</h1>
             <p className={styles.subtitle}>Auswertung und Vergleich von Kennzahlen.</p>
           </div>
           <nav className={styles.nav}>
