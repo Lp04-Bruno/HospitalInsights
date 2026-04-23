@@ -21,7 +21,7 @@ async function createUser(formData: FormData) {
   const password = String(formData.get("password") ?? "");
   const role = String(formData.get("role") ?? "VIEWER") as Role;
 
-  if (!email || !name || !password) redirect("/dashboard/users");
+  if (!email || !name) redirect("/dashboard/users");
 
   const sessionEmail = String(session.user.email ?? "")
     .trim()
@@ -30,21 +30,33 @@ async function createUser(formData: FormData) {
     redirect("/dashboard/users");
   }
 
-  const hash = await bcrypt.hash(password, 12);
-
-  await prisma.user.upsert({
+  const existingUser = await prisma.user.findUnique({
     where: { email },
-    update: {
-      name,
-      role,
-    },
-    create: {
-      email,
-      name,
-      password: hash,
-      role,
-    },
+    select: { id: true },
   });
+
+  if (existingUser) {
+    await prisma.user.update({
+      where: { id: existingUser.id },
+      data: {
+        name,
+        role,
+      },
+    });
+  } else {
+    if (!password) redirect("/dashboard/users");
+
+    const hash = await bcrypt.hash(password, 12);
+
+    await prisma.user.create({
+      data: {
+        email,
+        name,
+        password: hash,
+        role,
+      },
+    });
+  }
 
   redirect("/dashboard/users");
 }
@@ -114,12 +126,12 @@ export default async function UsersPage() {
     <section className={styles.page}>
       <header className={styles.header}>
         <h1 className={styles.title}>Benutzerverwaltung</h1>
-        <p className={styles.subtitle}>Benutzer anlegen, Rollen zuweisen, Passwörter zurücksetzen.</p>
+        <p className={styles.subtitle}>Benutzer anlegen, Stammdaten pflegen, Rollen zuweisen, Passwörter zurücksetzen.</p>
       </header>
 
       <div className={styles.grid}>
         <div className={styles.card}>
-          <h2 className={styles.cardTitle}>Benutzer anlegen (oder updaten)</h2>
+          <h2 className={styles.cardTitle}>Benutzer anlegen oder aktualisieren</h2>
           <form action={createUser} className={styles.form}>
             <div className={styles.row}>
               <label className={styles.label}>
@@ -135,8 +147,8 @@ export default async function UsersPage() {
             </div>
             <div className={styles.row}>
               <label className={styles.label}>
-                Passwort
-                <input name="password" className={styles.input} type="password" required />
+                Initialpasswort
+                <input name="password" className={styles.input} type="password" placeholder="Nur für neue Benutzer erforderlich" />
               </label>
             </div>
             <div className={styles.row}>
@@ -153,7 +165,7 @@ export default async function UsersPage() {
             </div>
             <div className={styles.actions}>
               <button className={styles.button} type="submit">
-                Speichern
+                Benutzer speichern
               </button>
             </div>
           </form>

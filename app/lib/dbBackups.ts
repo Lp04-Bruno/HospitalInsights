@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { createReadStream } from "node:fs";
-import { mkdir, readdir, rename, stat, unlink, writeFile } from "node:fs/promises";
+import { mkdir, open, readdir, rename, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 export type BackupKind = "daily" | "manual" | "upload" | "data" | "unknown";
@@ -22,6 +22,10 @@ export type BackupInfo = {
   sizeBytes: number;
   createdAt: Date;
 };
+
+const BACKUP_LOCK_RETRY_MS = 250;
+const BACKUP_LOCK_TIMEOUT_MS = 30_000;
+const BACKUP_LOCK_STALE_MS = 10 * 60 * 1000;
 
 function requireEnv(name: string): string {
   const v = process.env[name];
@@ -173,11 +177,54 @@ function runCapture(cmd: string, args: string[], env: Record<string, string | un
 async function withLock<T>(fn: () => Promise<T>): Promise<T> {
   await ensureBackupDir();
   const lockPath = path.join(getBackupDir(), ".lock");
+  const startedAt = Date.now();
+  let lockHandle: Awaited<ReturnType<typeof open>> | null = null;
 
-  await writeFile(lockPath, String(Date.now()));
+  while (!lockHandle) {
+    try {
+      lockHandle = await open(lockPath, "wx");
+      await lockHandle.writeFile(
+        JSON.stringify({
+          pid: process.pid,
+          createdAt: new Date().toISOString(),
+        })
+      );
+      break;
+    } catch (err) {
+      const anyErr = err as NodeJS.ErrnoException;
+      if (anyErr.code !== "EEXIST") throw err;
+
+      try {
+        const existing = await stat(lockPath);
+        const ageMs = Date.now() - existing.mtimeMs;
+        if (ageMs >= BACKUP_LOCK_STALE_MS) {
+          await unlink(lockPath).catch(() => {
+            // Another process may have released the stale lock first.
+          });
+          continue;
+        }
+      } catch (statErr) {
+        const anyStatErr = statErr as NodeJS.ErrnoException;
+        if (anyStatErr.code === "ENOENT") continue;
+        throw statErr;
+      }
+
+      if (Date.now() - startedAt >= BACKUP_LOCK_TIMEOUT_MS) {
+        throw new Error("Backup operation is busy. Another backup or restore is still running.");
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, BACKUP_LOCK_RETRY_MS));
+    }
+  }
+
   try {
     return await fn();
   } finally {
+    try {
+      await lockHandle?.close();
+    } catch {
+      // ignore
+    }
     try {
       await unlink(lockPath);
     } catch {

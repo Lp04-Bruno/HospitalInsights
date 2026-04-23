@@ -1,13 +1,24 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { getServerAuthSession } from "@/lib/auth";
 import { ConfirmSubmitButton } from "@/app/dashboard/_components/ConfirmSubmitButton";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
 
+async function requireHospitalAccess() {
+  const session = await getServerAuthSession();
+  if (!session) redirect("/signin?callbackUrl=/dashboard/hospitals");
+  if (session.user.role !== "ADMIN" && session.user.role !== "EDITOR") {
+    redirect("/dashboard/forbidden");
+  }
+}
+
 async function createHospital(formData: FormData) {
   "use server";
+
+  await requireHospitalAccess();
 
   const name = String(formData.get("name") ?? "").trim();
   const city = String(formData.get("city") ?? "").trim();
@@ -30,6 +41,8 @@ async function createHospital(formData: FormData) {
 async function deleteHospital(formData: FormData) {
   "use server";
 
+  await requireHospitalAccess();
+
   const hospitalId = String(formData.get("hospitalId") ?? "");
   if (!hospitalId) redirect("/dashboard/hospitals");
 
@@ -41,6 +54,8 @@ async function deleteHospital(formData: FormData) {
 
 async function deleteHospitalYear(formData: FormData) {
   "use server";
+
+  await requireHospitalAccess();
 
   const hospitalId = String(formData.get("hospitalId") ?? "");
   const year = Number(String(formData.get("year") ?? "").trim());
@@ -80,6 +95,8 @@ type HospitalsPageProps = {
 };
 
 export default async function HospitalsPage({ searchParams }: HospitalsPageProps) {
+  await requireHospitalAccess();
+
   const hospitals = await prisma.hospital.findMany({
     orderBy: { name: "asc" },
   });
