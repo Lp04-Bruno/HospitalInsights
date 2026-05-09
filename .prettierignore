@@ -18,6 +18,7 @@
 # Generated
 **/*.tsbuildinfo
 app/prisma/generated/
+prisma/generated/
 
 # Docker
 **/.docker/

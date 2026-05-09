@@ -60,6 +60,7 @@ export default async function Home() {
   });
 
   const explorerHref = views.length > 0 ? "#insights-explorer" : "#landing-notice";
+  const outputHref = views.length > 0 ? "#insights-output" : "#landing-notice";
 
   return (
     <main className={styles.shell}>
@@ -70,10 +71,10 @@ export default async function Home() {
           </div>
           <nav className={styles.nav}>
             <a href={explorerHref} className={styles.navLink}>
-              Explorer
+              Auswahl
             </a>
-            <a href={explorerHref} className={styles.navLink}>
-              Vergleich
+            <a href={outputHref} className={styles.navLink}>
+              Ausgabe
             </a>
             {session ? (
               <Link href="/dashboard" className={styles.navLink}>

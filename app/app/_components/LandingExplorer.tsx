@@ -272,7 +272,7 @@ export default function LandingExplorer({ views, hospitals, initialView }: Props
         </div>
       </div>
 
-      <div className={compare ? styles.embedsCompare : styles.embedsSingle}>
+      <div id="insights-output" className={compare ? styles.embedsCompare : styles.embedsSingle}>
         <div className={`${styles.embedCard} ${embedA.status === "ready" ? styles.embedCardReady : ""}`}>
           <div className={styles.embedHeader}>
             <div className={styles.embedHeaderCopy}>

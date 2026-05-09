@@ -335,7 +335,7 @@
 
 .controlsGrid {
   display: grid;
-  grid-template-columns: minmax(220px, 280px) minmax(220px, 280px) minmax(260px, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
   align-items: stretch;
 }
 
@@ -409,6 +409,7 @@
 .embedsCompare {
   display: grid;
   gap: 16px;
+  scroll-margin-top: 24px;
 }
 
 .embedsSingle {
