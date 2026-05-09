@@ -17,8 +17,7 @@
 
 # Generated
 **/*.tsbuildinfo
-
-# Prisma generated client (installed into node_modules anyway)
+app/prisma/generated/
 
 # Docker
 **/.docker/
