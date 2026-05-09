@@ -1,26 +1,30 @@
+import "dotenv/config";
 import { execSync } from "node:child_process";
+import { config } from "dotenv";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "../prisma/generated/client";
 
-function run(cmd) {
+config({ path: "../infra/.env", quiet: true });
+
+function run(cmd: string) {
   execSync(cmd, { stdio: "inherit" });
 }
 
-function sleep(ms) {
+function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
+}
+
+function createPrisma() {
+  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+  return new PrismaClient({ adapter });
 }
 
 if (process.env.SKIP_DB_BOOTSTRAP === "true") {
   process.exit(0);
 }
 
-let PrismaClient;
 try {
-  ({ PrismaClient } = await import("@prisma/client"));
-} catch {
-  process.exit(0);
-}
-
-try {
-  const prisma = new PrismaClient();
+  const prisma = createPrisma();
   let ready = false;
   for (let attempt = 0; attempt < 20; attempt += 1) {
     try {
@@ -32,12 +36,11 @@ try {
     }
   }
 
+  await prisma.$disconnect();
+
   if (!ready) {
-    await prisma.$disconnect();
     process.exit(0);
   }
-
-  await prisma.$disconnect();
 } catch {
   process.exit(0);
 }
@@ -48,7 +51,7 @@ try {
   process.exit(0);
 }
 
-const prisma = new PrismaClient();
+const prisma = createPrisma();
 try {
   const marker = await prisma.lineItem.findFirst({
     where: { code: "BAL_P__TOTAL" },
@@ -115,7 +118,7 @@ try {
   }
 
   try {
-    run("npx ts-node --transpile-only -P prisma/tsconfig.seed.json scripts/sync-lineitems-from-catalog.ts");
+    run("npx tsx scripts/sync-lineitems-from-catalog.ts");
   } catch {
     // keep dev startup resilient
   }

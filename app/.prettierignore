@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Build output
+.next/
+out/
+dist/
+build/
+
+# Caches
+.turbo/
+.vercel/
+.cache/
+
+# Logs
+*.log
+
+# Generated
+*.tsbuildinfo
+prisma/generated/

@@ -1,6 +1,12 @@
-import { PrismaClient, StatementType, Unit } from "@prisma/client";
+import "dotenv/config";
+import { config } from "dotenv";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "../prisma/generated/client";
+import { StatementType, Unit } from "../prisma/generated/enums";
 
 import { getStatementCatalog } from "../lib/statementCatalog";
+
+config({ path: "../infra/.env", quiet: true });
 
 type DbLineItem = {
   code: string;
@@ -19,7 +25,8 @@ function chunk<T>(arr: T[], size: number): T[][] {
 }
 
 async function main() {
-  const prisma = new PrismaClient();
+  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+  const prisma = new PrismaClient({ adapter });
   try {
     const { lineItems } = getStatementCatalog();
 

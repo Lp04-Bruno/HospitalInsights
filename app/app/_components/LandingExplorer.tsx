@@ -65,6 +65,15 @@ function parseViewKey(views: ViewOption[], viewKey: string): ViewOption | undefi
   return views.find((v) => v.type === type && v.id === id);
 }
 
+function describeEmbedStatus(canLoadEmbeds: boolean, state: EmbedState, hasSelection: boolean) {
+  if (!canLoadEmbeds) return { label: "Cookies", tone: "idle" as const };
+  if (!hasSelection) return { label: "Warten", tone: "idle" as const };
+  if (state.status === "loading") return { label: "Lädt", tone: "loading" as const };
+  if (state.status === "ready") return { label: "Live", tone: "ready" as const };
+  if (state.status === "error") return { label: "Fehler", tone: "error" as const };
+  return { label: "Bereit", tone: "idle" as const };
+}
+
 export default function LandingExplorer({ views, hospitals, initialView }: Props) {
   const consent = useSyncExternalStore(subscribeConsent, getConsentSnapshot, getConsentServerSnapshot);
   const [viewKey, setViewKey] = useState<string>(() => initialViewKey(views, initialView));
@@ -140,33 +149,48 @@ export default function LandingExplorer({ views, hospitals, initialView }: Props
   const selectedView = parseViewKey(views, viewKey);
   const hospitalASelected = hospitals.find((h) => h.id === hospitalA);
   const hospitalBSelected = hospitals.find((h) => h.id === hospitalB);
+  const embedAStatus = describeEmbedStatus(canLoadEmbeds, embedA, Boolean(viewKey && hospitalA));
+  const embedBStatus = describeEmbedStatus(canLoadEmbeds, embedB, Boolean(compare && viewKey && hospitalB));
 
   return (
-    <section className={styles.explorer} aria-label="Auswahl">
+    <section className={styles.explorer} aria-label="Explorer">
       <div className={styles.controlsCard}>
         <div className={styles.controlsHeader}>
-          <h3 className={styles.controlsTitle}>Auswahl</h3>
-          <label className={styles.toggle}>
-            <input
-              type="checkbox"
-              checked={compare}
-              onChange={(e) => {
-                const next = e.target.checked;
-                setCompare(next);
-                if (!next) {
-                  setHospitalB("");
-                  setEmbedB({ status: "idle" });
-                } else if (hospitalB && canLoadEmbeds) {
-                  loadEmbedB(viewKey, hospitalB);
-                }
-              }}
-            />
-            <span>Vergleich</span>
+          <div className={styles.controlsIntro}>
+            <div className={styles.controlsEyebrow}>Explorer</div>
+            <h3 className={styles.controlsTitle}>Ansicht auswählen</h3>
+          </div>
+
+          <label className={styles.togglePanel}>
+            <div className={styles.toggleCopy}>
+              <span className={styles.toggleLabel}>Vergleich</span>
+              <span className={styles.toggleMeta}>{compare ? "Zwei Häuser" : "Ein Haus"}</span>
+            </div>
+            <span className={styles.switch}>
+              <input
+                className={styles.switchInput}
+                type="checkbox"
+                checked={compare}
+                onChange={(e) => {
+                  const next = e.target.checked;
+                  setCompare(next);
+                  if (!next) {
+                    setHospitalB("");
+                    setEmbedB({ status: "idle" });
+                  } else if (hospitalB && canLoadEmbeds) {
+                    loadEmbedB(viewKey, hospitalB);
+                  }
+                }}
+              />
+              <span className={styles.switchTrack}>
+                <span className={styles.switchThumb} />
+              </span>
+            </span>
           </label>
         </div>
 
         <div className={styles.controlsGrid}>
-          <label className={styles.field}>
+          <label className={`${styles.field} ${styles.fieldCard}`}>
             <span className={styles.fieldLabel}>Ansicht</span>
             <select
               className={styles.select}
@@ -195,7 +219,7 @@ export default function LandingExplorer({ views, hospitals, initialView }: Props
             </select>
           </label>
 
-          <label className={styles.field}>
+          <label className={`${styles.field} ${styles.fieldCard}`}>
             <span className={styles.fieldLabel}>{compare ? "Krankenhaus A" : "Krankenhaus"}</span>
             <select
               className={styles.select}
@@ -217,7 +241,7 @@ export default function LandingExplorer({ views, hospitals, initialView }: Props
           </label>
 
           {compare ? (
-            <label className={styles.field}>
+            <label className={`${styles.field} ${styles.fieldCard}`}>
               <span className={styles.fieldLabel}>Krankenhaus B</span>
               <select
                 className={styles.select}
@@ -239,50 +263,97 @@ export default function LandingExplorer({ views, hospitals, initialView }: Props
             </label>
           ) : null}
 
-          <div className={styles.hint}>{selectedView ? `${selectedView.name} · ` : ""}Datenquelle: Metabase</div>
+          <div className={`${styles.fieldCard} ${styles.selectionCard}`}>
+            <div className={styles.selectionEyebrow}>Aktuell</div>
+            <div className={styles.selectionTitle}>{selectedView?.name ?? "Noch keine Ansicht"}</div>
+            <div className={styles.selectionText}>{hospitalASelected ? hospitalLabel(hospitalASelected) : "Krankenhaus auswählen"}</div>
+            <div className={styles.hint}>Metabase</div>
+          </div>
         </div>
       </div>
 
-      <div className={compare ? styles.embedsCompare : styles.embedsSingle}>
-        <div className={styles.embedCard}>
+      <div id="insights-output" className={compare ? styles.embedsCompare : styles.embedsSingle}>
+        <div className={`${styles.embedCard} ${embedA.status === "ready" ? styles.embedCardReady : ""}`}>
           <div className={styles.embedHeader}>
-            <div className={styles.embedTitle}>{compare ? "A" : "Ausgabe"}</div>
-            <div className={styles.embedMeta}>{hospitalASelected ? hospitalLabel(hospitalASelected) : "Bitte auswählen"}</div>
+            <div className={styles.embedHeaderCopy}>
+              <div className={styles.embedTitle}>{compare ? "Krankenhaus A" : "Ausgabe"}</div>
+              <div className={styles.embedSubhead}>{selectedView?.name ?? "Ansicht wählen"}</div>
+            </div>
+            <div className={styles.embedHeaderSide}>
+              <span
+                className={`${styles.embedStatus} ${styles[`embedStatus${embedAStatus.tone[0].toUpperCase()}${embedAStatus.tone.slice(1)}`]}`}
+              >
+                {embedAStatus.label}
+              </span>
+              <div className={styles.embedMeta}>{hospitalASelected ? hospitalLabel(hospitalASelected) : "Bitte auswählen"}</div>
+            </div>
           </div>
           <div className={styles.embedBody}>
             {!canLoadEmbeds ? (
-              <div className={styles.embedPlaceholder}>Externe Inhalte (Metabase) sind deaktiviert. Bitte im Cookie-Banner zustimmen.</div>
+              <div className={styles.embedPlaceholder}>
+                <div className={styles.embedPlaceholderTitle}>Cookies freigeben</div>
+                <div className={styles.embedPlaceholderText}>Dann kann die Ansicht geladen werden.</div>
+              </div>
             ) : embedA.status === "idle" ? (
-              <div className={styles.embedPlaceholder}>Ansicht und Krankenhaus auswählen.</div>
+              <div className={styles.embedPlaceholder}>
+                <div className={styles.embedPlaceholderTitle}>Bereit</div>
+                <div className={styles.embedPlaceholderText}>Ansicht und Krankenhaus auswählen.</div>
+              </div>
             ) : embedA.status === "loading" ? (
-              <div className={styles.embedPlaceholder}>Lädt…</div>
+              <div className={styles.embedPlaceholder}>
+                <div className={styles.embedPlaceholderTitle}>Lädt</div>
+                <div className={styles.embedPlaceholderText}>Die Ansicht wird aufgebaut.</div>
+              </div>
             ) : embedA.status === "error" ? (
-              <div className={styles.embedError}>{embedA.message}</div>
+              <div className={styles.embedError}>
+                <div className={styles.embedPlaceholderTitle}>Fehler</div>
+                <div className={styles.embedPlaceholderText}>{embedA.message}</div>
+              </div>
             ) : (
-              <iframe title="Metabase Embed A" src={embedA.url} className={styles.frame} />
+              <iframe title="Metabase Embed A" src={embedA.url} className={`${styles.frame} ${styles.frameReady}`} />
             )}
           </div>
         </div>
 
         {compare ? (
-          <div className={styles.embedCard}>
+          <div className={`${styles.embedCard} ${embedB.status === "ready" ? styles.embedCardReady : ""}`}>
             <div className={styles.embedHeader}>
-              <div className={styles.embedTitle}>B</div>
-              <div className={styles.embedMeta}>{hospitalBSelected ? hospitalLabel(hospitalBSelected) : "Bitte auswählen"}</div>
+              <div className={styles.embedHeaderCopy}>
+                <div className={styles.embedTitle}>Krankenhaus B</div>
+                <div className={styles.embedSubhead}>{selectedView?.name ?? "Ansicht wählen"}</div>
+              </div>
+              <div className={styles.embedHeaderSide}>
+                <span
+                  className={`${styles.embedStatus} ${styles[`embedStatus${embedBStatus.tone[0].toUpperCase()}${embedBStatus.tone.slice(1)}`]}`}
+                >
+                  {embedBStatus.label}
+                </span>
+                <div className={styles.embedMeta}>{hospitalBSelected ? hospitalLabel(hospitalBSelected) : "Bitte auswählen"}</div>
+              </div>
             </div>
             <div className={styles.embedBody}>
               {!canLoadEmbeds ? (
                 <div className={styles.embedPlaceholder}>
-                  Externe Inhalte (Metabase) sind deaktiviert. Bitte im Cookie-Banner zustimmen.
+                  <div className={styles.embedPlaceholderTitle}>Cookies freigeben</div>
+                  <div className={styles.embedPlaceholderText}>Dann kann der Vergleich geladen werden.</div>
                 </div>
               ) : embedB.status === "idle" ? (
-                <div className={styles.embedPlaceholder}>Krankenhaus B auswählen.</div>
+                <div className={styles.embedPlaceholder}>
+                  <div className={styles.embedPlaceholderTitle}>Bereit</div>
+                  <div className={styles.embedPlaceholderText}>Krankenhaus B auswählen.</div>
+                </div>
               ) : embedB.status === "loading" ? (
-                <div className={styles.embedPlaceholder}>Lädt…</div>
+                <div className={styles.embedPlaceholder}>
+                  <div className={styles.embedPlaceholderTitle}>Lädt</div>
+                  <div className={styles.embedPlaceholderText}>Die Vergleichsansicht wird aufgebaut.</div>
+                </div>
               ) : embedB.status === "error" ? (
-                <div className={styles.embedError}>{embedB.message}</div>
+                <div className={styles.embedError}>
+                  <div className={styles.embedPlaceholderTitle}>Fehler</div>
+                  <div className={styles.embedPlaceholderText}>{embedB.message}</div>
+                </div>
               ) : (
-                <iframe title="Metabase Embed B" src={embedB.url} className={styles.frame} />
+                <iframe title="Metabase Embed B" src={embedB.url} className={`${styles.frame} ${styles.frameReady}`} />
               )}
             </div>
           </div>

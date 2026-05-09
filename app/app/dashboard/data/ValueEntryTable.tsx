@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Unit } from "@prisma/client";
+import { Unit } from "@/prisma/generated/enums";
 
 import styles from "./page.module.css";
 import { FormattedValueInput } from "./FormattedValueInput";

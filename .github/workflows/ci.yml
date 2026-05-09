@@ -15,10 +15,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js 20
+      - name: Use Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: "npm"
           cache-dependency-path: app/package-lock.json
 
@@ -35,4 +35,4 @@ jobs:
         run: npm run lint
 
       - name: Prettier check
-        run: npx --no-install prettier --check ..
+        run: npx --no-install prettier --ignore-path ../.prettierignore --check ..

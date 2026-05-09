@@ -1,15 +1,13 @@
 .footer {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px 16px;
-  border-radius: 14px;
-  border: 1px solid var(--hi-border);
-  background: var(--hi-glass-topbar);
-  backdrop-filter: blur(10px);
-  color: var(--hi-text-muted);
-  font-size: 13px;
+  padding: 22px 0 0;
+  border-top: 1px solid var(--landing-line, rgba(145, 170, 189, 0.24));
+  color: var(--landing-muted, #5d7587);
+  font-size: 12px;
 }
 
 .links {
@@ -19,18 +17,22 @@
 }
 
 .link {
-  color: var(--hi-text);
+  color: var(--landing-text, #102235);
   text-decoration: none;
-  font-weight: 650;
+  font-weight: 700;
+  transition:
+    color 160ms ease,
+    opacity 160ms ease;
 }
 
 .link:hover {
-  text-decoration: underline;
+  color: var(--landing-blue, #145af4);
+  opacity: 0.9;
 }
 
 @media (max-width: 640px) {
   .footer {
-    flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    padding-top: 18px;
   }
 }

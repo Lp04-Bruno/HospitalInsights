@@ -4,6 +4,7 @@ import { getServerAuthSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import LandingExplorer from "@/app/_components/LandingExplorer";
 import Footer from "@/app/_components/Footer";
+import LandingThemeToggle from "@/app/_components/LandingThemeToggle";
 
 type ViewOption = {
   type: "dashboard" | "question";
@@ -58,56 +59,57 @@ export default async function Home() {
     select: { id: true, name: true, city: true, state: true },
   });
 
+  const explorerHref = views.length > 0 ? "#insights-explorer" : "#landing-notice";
+  const outputHref = views.length > 0 ? "#insights-output" : "#landing-notice";
+
   return (
     <main className={styles.shell}>
       <div className={styles.page}>
         <header className={styles.header}>
           <div className={styles.brand}>
             <h1 className={styles.title}>Hospitalinsights</h1>
-            <p className={styles.subtitle}>Auswertung und Vergleich von Kennzahlen.</p>
           </div>
           <nav className={styles.nav}>
+            <a href={explorerHref} className={styles.navLink}>
+              Auswahl
+            </a>
+            <a href={outputHref} className={styles.navLink}>
+              Ausgabe
+            </a>
             {session ? (
-              <Link href="/dashboard" className={`${styles.button} ${styles.primary}`}>
+              <Link href="/dashboard" className={styles.navLink}>
                 Dashboard
               </Link>
             ) : (
-              <Link href="/signin?callbackUrl=/dashboard" className={`${styles.button} ${styles.primary}`}>
-                Sign in
+              <Link href="/signin?callbackUrl=/dashboard" className={styles.navLink}>
+                Dashboard
               </Link>
             )}
           </nav>
+          <LandingThemeToggle />
         </header>
 
         <section className={styles.hero} aria-label="Start">
           <div className={styles.heroContent}>
-            <div className={styles.heroBadge}>Metabase</div>
-            <h2 className={styles.heroTitle}>Kennzahlen pro Krankenhaus</h2>
+            <h2 className={styles.heroTitle}>Datenbasierte Krankenhaus-Analyse</h2>
             <p className={styles.heroText}>
-              Wähle Ansicht und Krankenhaus aus. Optional kannst du zwei Krankenhäuser nebeneinander vergleichen.
+              Analysieren Sie finanzielle und operative Kennzahlen verschiedener Institutionen. Gewinnen Sie fundierte Einblicke durch
+              unseren interaktiven Explorer.
             </p>
-
-            <div className={styles.stats}>
-              <div className={styles.stat}>
-                <div className={styles.statValue}>{views.length}</div>
-                <div className={styles.statLabel}>Ansichten</div>
-              </div>
-              <div className={styles.stat}>
-                <div className={styles.statValue}>{hospitals.length}</div>
-                <div className={styles.statLabel}>Krankenhäuser</div>
-              </div>
-            </div>
           </div>
-          <div className={styles.heroArt} aria-hidden="true" />
         </section>
 
-        {views.length > 0 ? (
-          <LandingExplorer views={views} hospitals={hospitals} initialView={initialView} />
-        ) : (
-          <section className={styles.notice} aria-label="Hinweis">
-            Keine Metabase-Ansicht konfiguriert. Setze `METABASE_DASHBOARD_ID` oder `METABASE_DASHBOARD_CATALOG`.
-          </section>
-        )}
+        <section className={styles.explorerSection} aria-label="Explorer">
+          {views.length > 0 ? (
+            <div id="insights-explorer" className={styles.explorerAnchor}>
+              <LandingExplorer views={views} hospitals={hospitals} initialView={initialView} />
+            </div>
+          ) : (
+            <section id="landing-notice" className={styles.notice} aria-label="Hinweis">
+              Keine Metabase-Ansicht konfiguriert. Setze `METABASE_DASHBOARD_ID` oder `METABASE_DASHBOARD_CATALOG`.
+            </section>
+          )}
+        </section>
 
         <Footer />
       </div>
