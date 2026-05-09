@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getServerAuthSession } from "@/lib/auth";
-import { Role } from "@prisma/client";
+import { Role } from "@/prisma/generated/enums";
 import styles from "./page.module.css";
 import { ConfirmSubmitButton } from "@/app/dashboard/_components/ConfirmSubmitButton";
 import { ResetPasswordButton } from "./ResetPasswordButton";

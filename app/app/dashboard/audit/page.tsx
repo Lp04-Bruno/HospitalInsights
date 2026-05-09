@@ -4,7 +4,8 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getServerAuthSession } from "@/lib/auth";
 import { statementLabel } from "@/lib/statements";
-import { Prisma, StatementType, Unit } from "@prisma/client";
+import { StatementType, Unit } from "@/prisma/generated/enums";
+import type { FactChangeGetPayload } from "@/prisma/generated/models";
 
 import styles from "./page.module.css";
 import AuditFilters from "./AuditFilters";
@@ -112,7 +113,7 @@ const changeInclude = {
   },
 } as const;
 
-type ChangeWithRun = Prisma.FactChangeGetPayload<{ include: typeof changeInclude }>;
+type ChangeWithRun = FactChangeGetPayload<{ include: typeof changeInclude }>;
 
 export const dynamic = "force-dynamic";
 

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 import { getServerAuthSession } from "@/lib/auth";
-import { Unit } from "@prisma/client";
+import { Unit } from "@/prisma/generated/enums";
 
 import styles from "./page.module.css";
 

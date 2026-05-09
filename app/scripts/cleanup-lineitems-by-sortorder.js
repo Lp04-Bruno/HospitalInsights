@@ -1,7 +1,12 @@
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { PrismaClient } = require("@prisma/client");
+import "dotenv/config";
+import { config } from "dotenv";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "../prisma/generated/client.ts";
 
-const prisma = new PrismaClient();
+config({ path: "../infra/.env", quiet: true });
+
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+const prisma = new PrismaClient({ adapter });
 
 function pad4(n) {
   return String(n).padStart(4, "0");

@@ -1,6 +1,6 @@
 "use client";
 
-import { Unit } from "@prisma/client";
+import { Unit } from "@/prisma/generated/enums";
 import { useCallback, useRef } from "react";
 
 import { parseUserNumberDetailed } from "./numberParsing";

@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerAuthSession } from "@/lib/auth";
 import { statementLabel } from "@/lib/statements";
 import { getStatementCatalog } from "@/lib/statementCatalog";
-import { StatementType, Unit } from "@prisma/client";
+import { StatementType, Unit } from "@/prisma/generated/enums";
 import styles from "./page.module.css";
 import { parseUserNumberDetailed } from "@/app/dashboard/data/numberParsing";
 import { DirtySaveForm } from "@/app/dashboard/data/DirtySaveForm";
