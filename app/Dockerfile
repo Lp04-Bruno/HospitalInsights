@@ -2,6 +2,8 @@ FROM node:24-alpine AS builder
 
 WORKDIR /app
 
+ENV DATABASE_URL=postgresql://hospitalinsights:hospitalinsights_pw@localhost:5432/hospitalinsights?schema=public
+
 RUN apk add --no-cache ca-certificates openssl
 
 COPY package.json package-lock.json* ./
@@ -25,6 +27,7 @@ COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/scripts/validate-runtime-env.mjs ./scripts/validate-runtime-env.mjs
 COPY --from=builder /app/prisma ./prisma
 

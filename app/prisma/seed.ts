@@ -1,11 +1,18 @@
+import "dotenv/config";
+import { config } from "dotenv";
+import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcrypt";
-import { PrismaClient, Role, StatementType, Unit } from "@prisma/client";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 import { getStatementCatalog } from "../lib/statementCatalog";
+import { PrismaClient } from "./generated/client";
+import { Role, StatementType, Unit } from "./generated/enums";
 
-const prisma = new PrismaClient();
+config({ path: "../infra/.env", quiet: true });
+
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+const prisma = new PrismaClient({ adapter });
 
 function parseGermanNumber(raw: string): number | null {
   const trimmed = raw.trim();

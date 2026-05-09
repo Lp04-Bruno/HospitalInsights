@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
-import { Unit, type StatementType } from "@prisma/client";
+import { Unit, type StatementType } from "@/prisma/generated/enums";
 
 import styles from "./page.module.css";
 import { ValueEntryTable } from "./ValueEntryTable";

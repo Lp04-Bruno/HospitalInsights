@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { StatementType, Unit } from "@prisma/client";
+import { StatementType, Unit } from "@/prisma/generated/enums";
 
 import { prisma } from "@/lib/prisma";
 import { getServerAuthSession } from "@/lib/auth";

@@ -1,4 +1,4 @@
-import { StatementType } from "@prisma/client";
+import { StatementType } from "../prisma/generated/enums";
 
 export function statementLabel(st: StatementType) {
   switch (st) {

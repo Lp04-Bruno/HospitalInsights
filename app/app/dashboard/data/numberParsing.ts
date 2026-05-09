@@ -1,4 +1,4 @@
-import { Unit } from "@prisma/client";
+import { Unit } from "@/prisma/generated/enums";
 
 export type ParseUserNumberResult = { kind: "empty" } | { kind: "invalid" } | { kind: "value"; value: number };
 
