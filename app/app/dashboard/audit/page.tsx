@@ -342,6 +342,7 @@ export default async function AuditLogPage({ searchParams }: PageProps) {
       </div>
 
       <AuditFilters
+        key={qsBase.toString()}
         hospitals={hospitals.map((h) => ({ value: h.id, label: h.name }))}
         users={users.map((u) => ({ value: u.id, label: u.email ?? u.name ?? u.id }))}
         years={years}
