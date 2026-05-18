@@ -1,0 +1,86 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":dependencyDashboard"],
+  "baseBranchPatterns": ["develop"],
+  "enabledManagers": ["npm", "dockerfile", "docker-compose", "github-actions"],
+  "timezone": "Europe/Berlin",
+  "schedule": ["* 20-21 * * 5"],
+  "labels": ["dependencies"],
+  "rangeStrategy": "bump",
+  "minimumReleaseAge": "3 days",
+  "prConcurrentLimit": 5,
+  "osvVulnerabilityAlerts": true,
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "addLabels": ["security"],
+    "prCreation": "immediate",
+    "vulnerabilityFixStrategy": "lowest"
+  },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["* 20-21 * * 5"]
+  },
+  "packageRules": [
+    {
+      "description": "Group non-major production npm updates.",
+      "groupName": "production dependencies",
+      "matchManagers": ["npm"],
+      "matchDepTypes": ["dependencies"],
+      "matchUpdateTypes": ["minor", "patch"]
+    },
+    {
+      "description": "Group non-major development npm updates.",
+      "groupName": "development dependencies",
+      "matchManagers": ["npm"],
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["minor", "patch"]
+    },
+    {
+      "description": "Keep Prisma packages aligned.",
+      "groupName": "prisma",
+      "matchPackageNames": ["@prisma/adapter-pg", "@prisma/client", "prisma"]
+    },
+    {
+      "description": "Keep Next.js packages aligned.",
+      "groupName": "nextjs",
+      "matchPackageNames": ["next", "eslint-config-next"]
+    },
+    {
+      "description": "Keep React packages and their types aligned.",
+      "groupName": "react",
+      "matchPackageNames": ["react", "react-dom", "@types/react", "@types/react-dom"]
+    },
+    {
+      "description": "Keep Tailwind packages aligned.",
+      "groupName": "tailwind",
+      "matchPackageNames": ["tailwindcss", "@tailwindcss/postcss"]
+    },
+    {
+      "description": "Keep lint and formatting tooling aligned.",
+      "groupName": "lint and formatting",
+      "matchPackageNames": ["eslint", "eslint-config-prettier", "prettier"]
+    },
+    {
+      "description": "Keep TypeScript tooling aligned.",
+      "groupName": "typescript tooling",
+      "matchPackageNames": ["typescript", "tsx", "@types/node"]
+    },
+    {
+      "description": "Group non-major container image updates.",
+      "groupName": "container images",
+      "matchManagers": ["dockerfile", "docker-compose"],
+      "matchUpdateTypes": ["minor", "patch", "digest"]
+    },
+    {
+      "description": "Group GitHub Actions updates.",
+      "groupName": "github actions",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch", "digest"]
+    },
+    {
+      "description": "Keep Node runtime bumps explicit.",
+      "matchDatasources": ["node-version"],
+      "enabled": false
+    }
+  ]
+}
