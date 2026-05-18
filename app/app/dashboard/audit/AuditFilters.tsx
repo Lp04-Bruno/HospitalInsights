@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import styles from "./page.module.css";
 
@@ -45,71 +45,25 @@ function buildQueryFromState(state: AuditFiltersProps["initial"]) {
   return qs;
 }
 
-function readParam(sp: URLSearchParams, key: string) {
-  return sp.get(key) ?? "";
-}
-
-function readBool(sp: URLSearchParams, key: string, opts?: { defaultTrue?: boolean }) {
-  const v = sp.get(key);
-  if (v === null) return opts?.defaultTrue ?? false;
-  if (v === "1" || v.toLowerCase() === "true") return true;
-  if (v === "0" || v.toLowerCase() === "false") return false;
-  return opts?.defaultTrue ?? false;
-}
-
 export default function AuditFilters(props: AuditFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const sp = useSearchParams();
 
   const [state, setState] = useState(props.initial);
 
-  useEffect(() => {
-    if (!sp) return;
-
-    const next: AuditFiltersProps["initial"] = {
-      hospitalId: readParam(sp, "hospitalId"),
-      userId: readParam(sp, "userId"),
-      from: readParam(sp, "from"),
-      to: readParam(sp, "to"),
-      q: readParam(sp, "q"),
-      year: readParam(sp, "year"),
-      statementType: readParam(sp, "statementType"),
-      realOnly: readBool(sp, "realOnly", { defaultTrue: true }),
-      mine: readBool(sp, "mine"),
-    };
-
-    const same = Object.entries(next).every(([k, v]) => (state as Record<string, unknown>)[k] === v);
-    if (!same) setState(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sp?.toString()]);
-
+  const initialQuery = useMemo(() => buildQueryFromState(props.initial).toString(), [props.initial]);
   const desiredQuery = useMemo(() => buildQueryFromState(state).toString(), [state]);
-
-  const yearSet = useMemo(() => new Set(props.years.map((y) => String(y))), [props.years]);
-
-  useEffect(() => {
-    if (!state.year) return;
-    if (yearSet.has(state.year)) return;
-    setState((s) => ({ ...s, year: "" }));
-  }, [state.year, yearSet]);
 
   const debounceRef = useRef<number | null>(null);
   const initialMount = useRef(true);
 
   useEffect(() => {
-    if (!sp) return;
-
     if (initialMount.current) {
       initialMount.current = false;
       return;
     }
 
-    const current = new URLSearchParams(sp.toString());
-    current.delete("page");
-    const currentStr = current.toString();
-
-    if (currentStr === desiredQuery) return;
+    if (initialQuery === desiredQuery) return;
 
     if (debounceRef.current) window.clearTimeout(debounceRef.current);
     debounceRef.current = window.setTimeout(() => {
@@ -120,7 +74,7 @@ export default function AuditFilters(props: AuditFiltersProps) {
     return () => {
       if (debounceRef.current) window.clearTimeout(debounceRef.current);
     };
-  }, [desiredQuery, pathname, router, sp]);
+  }, [desiredQuery, initialQuery, pathname, router]);
 
   return (
     <form
