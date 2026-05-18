@@ -16,7 +16,7 @@ services:
       retries: 10
 
   metabase:
-    image: metabase/metabase:v0.58.7.1
+    image: metabase/metabase:v0.61.1.1
     restart: unless-stopped
     depends_on:
       db:
