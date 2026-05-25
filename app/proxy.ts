@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
+import { EDITOR_ROLES, hasAnyRoleValue } from "@/lib/roles";
+
 const SIGN_IN_PATH = "/signin";
 
 function redirectToSignIn(req: NextRequest) {
@@ -26,7 +28,7 @@ export async function proxy(req: NextRequest) {
     const isForbidden = pathname === "/dashboard/forbidden";
 
     if (!isOverview && !isForbidden) {
-      if (role !== "ADMIN" && role !== "EDITOR") {
+      if (!hasAnyRoleValue(role, EDITOR_ROLES)) {
         const url = req.nextUrl.clone();
         url.pathname = "/dashboard/forbidden";
         return NextResponse.redirect(url);

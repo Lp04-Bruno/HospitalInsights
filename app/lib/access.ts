@@ -1,16 +1,12 @@
 import { redirect } from "next/navigation";
 
 import { getServerAuthSession } from "@/lib/auth";
-import { Role } from "@/prisma/generated/enums";
+import { ADMIN_ROLES, EDITOR_ROLES, hasAnyRoleValue, type AppRole } from "@/lib/roles";
 
-export const EDITOR_ROLES = [Role.ADMIN, Role.EDITOR] as const;
-export const ADMIN_ROLES = [Role.ADMIN] as const;
+export { ADMIN_ROLES, EDITOR_ROLES };
 
-type RoleLike = Role | (typeof EDITOR_ROLES)[number] | (typeof ADMIN_ROLES)[number];
-
-export function hasAnyRole(session: { user?: { role?: string } } | null | undefined, roles: readonly RoleLike[]) {
-  const role = session?.user?.role;
-  return roles.some((allowed) => allowed === role);
+export function hasAnyRole(session: { user?: { role?: string } } | null | undefined, roles: readonly AppRole[]) {
+  return hasAnyRoleValue(session?.user?.role, roles);
 }
 
 export async function requireSession(callbackUrl: string) {
@@ -19,7 +15,7 @@ export async function requireSession(callbackUrl: string) {
   return session;
 }
 
-export async function requireAnyRole(roles: readonly RoleLike[], callbackUrl: string) {
+export async function requireAnyRole(roles: readonly AppRole[], callbackUrl: string) {
   const session = await requireSession(callbackUrl);
   if (!hasAnyRole(session, roles)) redirect("/dashboard/forbidden");
   return session;
@@ -29,13 +25,13 @@ export async function requireAdmin(callbackUrl: string) {
   return requireAnyRole(ADMIN_ROLES, callbackUrl);
 }
 
-export async function getSessionIfAllowed(roles: readonly RoleLike[]) {
+export async function getSessionIfAllowed(roles: readonly AppRole[]) {
   const session = await getServerAuthSession();
   if (!session || !hasAnyRole(session, roles)) return null;
   return session;
 }
 
-export async function requireApiAnyRole(roles: readonly RoleLike[]) {
+export async function requireApiAnyRole(roles: readonly AppRole[]) {
   const session = await getServerAuthSession();
   if (!session) {
     return { ok: false as const, response: Response.json({ error: "Not authenticated" }, { status: 401 }) };
