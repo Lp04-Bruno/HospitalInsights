@@ -3,6 +3,8 @@ import { createReadStream } from "node:fs";
 import { mkdir, open, readdir, rename, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import { parseEnvBoolean } from "@/lib/validation";
+
 export type BackupKind = "daily" | "manual" | "upload" | "data" | "unknown";
 
 export type RestoreMode = "replace" | "append";
@@ -54,27 +56,19 @@ function getBackupDir(): string {
 }
 
 export function backupsFeatureEnabled() {
-  const raw = process.env.BACKUP_ENABLED;
-  if (raw === undefined) return process.env.NODE_ENV !== "production";
-  return raw === "1" || raw.toLowerCase() === "true";
+  return parseEnvBoolean(process.env.BACKUP_ENABLED, process.env.NODE_ENV !== "production");
 }
 
 export function backupsRestoreEnabled() {
-  const raw = process.env.BACKUP_RESTORE_ENABLED;
-  if (raw === undefined) return process.env.NODE_ENV !== "production";
-  return raw === "1" || raw.toLowerCase() === "true";
+  return parseEnvBoolean(process.env.BACKUP_RESTORE_ENABLED, process.env.NODE_ENV !== "production");
 }
 
 export function backupsAutoDailyEnabled() {
-  const raw = process.env.BACKUP_AUTO_DAILY;
-  if (raw === undefined) return false;
-  return raw === "1" || raw.toLowerCase() === "true";
+  return parseEnvBoolean(process.env.BACKUP_AUTO_DAILY, false);
 }
 
 export function backupsAutoOnHealthEnabled() {
-  const raw = process.env.BACKUP_AUTO_ON_HEALTH;
-  if (raw === undefined) return false;
-  return raw === "1" || raw.toLowerCase() === "true";
+  return parseEnvBoolean(process.env.BACKUP_AUTO_ON_HEALTH, false);
 }
 
 async function ensureBackupDir() {

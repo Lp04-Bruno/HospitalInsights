@@ -1,4 +1,7 @@
 import { SignJWT } from "jose";
+import { z } from "zod";
+
+import { searchNumberSchema } from "@/lib/validation";
 
 export type MetabaseViewType = "dashboard" | "question";
 
@@ -23,34 +26,32 @@ function normalizeViewType(raw: unknown): MetabaseViewType {
   return raw === "question" ? "question" : "dashboard";
 }
 
+const catalogViewSchema = z
+  .object({
+    type: z.preprocess(normalizeViewType, z.enum(["dashboard", "question"])),
+    id: searchNumberSchema,
+    name: z.string().trim().min(1).optional(),
+    hospitalParamKey: z.string().trim().min(1).optional(),
+  })
+  .strip();
+
+const catalogSchema = z.array(catalogViewSchema);
+
+const metabaseEmbedEnvSchema = z.object({
+  METABASE_SITE_URL: z
+    .string()
+    .trim()
+    .min(1)
+    .transform((value) => value.replace(/\/+$/, "")),
+  METABASE_EMBED_SECRET: z.string().trim().min(1),
+});
+
 export function parseMetabaseCatalog(raw = process.env.METABASE_DASHBOARD_CATALOG): MetabaseCatalogView[] {
   if (!raw) return [];
 
   try {
-    const parsed = JSON.parse(raw) as Array<
-      Partial<{
-        type: MetabaseViewType;
-        id: number;
-        name: string;
-        hospitalParamKey: string;
-      }>
-    >;
-
-    if (!Array.isArray(parsed)) return [];
-
-    return parsed
-      .map((view): MetabaseCatalogView => {
-        const name = typeof view.name === "string" ? view.name.trim() : "";
-        const hospitalParamKey = typeof view.hospitalParamKey === "string" ? view.hospitalParamKey.trim() : "";
-
-        return {
-          type: normalizeViewType(view.type),
-          id: Number(view.id),
-          ...(name ? { name } : null),
-          ...(hospitalParamKey ? { hospitalParamKey } : null),
-        };
-      })
-      .filter((view) => Number.isFinite(view.id));
+    const parsed = catalogSchema.safeParse(JSON.parse(raw));
+    return parsed.success ? parsed.data : [];
   } catch {
     return [];
   }
@@ -60,8 +61,8 @@ export function getInitialMetabaseView(): Pick<MetabaseCatalogView, "type" | "id
   const raw = process.env.METABASE_DASHBOARD_ID;
   if (!raw) return undefined;
 
-  const id = Number(raw);
-  return Number.isFinite(id) ? { type: "dashboard", id } : undefined;
+  const id = searchNumberSchema.safeParse(raw);
+  return id.success ? { type: "dashboard", id: id.data } : undefined;
 }
 
 export function getMetabaseLandingViews(): MetabaseLandingView[] {
@@ -88,10 +89,9 @@ export function findAllowedMetabaseView(type: MetabaseViewType, id: number): Met
 }
 
 export async function buildMetabaseEmbedUrl(view: MetabaseCatalogView, hospitalId?: string): Promise<string> {
-  const siteUrl = process.env.METABASE_SITE_URL?.replace(/\/+$/, "");
-  const embedSecret = process.env.METABASE_EMBED_SECRET;
+  const env = metabaseEmbedEnvSchema.safeParse(process.env);
 
-  if (!siteUrl || !embedSecret) {
+  if (!env.success) {
     throw new MissingMetabaseConfigError();
   }
 
@@ -105,7 +105,7 @@ export async function buildMetabaseEmbedUrl(view: MetabaseCatalogView, hospitalI
   const token = await new SignJWT({ resource, params })
     .setProtectedHeader({ alg: "HS256", typ: "JWT" })
     .setExpirationTime("10m")
-    .sign(new TextEncoder().encode(embedSecret));
+    .sign(new TextEncoder().encode(env.data.METABASE_EMBED_SECRET));
 
-  return `${siteUrl}/embed/${view.type}/${token}#bordered=true&titled=true`;
+  return `${env.data.METABASE_SITE_URL}/embed/${view.type}/${token}#bordered=true&titled=true`;
 }

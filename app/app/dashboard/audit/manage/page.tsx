@@ -3,18 +3,13 @@ import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/access";
+import { formString, parseStatementType, yearSchema } from "@/lib/validation";
 import { StatementType } from "@/prisma/generated/enums";
 import { ConfirmSubmitButton } from "@/app/dashboard/_components/ConfirmSubmitButton";
 
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
-
-function parseStatementType(raw: string | undefined): StatementType | undefined {
-  if (!raw) return undefined;
-  const values = Object.values(StatementType) as string[];
-  return values.includes(raw) ? (raw as StatementType) : undefined;
-}
 
 function parseISODate(raw: string | undefined): Date | undefined {
   if (!raw) return undefined;
@@ -39,7 +34,7 @@ export default async function AuditManagePage() {
     "use server";
     await requireAdmin("/dashboard/audit/manage");
 
-    const runId = String(formData.get("runId") ?? "").trim();
+    const runId = formString(formData, "runId");
     if (!runId) redirect("/dashboard/audit/manage");
 
     await prisma.factChangeRun.delete({ where: { id: runId } });
@@ -50,7 +45,7 @@ export default async function AuditManagePage() {
     "use server";
     await requireAdmin("/dashboard/audit/manage");
 
-    const confirmed = String(formData.get("confirmed") ?? "").trim();
+    const confirmed = formString(formData, "confirmed");
     if (confirmed !== "1") redirect("/dashboard/audit/manage");
 
     await prisma.factChangeRun.deleteMany({});
@@ -61,17 +56,18 @@ export default async function AuditManagePage() {
     "use server";
     await requireAdmin("/dashboard/audit/manage");
 
-    const hospitalId = String(formData.get("hospitalId") ?? "").trim();
-    const yearRaw = String(formData.get("year") ?? "").trim();
-    const statementTypeRaw = String(formData.get("statementType") ?? "").trim();
-    const userId = String(formData.get("userId") ?? "").trim();
-    const fromRaw = String(formData.get("from") ?? "").trim();
-    const toRaw = String(formData.get("to") ?? "").trim();
+    const hospitalId = formString(formData, "hospitalId");
+    const yearRaw = formString(formData, "year");
+    const statementTypeRaw = formString(formData, "statementType");
+    const userId = formString(formData, "userId");
+    const fromRaw = formString(formData, "from");
+    const toRaw = formString(formData, "to");
 
-    const confirmed = String(formData.get("confirmed") ?? "").trim();
+    const confirmed = formString(formData, "confirmed");
     if (confirmed !== "1") redirect("/dashboard/audit/manage");
 
-    const year = yearRaw && Number.isFinite(Number(yearRaw)) ? Number(yearRaw) : undefined;
+    const yearResult = yearSchema.safeParse(yearRaw);
+    const year = yearResult.success ? yearResult.data : undefined;
     const statementType = parseStatementType(statementTypeRaw);
     const fromDate = parseISODate(fromRaw);
     const toDate = parseISODate(toRaw);

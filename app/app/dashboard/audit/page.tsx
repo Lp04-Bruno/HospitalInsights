@@ -4,6 +4,15 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { EDITOR_ROLES, requireAdmin, requireAnyRole } from "@/lib/access";
 import { statementLabel } from "@/lib/statements";
+import {
+  firstSearchParam,
+  formString,
+  parseBooleanString,
+  parseStatementType,
+  positiveIntSchema,
+  resolveSearchParams,
+  yearSchema,
+} from "@/lib/validation";
 import { StatementType, Unit } from "@/prisma/generated/enums";
 import type { FactChangeGetPayload } from "@/prisma/generated/models";
 
@@ -14,12 +23,6 @@ type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
 };
 
-function firstParam(v: string | string[] | undefined): string | undefined {
-  if (typeof v === "string") return v;
-  if (Array.isArray(v)) return v[0];
-  return undefined;
-}
-
 function lastParam(v: string | string[] | undefined): string | undefined {
   if (typeof v === "string") return v;
   if (Array.isArray(v)) return v[v.length - 1];
@@ -27,26 +30,7 @@ function lastParam(v: string | string[] | undefined): string | undefined {
 }
 
 function boolParam(v: string | string[] | undefined, opts?: { defaultTrue?: boolean }): boolean {
-  const raw = lastParam(v);
-  if (raw === undefined) return opts?.defaultTrue ?? false;
-  if (raw === "1" || raw.toLowerCase() === "true") return true;
-  if (raw === "0" || raw.toLowerCase() === "false") return false;
-  return opts?.defaultTrue ?? false;
-}
-
-async function resolveSearchParams(searchParams: PageProps["searchParams"]): Promise<Record<string, string | string[] | undefined>> {
-  if (!searchParams) return {};
-  const maybePromise = searchParams as unknown as { then?: unknown };
-  if (typeof maybePromise.then === "function") {
-    return (await (searchParams as Promise<Record<string, string | string[] | undefined>>)) ?? {};
-  }
-  return (searchParams as Record<string, string | string[] | undefined>) ?? {};
-}
-
-function parseStatementType(raw: string | undefined): StatementType | undefined {
-  if (!raw) return undefined;
-  const values = Object.values(StatementType) as string[];
-  return values.includes(raw) ? (raw as StatementType) : undefined;
+  return parseBooleanString(lastParam(v), opts?.defaultTrue ?? false);
 }
 
 function parseISODate(raw: string | undefined): Date | undefined {
@@ -124,8 +108,8 @@ export default async function AuditLogPage({ searchParams }: PageProps) {
     "use server";
     await requireAdmin("/dashboard/audit");
 
-    const changeId = String(formData.get("changeId") ?? "").trim();
-    const returnTo = String(formData.get("returnTo") ?? "/dashboard/audit").trim() || "/dashboard/audit";
+    const changeId = formString(formData, "changeId");
+    const returnTo = formString(formData, "returnTo") || "/dashboard/audit";
     if (!changeId) redirect(returnTo);
 
     await prisma.$transaction(async (tx) => {
@@ -154,10 +138,10 @@ export default async function AuditLogPage({ searchParams }: PageProps) {
     select: { id: true, email: true, name: true },
   });
 
-  const selectedHospitalId = firstParam(sp.hospitalId) || "";
-  const yearRaw = firstParam(sp.year);
-  const requestedYear = yearRaw && Number.isFinite(Number(yearRaw)) ? Number(yearRaw) : undefined;
-  const selectedStatementType = parseStatementType(firstParam(sp.statementType));
+  const selectedHospitalId = firstSearchParam(sp.hospitalId) || "";
+  const requestedYearResult = yearSchema.safeParse(firstSearchParam(sp.year));
+  const requestedYear = requestedYearResult.success ? requestedYearResult.data : undefined;
+  const selectedStatementType = parseStatementType(firstSearchParam(sp.statementType));
 
   const years = await (async () => {
     if (selectedHospitalId) {
@@ -180,22 +164,22 @@ export default async function AuditLogPage({ searchParams }: PageProps) {
   const availableYears = new Set(years);
   const selectedYear = requestedYear !== undefined && availableYears.has(requestedYear) ? requestedYear : undefined;
 
-  const selectedUserId = firstParam(sp.userId) || "";
+  const selectedUserId = firstSearchParam(sp.userId) || "";
 
-  const fromRaw = firstParam(sp.from);
-  const toRaw = firstParam(sp.to);
+  const fromRaw = firstSearchParam(sp.from);
+  const toRaw = firstSearchParam(sp.to);
   const fromDate = parseISODate(fromRaw);
   const toDate = parseISODate(toRaw);
 
   const realOnly = boolParam(sp.realOnly, { defaultTrue: true });
   const mine = boolParam(sp.mine);
 
-  const q = (firstParam(sp.q) ?? "").trim();
+  const q = (firstSearchParam(sp.q) ?? "").trim();
 
   const effectiveUserId = mine ? session.user.id : selectedUserId;
 
-  const pageRaw = firstParam(sp.page);
-  const page = pageRaw && Number.isFinite(Number(pageRaw)) ? Math.max(1, Math.trunc(Number(pageRaw))) : 1;
+  const pageResult = positiveIntSchema.safeParse(firstSearchParam(sp.page));
+  const page = pageResult.success ? Math.max(1, Math.trunc(pageResult.data)) : 1;
   const take = 200;
   const skip = (page - 1) * take;
 

@@ -3,6 +3,7 @@ import { StatementType, Unit } from "@/prisma/generated/enums";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/access";
 import { statementLabel } from "@/lib/statements";
+import { firstSearchParam, resolveSearchParams, yearSchema } from "@/lib/validation";
 
 import styles from "./page.module.css";
 
@@ -11,28 +12,6 @@ export const dynamic = "force-dynamic";
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
 };
-
-function firstParam(v: string | string[] | undefined): string | undefined {
-  if (typeof v === "string") return v;
-  if (Array.isArray(v)) return v[0];
-  return undefined;
-}
-
-async function resolveSearchParams(searchParams: PageProps["searchParams"]): Promise<Record<string, string | string[] | undefined>> {
-  if (!searchParams) return {};
-  const maybePromise = searchParams as unknown as { then?: unknown };
-  if (typeof maybePromise.then === "function") {
-    return (await (searchParams as Promise<Record<string, string | string[] | undefined>>)) ?? {};
-  }
-  return (searchParams as Record<string, string | string[] | undefined>) ?? {};
-}
-
-function parseYear(raw: string | undefined): number | undefined {
-  if (!raw) return undefined;
-  const year = Number(raw);
-  if (!Number.isInteger(year) || year < 1900 || year > 2100) return undefined;
-  return year;
-}
 
 function clampPercent(value: number) {
   if (!Number.isFinite(value)) return 0;
@@ -45,8 +24,9 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   const isAdmin = session.user.role === "ADMIN";
 
   const sp = await resolveSearchParams(searchParams);
-  const selectedHospitalId = firstParam(sp.hospitalId);
-  const requestedYear = parseYear(firstParam(sp.year));
+  const selectedHospitalId = firstSearchParam(sp.hospitalId);
+  const requestedYearResult = yearSchema.safeParse(firstSearchParam(sp.year));
+  const requestedYear = requestedYearResult.success ? requestedYearResult.data : undefined;
 
   const [hospitalCount, singleHospital, selectedHospital, allLineItems, latestSaveRunGlobal, globalPeriodCount, usedPeriodIds] =
     await Promise.all([

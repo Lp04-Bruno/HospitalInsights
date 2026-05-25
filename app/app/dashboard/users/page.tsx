@@ -2,29 +2,25 @@ import bcrypt from "bcrypt";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/access";
+import { formString, roleSchema } from "@/lib/validation";
 import { Role } from "@/prisma/generated/enums";
 import styles from "./page.module.css";
 import { ConfirmSubmitButton } from "@/app/dashboard/_components/ConfirmSubmitButton";
 import { ResetPasswordButton } from "./ResetPasswordButton";
-
-function parseRole(raw: FormDataEntryValue | null): Role {
-  const role = String(raw ?? "VIEWER");
-  return (Object.values(Role) as string[]).includes(role) ? (role as Role) : Role.VIEWER;
-}
 
 async function createUser(formData: FormData) {
   "use server";
 
   const session = await requireAdmin("/dashboard/users");
 
-  const email = String(formData.get("email") ?? "")
-    .trim()
-    .toLowerCase();
-  const name = String(formData.get("name") ?? "").trim();
-  const password = String(formData.get("password") ?? "");
-  const role = parseRole(formData.get("role"));
+  const roleResult = roleSchema.safeParse(formData.get("role"));
+  const email = formString(formData, "email").toLowerCase();
+  const name = formString(formData, "name");
+  const password = typeof formData.get("password") === "string" ? String(formData.get("password")) : "";
 
-  if (!email || !name) redirect("/dashboard/users");
+  if (!email || !name || !roleResult.success) redirect("/dashboard/users");
+
+  const role = roleResult.data;
 
   const sessionEmail = String(session.user.email ?? "")
     .trim()
@@ -69,9 +65,11 @@ async function setRole(formData: FormData) {
 
   const session = await requireAdmin("/dashboard/users");
 
-  const userId = String(formData.get("userId") ?? "");
-  const role = parseRole(formData.get("role"));
-  if (!userId) redirect("/dashboard/users");
+  const userId = formString(formData, "userId");
+  const roleResult = roleSchema.safeParse(formData.get("role"));
+  if (!userId || !roleResult.success) redirect("/dashboard/users");
+
+  const role = roleResult.data;
 
   if (userId === session.user.id) {
     redirect("/dashboard/users");
@@ -90,8 +88,8 @@ async function deleteUser(formData: FormData) {
 
   const session = await requireAdmin("/dashboard/users");
 
-  const confirmed = String(formData.get("confirmed") ?? "").trim();
-  const userId = String(formData.get("userId") ?? "").trim();
+  const confirmed = formString(formData, "confirmed");
+  const userId = formString(formData, "userId");
   if (confirmed !== "1" || !userId) redirect("/dashboard/users");
 
   if (userId === session.user.id) {

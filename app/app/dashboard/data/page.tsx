@@ -6,6 +6,7 @@ import { getStatementCatalog } from "@/lib/statementCatalog";
 import { EDITOR_ROLES, requireAnyRole } from "@/lib/access";
 import { saveFacts } from "@/lib/facts/saveFacts";
 import { buildStatementRows } from "@/lib/facts/statementRows";
+import { firstSearchParam, formString, parseStatementType, resolveSearchParams, yearSchema } from "@/lib/validation";
 import { StatementType, Unit } from "@/prisma/generated/enums";
 import styles from "./page.module.css";
 import { DirtySaveForm } from "@/app/dashboard/data/DirtySaveForm";
@@ -23,27 +24,6 @@ const STATEMENT_TABS: StatementTab[] = [
   StatementType.INCOME_STATEMENT_GKV,
   StatementType.CASHFLOW,
 ];
-
-function firstParam(v: string | string[] | undefined): string | undefined {
-  if (typeof v === "string") return v;
-  if (Array.isArray(v)) return v[0];
-  return undefined;
-}
-
-async function resolveSearchParams(searchParams: PageProps["searchParams"]): Promise<Record<string, string | string[] | undefined>> {
-  if (!searchParams) return {};
-  const maybePromise = searchParams as unknown as { then?: unknown };
-  if (typeof maybePromise.then === "function") {
-    return (await (searchParams as Promise<Record<string, string | string[] | undefined>>)) ?? {};
-  }
-  return (searchParams as Record<string, string | string[] | undefined>) ?? {};
-}
-
-function parseStatementType(raw: string | undefined): StatementType | undefined {
-  if (!raw) return undefined;
-  const values = Object.values(StatementType) as string[];
-  return values.includes(raw) ? (raw as StatementType) : undefined;
-}
 
 function parseStatementTab(raw: string | undefined): StatementTab | undefined {
   if (!raw) return undefined;
@@ -69,21 +49,20 @@ async function createPeriod(formData: FormData) {
 
   await requireDataAccess();
 
-  const yearRaw = String(formData.get("year") ?? "").trim();
-  const year = Number(yearRaw);
+  const year = yearSchema.safeParse(formData.get("year"));
 
-  const hospitalId = String(formData.get("hospitalId") ?? "").trim();
-  const statementType = String(formData.get("statementType") ?? "").trim();
+  const hospitalId = formString(formData, "hospitalId");
+  const statementType = formString(formData, "statementType");
   if (!hospitalId) redirect("/dashboard/data");
 
-  if (!Number.isInteger(year) || year < 1900 || year > 2100) {
+  if (!year.success) {
     redirect(`/dashboard/data?hospitalId=${encodeURIComponent(hospitalId)}`);
   }
 
   const period = await prisma.period.upsert({
-    where: { year },
+    where: { year: year.data },
     update: {},
-    create: { year },
+    create: { year: year.data },
     select: { id: true, year: true },
   });
 
@@ -95,7 +74,7 @@ async function createPeriod(formData: FormData) {
 
   const qs = new URLSearchParams();
   qs.set("hospitalId", hospitalId);
-  qs.set("year", String(year));
+  qs.set("year", String(year.data));
   if (parseStatementTab(statementType)) qs.set("statementType", statementType);
   redirect(`/dashboard/data?${qs.toString()}`);
 }
@@ -110,7 +89,9 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
   });
 
   const selectedHospitalId =
-    typeof firstParam(sp.hospitalId) === "string" && firstParam(sp.hospitalId) ? (firstParam(sp.hospitalId) as string) : hospitals[0]?.id;
+    typeof firstSearchParam(sp.hospitalId) === "string" && firstSearchParam(sp.hospitalId)
+      ? (firstSearchParam(sp.hospitalId) as string)
+      : hospitals[0]?.id;
 
   const hospitalPeriods = selectedHospitalId
     ? await prisma.hospitalPeriod.findMany({
@@ -123,13 +104,12 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
   const periods = hospitalPeriods.map((hp) => hp.period);
   const availableYears = new Set(periods.map((p) => p.year));
 
-  const requestedYearRaw = firstParam(sp.year);
-  const requestedYear =
-    typeof requestedYearRaw === "string" && Number.isFinite(Number(requestedYearRaw)) ? Number(requestedYearRaw) : undefined;
+  const requestedYearResult = yearSchema.safeParse(firstSearchParam(sp.year));
+  const requestedYear = requestedYearResult.success ? requestedYearResult.data : undefined;
 
   const selectedYear = requestedYear !== undefined && availableYears.has(requestedYear) ? requestedYear : periods[0]?.year;
 
-  const selectedStatementTab: StatementTab = parseStatementTab(firstParam(sp.statementType)) ?? BALANCE_TAB;
+  const selectedStatementTab: StatementTab = parseStatementTab(firstSearchParam(sp.statementType)) ?? BALANCE_TAB;
 
   const selectedPeriod = selectedYear ? (periods.find((p) => p.year === selectedYear) ?? null) : null;
 

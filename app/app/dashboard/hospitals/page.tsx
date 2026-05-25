@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { EDITOR_ROLES, requireAnyRole } from "@/lib/access";
+import { formString, yearSchema } from "@/lib/validation";
 import { ConfirmSubmitButton } from "@/app/dashboard/_components/ConfirmSubmitButton";
 import styles from "./page.module.css";
 
@@ -16,9 +17,9 @@ async function createHospital(formData: FormData) {
 
   await requireHospitalAccess();
 
-  const name = String(formData.get("name") ?? "").trim();
-  const city = String(formData.get("city") ?? "").trim();
-  const state = String(formData.get("state") ?? "").trim();
+  const name = formString(formData, "name");
+  const city = formString(formData, "city");
+  const state = formString(formData, "state");
 
   if (!name || !city || !state) redirect("/dashboard/hospitals");
 
@@ -39,7 +40,7 @@ async function deleteHospital(formData: FormData) {
 
   await requireHospitalAccess();
 
-  const hospitalId = String(formData.get("hospitalId") ?? "");
+  const hospitalId = formString(formData, "hospitalId");
   if (!hospitalId) redirect("/dashboard/hospitals");
 
   await prisma.hospital.delete({ where: { id: hospitalId } });
@@ -53,12 +54,12 @@ async function deleteHospitalYear(formData: FormData) {
 
   await requireHospitalAccess();
 
-  const hospitalId = String(formData.get("hospitalId") ?? "");
-  const year = Number(String(formData.get("year") ?? "").trim());
+  const hospitalId = formString(formData, "hospitalId");
+  const year = yearSchema.safeParse(formData.get("year"));
   if (!hospitalId) redirect("/dashboard/hospitals");
-  if (!Number.isInteger(year) || year < 1900 || year > 2100) redirect("/dashboard/hospitals");
+  if (!year.success) redirect("/dashboard/hospitals");
 
-  const period = await prisma.period.findUnique({ where: { year } });
+  const period = await prisma.period.findUnique({ where: { year: year.data } });
   if (!period) redirect("/dashboard/hospitals");
 
   await prisma.factChangeRun.deleteMany({
@@ -83,7 +84,7 @@ async function deleteHospitalYear(formData: FormData) {
   });
 
   revalidatePath("/dashboard/hospitals");
-  redirect(`/dashboard/hospitals?notice=${encodeURIComponent(`Jahr ${year} gelöscht (${res.count} Werte entfernt).`)}`);
+  redirect(`/dashboard/hospitals?notice=${encodeURIComponent(`Jahr ${year.data} gelöscht (${res.count} Werte entfernt).`)}`);
 }
 
 type HospitalsPageProps = {
