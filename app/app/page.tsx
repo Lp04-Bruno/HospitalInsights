@@ -1,12 +1,13 @@
 import styles from "./page.module.css";
 import Image from "next/image";
 import Link from "next/link";
-import logoIcon from "@/assets/hospitalinsights_logo_icon_transparent.png";
 import { getServerAuthSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import LandingExplorer from "@/app/_components/LandingExplorer";
 import Footer from "@/app/_components/Footer";
 import LandingThemeToggle from "@/app/_components/LandingThemeToggle";
+
+const logoIcon = "/assets/hospitalinsights-logo-icon.png";
 
 type ViewOption = {
   type: "dashboard" | "question";

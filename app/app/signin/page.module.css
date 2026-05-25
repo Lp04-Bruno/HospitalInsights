@@ -6,8 +6,22 @@
 
 .header {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   margin-bottom: 12px;
+}
+
+.logoLink {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.logo {
+  width: clamp(180px, 24vw, 300px);
+  height: auto;
+  object-fit: contain;
 }
 
 .topLink {
@@ -32,4 +46,15 @@
   min-height: calc(100vh - 48px);
   display: grid;
   place-items: center;
+}
+
+@media (max-width: 560px) {
+  .page {
+    padding: 18px;
+  }
+
+  .header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }

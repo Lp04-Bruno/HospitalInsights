@@ -3,9 +3,10 @@ import Image from "next/image";
 
 import { requireSession } from "@/lib/access";
 import { DashboardNav } from "./DashboardNav";
-import logoIcon from "@/assets/hospitalinsights_logo_icon_transparent.png";
 
 import styles from "./layout.module.css";
+
+const logoIcon = "/assets/hospitalinsights-logo-icon.png";
 
 export const dynamic = "force-dynamic";
 

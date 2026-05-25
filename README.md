@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="app/public/assets/hospitalinsights-logo-with-text.png" alt="Hospitalinsights" width="520">
+</p>
+
 # Hospitalinsights
 
 Hospitalinsights ist eine Web-Plattform, die Jahresabschlüsse/Bilanzen von Krankenhäusern verständlich aufbereitet und vergleichbar macht (Benchmarking).

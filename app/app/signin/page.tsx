@@ -1,6 +1,9 @@
 import { SignInForm } from "./SignInForm";
+import Image from "next/image";
 import Link from "next/link";
 import styles from "./page.module.css";
+
+const wordmarkLogo = "/assets/hospitalinsights-logo-with-text.png";
 
 type SignInPageProps = {
   searchParams?: { callbackUrl?: string | string[] } | Promise<{ callbackUrl?: string | string[] }>;
@@ -24,6 +27,9 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
   return (
     <main className={styles.page}>
       <header className={styles.header}>
+        <Link href="/" className={styles.logoLink} aria-label="Hospitalinsights Startseite">
+          <Image className={styles.logo} src={wordmarkLogo} alt="Hospitalinsights" width={300} height={100} priority />
+        </Link>
         <Link href="/" className={styles.topLink}>
           Startseite
         </Link>

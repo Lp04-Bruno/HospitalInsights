@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import CookieBanner from "@/app/_components/CookieBanner";
 
+const siteIcon = "/assets/hospitalinsights-logo-icon.png";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -17,9 +19,9 @@ export const metadata: Metadata = {
   title: "Hospitalinsights",
   description: "Hospitalinsights",
   icons: {
-    icon: "/icon.png",
-    shortcut: "/icon.png",
-    apple: "/icon.png",
+    icon: siteIcon,
+    shortcut: siteIcon,
+    apple: siteIcon,
   },
 };
 
