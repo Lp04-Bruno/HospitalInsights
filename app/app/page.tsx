@@ -1,5 +1,7 @@
 import styles from "./page.module.css";
+import Image from "next/image";
 import Link from "next/link";
+import logoIcon from "@/assets/hospitalinsights_logo_icon_transparent.png";
 import { getServerAuthSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import LandingExplorer from "@/app/_components/LandingExplorer";
@@ -66,9 +68,10 @@ export default async function Home() {
     <main className={styles.shell}>
       <div className={styles.page}>
         <header className={styles.header}>
-          <div className={styles.brand}>
+          <Link href="/" className={styles.brand} aria-label="Hospitalinsights Startseite">
+            <Image className={styles.brandIcon} src={logoIcon} alt="" width={36} height={36} priority />
             <h1 className={styles.title}>Hospitalinsights</h1>
-          </div>
+          </Link>
           <nav className={styles.nav}>
             <a href={explorerHref} className={styles.navLink}>
               Auswahl

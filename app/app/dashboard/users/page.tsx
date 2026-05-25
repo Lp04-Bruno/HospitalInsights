@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getServerAuthSession } from "@/lib/auth";
+import { requireAdmin } from "@/lib/access";
 import { Role } from "@/prisma/generated/enums";
 import styles from "./page.module.css";
 import { ConfirmSubmitButton } from "@/app/dashboard/_components/ConfirmSubmitButton";
@@ -10,9 +10,7 @@ import { ResetPasswordButton } from "./ResetPasswordButton";
 async function createUser(formData: FormData) {
   "use server";
 
-  const session = await getServerAuthSession();
-  if (!session) redirect("/signin?callbackUrl=/dashboard/users");
-  if (session.user.role !== "ADMIN") redirect("/dashboard/forbidden");
+  const session = await requireAdmin("/dashboard/users");
 
   const email = String(formData.get("email") ?? "")
     .trim()
@@ -64,9 +62,7 @@ async function createUser(formData: FormData) {
 async function setRole(formData: FormData) {
   "use server";
 
-  const session = await getServerAuthSession();
-  if (!session) redirect("/signin?callbackUrl=/dashboard/users");
-  if (session.user.role !== "ADMIN") redirect("/dashboard/forbidden");
+  const session = await requireAdmin("/dashboard/users");
 
   const userId = String(formData.get("userId") ?? "");
   const role = String(formData.get("role") ?? "VIEWER") as Role;
@@ -87,9 +83,7 @@ async function setRole(formData: FormData) {
 async function deleteUser(formData: FormData) {
   "use server";
 
-  const session = await getServerAuthSession();
-  if (!session) redirect("/signin?callbackUrl=/dashboard/users");
-  if (session.user.role !== "ADMIN") redirect("/dashboard/forbidden");
+  const session = await requireAdmin("/dashboard/users");
 
   const confirmed = String(formData.get("confirmed") ?? "").trim();
   const userId = String(formData.get("userId") ?? "").trim();
@@ -104,12 +98,7 @@ async function deleteUser(formData: FormData) {
 }
 
 export default async function UsersPage() {
-  const session = await getServerAuthSession();
-  if (!session) redirect("/signin?callbackUrl=/dashboard/users");
-
-  if (session.user.role !== "ADMIN") {
-    redirect("/dashboard/forbidden");
-  }
+  await requireAdmin("/dashboard/users");
 
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },

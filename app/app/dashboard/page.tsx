@@ -1,8 +1,7 @@
-import { redirect } from "next/navigation";
 import { StatementType, Unit } from "@/prisma/generated/enums";
 
 import { prisma } from "@/lib/prisma";
-import { getServerAuthSession } from "@/lib/auth";
+import { requireSession } from "@/lib/access";
 import { statementLabel } from "@/lib/statements";
 
 import styles from "./page.module.css";
@@ -41,8 +40,7 @@ function clampPercent(value: number) {
 }
 
 export default async function DashboardPage({ searchParams }: PageProps) {
-  const session = await getServerAuthSession();
-  if (!session) redirect("/signin?callbackUrl=/dashboard");
+  const session = await requireSession("/dashboard");
 
   const isAdmin = session.user.role === "ADMIN";
 

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
-import { getServerAuthSession } from "@/lib/auth";
+import { EDITOR_ROLES, requireAdmin, requireAnyRole } from "@/lib/access";
 import { statementLabel } from "@/lib/statements";
 import { StatementType, Unit } from "@/prisma/generated/enums";
 import type { FactChangeGetPayload } from "@/prisma/generated/models";
@@ -118,17 +118,11 @@ type ChangeWithRun = FactChangeGetPayload<{ include: typeof changeInclude }>;
 export const dynamic = "force-dynamic";
 
 export default async function AuditLogPage({ searchParams }: PageProps) {
-  const session = await getServerAuthSession();
-  if (!session) redirect("/signin?callbackUrl=/dashboard/audit");
-  if (session.user.role !== "ADMIN" && session.user.role !== "EDITOR") {
-    redirect("/dashboard/forbidden");
-  }
+  const session = await requireAnyRole(EDITOR_ROLES, "/dashboard/audit");
 
   async function deleteChange(formData: FormData) {
     "use server";
-    const session = await getServerAuthSession();
-    if (!session) redirect("/signin?callbackUrl=/dashboard/audit");
-    if (session.user.role !== "ADMIN") redirect("/dashboard/forbidden");
+    await requireAdmin("/dashboard/audit");
 
     const changeId = String(formData.get("changeId") ?? "").trim();
     const returnTo = String(formData.get("returnTo") ?? "/dashboard/audit").trim() || "/dashboard/audit";

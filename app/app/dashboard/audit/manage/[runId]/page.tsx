@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
-import { getServerAuthSession } from "@/lib/auth";
+import { requireAdmin } from "@/lib/access";
 import { Unit } from "@/prisma/generated/enums";
 
 import styles from "./page.module.css";
@@ -50,18 +50,14 @@ function formatMaybeDecimal(value: unknown, unit: Unit): string {
 }
 
 export default async function AuditRunDetailsPage({ params }: PageProps) {
-  const session = await getServerAuthSession();
-  if (!session) redirect("/signin?callbackUrl=/dashboard/audit/manage");
-  if (session.user.role !== "ADMIN") redirect("/dashboard/forbidden");
+  await requireAdmin("/dashboard/audit/manage");
 
   const { runId } = await resolveParams(params);
   if (!runId) redirect("/dashboard/audit/manage");
 
   async function deleteChange(formData: FormData) {
     "use server";
-    const session = await getServerAuthSession();
-    if (!session) redirect(`/signin?callbackUrl=/dashboard/audit/manage/${runId}`);
-    if (session.user.role !== "ADMIN") redirect("/dashboard/forbidden");
+    await requireAdmin(`/dashboard/audit/manage/${runId}`);
 
     const changeId = String(formData.get("changeId") ?? "").trim();
     if (!changeId) redirect(`/dashboard/audit/manage/${runId}`);
@@ -84,9 +80,7 @@ export default async function AuditRunDetailsPage({ params }: PageProps) {
 
   async function deleteRun() {
     "use server";
-    const session = await getServerAuthSession();
-    if (!session) redirect(`/signin?callbackUrl=/dashboard/audit/manage/${runId}`);
-    if (session.user.role !== "ADMIN") redirect("/dashboard/forbidden");
+    await requireAdmin(`/dashboard/audit/manage/${runId}`);
 
     await prisma.factChangeRun.delete({ where: { id: runId } });
     redirect("/dashboard/audit/manage");

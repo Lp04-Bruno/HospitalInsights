@@ -1,18 +1,14 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { getServerAuthSession } from "@/lib/auth";
+import { EDITOR_ROLES, requireAnyRole } from "@/lib/access";
 import { ConfirmSubmitButton } from "@/app/dashboard/_components/ConfirmSubmitButton";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
 
 async function requireHospitalAccess() {
-  const session = await getServerAuthSession();
-  if (!session) redirect("/signin?callbackUrl=/dashboard/hospitals");
-  if (session.user.role !== "ADMIN" && session.user.role !== "EDITOR") {
-    redirect("/dashboard/forbidden");
-  }
+  await requireAnyRole(EDITOR_ROLES, "/dashboard/hospitals");
 }
 
 async function createHospital(formData: FormData) {

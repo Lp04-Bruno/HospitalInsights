@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-import { getServerAuthSession } from "@/lib/auth";
+import { requireAdmin as requireAdminAccess } from "@/lib/access";
 import {
   backupsAutoDailyEnabled,
   backupsFeatureEnabled,
@@ -36,16 +36,13 @@ type PageProps = {
   searchParams?: Record<string, string | string[] | undefined> | Promise<Record<string, string | string[] | undefined>>;
 };
 
-async function requireAdmin(callbackUrl: string) {
-  const session = await getServerAuthSession();
-  if (!session) redirect(`/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`);
-  if (session.user.role !== "ADMIN") redirect("/dashboard/forbidden");
-  return session;
+async function requireBackupAdmin(callbackUrl: string) {
+  return requireAdminAccess(callbackUrl);
 }
 
 async function createManualBackup() {
   "use server";
-  await requireAdmin("/dashboard/backups");
+  await requireBackupAdmin("/dashboard/backups");
 
   if (!backupsFeatureEnabled()) redirect("/dashboard/backups?notice=Backups%20sind%20deaktiviert.");
 
@@ -63,7 +60,7 @@ async function createManualBackup() {
 
 async function ensureDailyBackupAction() {
   "use server";
-  await requireAdmin("/dashboard/backups");
+  await requireBackupAdmin("/dashboard/backups");
 
   if (!backupsAutoDailyEnabled()) {
     redirect("/dashboard/backups?notice=Daily-Backup%20ist%20deaktiviert%20(BACKUP_AUTO_DAILY).");
@@ -86,7 +83,7 @@ async function ensureDailyBackupAction() {
 
 async function createDataExportAction() {
   "use server";
-  await requireAdmin("/dashboard/backups");
+  await requireBackupAdmin("/dashboard/backups");
 
   if (!backupsFeatureEnabled()) redirect("/dashboard/backups?notice=Backups%20sind%20deaktiviert.");
 
@@ -104,7 +101,7 @@ async function createDataExportAction() {
 
 async function deleteBackupAction(formData: FormData) {
   "use server";
-  await requireAdmin("/dashboard/backups");
+  await requireBackupAdmin("/dashboard/backups");
 
   const filename = String(formData.get("filename") ?? "").trim();
   const confirmed = String(formData.get("confirmed") ?? "").trim();
@@ -123,7 +120,7 @@ async function deleteBackupAction(formData: FormData) {
 
 async function restoreBackupAction(formData: FormData) {
   "use server";
-  await requireAdmin("/dashboard/backups");
+  await requireBackupAdmin("/dashboard/backups");
 
   const filename = String(formData.get("filename") ?? "").trim();
   const modeRaw = String(formData.get("mode") ?? "replace").trim();
@@ -152,7 +149,7 @@ async function restoreBackupAction(formData: FormData) {
 
 async function uploadBackupAction(formData: FormData) {
   "use server";
-  await requireAdmin("/dashboard/backups");
+  await requireBackupAdmin("/dashboard/backups");
 
   const file = formData.get("file");
   if (!(file instanceof File)) redirect("/dashboard/backups?notice=Kein%20Backup%20hochgeladen.");
@@ -170,7 +167,7 @@ async function uploadBackupAction(formData: FormData) {
 }
 
 export default async function BackupsPage({ searchParams }: PageProps) {
-  await requireAdmin("/dashboard/backups");
+  await requireBackupAdmin("/dashboard/backups");
 
   const enabled = backupsFeatureEnabled();
   const restoreEnabled = backupsRestoreEnabled();

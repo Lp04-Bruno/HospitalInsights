@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
-import { getServerAuthSession } from "@/lib/auth";
+import { requireAdmin } from "@/lib/access";
 import { StatementType } from "@/prisma/generated/enums";
 import { ConfirmSubmitButton } from "@/app/dashboard/_components/ConfirmSubmitButton";
 
@@ -33,15 +33,11 @@ function endOfDayUTC(d: Date): Date {
 }
 
 export default async function AuditManagePage() {
-  const session = await getServerAuthSession();
-  if (!session) redirect("/signin?callbackUrl=/dashboard/audit/manage");
-  if (session.user.role !== "ADMIN") redirect("/dashboard/forbidden");
+  await requireAdmin("/dashboard/audit/manage");
 
   async function deleteRun(formData: FormData) {
     "use server";
-    const session = await getServerAuthSession();
-    if (!session) redirect("/signin?callbackUrl=/dashboard/audit/manage");
-    if (session.user.role !== "ADMIN") redirect("/dashboard/forbidden");
+    await requireAdmin("/dashboard/audit/manage");
 
     const runId = String(formData.get("runId") ?? "").trim();
     if (!runId) redirect("/dashboard/audit/manage");
@@ -52,9 +48,7 @@ export default async function AuditManagePage() {
 
   async function deleteAll(formData: FormData) {
     "use server";
-    const session = await getServerAuthSession();
-    if (!session) redirect("/signin?callbackUrl=/dashboard/audit/manage");
-    if (session.user.role !== "ADMIN") redirect("/dashboard/forbidden");
+    await requireAdmin("/dashboard/audit/manage");
 
     const confirmed = String(formData.get("confirmed") ?? "").trim();
     if (confirmed !== "1") redirect("/dashboard/audit/manage");
@@ -65,9 +59,7 @@ export default async function AuditManagePage() {
 
   async function deleteByFilter(formData: FormData) {
     "use server";
-    const session = await getServerAuthSession();
-    if (!session) redirect("/signin?callbackUrl=/dashboard/audit/manage");
-    if (session.user.role !== "ADMIN") redirect("/dashboard/forbidden");
+    await requireAdmin("/dashboard/audit/manage");
 
     const hospitalId = String(formData.get("hospitalId") ?? "").trim();
     const yearRaw = String(formData.get("year") ?? "").trim();
