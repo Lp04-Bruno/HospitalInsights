@@ -7,6 +7,11 @@ import styles from "./page.module.css";
 import { ConfirmSubmitButton } from "@/app/dashboard/_components/ConfirmSubmitButton";
 import { ResetPasswordButton } from "./ResetPasswordButton";
 
+function parseRole(raw: FormDataEntryValue | null): Role {
+  const role = String(raw ?? "VIEWER");
+  return (Object.values(Role) as string[]).includes(role) ? (role as Role) : Role.VIEWER;
+}
+
 async function createUser(formData: FormData) {
   "use server";
 
@@ -17,7 +22,7 @@ async function createUser(formData: FormData) {
     .toLowerCase();
   const name = String(formData.get("name") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  const role = String(formData.get("role") ?? "VIEWER") as Role;
+  const role = parseRole(formData.get("role"));
 
   if (!email || !name) redirect("/dashboard/users");
 
@@ -65,7 +70,7 @@ async function setRole(formData: FormData) {
   const session = await requireAdmin("/dashboard/users");
 
   const userId = String(formData.get("userId") ?? "");
-  const role = String(formData.get("role") ?? "VIEWER") as Role;
+  const role = parseRole(formData.get("role"));
   if (!userId) redirect("/dashboard/users");
 
   if (userId === session.user.id) {
