@@ -1,13 +1,12 @@
-import { redirect } from "next/navigation";
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
 import { statementLabel } from "@/lib/statements";
-import { getStatementCatalog } from "@/lib/statementCatalog";
 import { EDITOR_ROLES, requireAnyRole } from "@/lib/access";
 import { saveFacts } from "@/lib/facts/saveFacts";
 import { buildStatementRows } from "@/lib/facts/statementRows";
-import { firstSearchParam, formString, parseStatementType, resolveSearchParams, yearSchema } from "@/lib/validation";
-import { StatementType, Unit } from "@/prisma/generated/enums";
+import { createPeriod } from "@/lib/facts/periods";
+import { BALANCE_TAB, loadStatementContext, STATEMENT_TABS, tabLabel } from "@/lib/facts/loadStatementContext";
+import { resolveSearchParams } from "@/lib/validation";
+import { StatementType } from "@/prisma/generated/enums";
 import styles from "./page.module.css";
 import { DirtySaveForm } from "@/app/dashboard/data/DirtySaveForm";
 
@@ -15,150 +14,26 @@ type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
 };
 
-const BALANCE_TAB = "BALANCE" as const;
-type StatementTab = typeof BALANCE_TAB | StatementType;
-
-const STATEMENT_TABS: StatementTab[] = [
-  BALANCE_TAB,
-  StatementType.INCOME_STATEMENT_UKV,
-  StatementType.INCOME_STATEMENT_GKV,
-  StatementType.CASHFLOW,
-];
-
-function parseStatementTab(raw: string | undefined): StatementTab | undefined {
-  if (!raw) return undefined;
-  if (raw === BALANCE_TAB) return BALANCE_TAB;
-
-  const parsed = parseStatementType(raw);
-  if (!parsed) return undefined;
-  if (parsed === StatementType.BALANCE_ASSET || parsed === StatementType.BALANCE_LIAB) return BALANCE_TAB;
-  return parsed;
-}
-
-function tabLabel(tab: StatementTab): string {
-  if (tab === BALANCE_TAB) return "Bilanz";
-  return statementLabel(tab);
-}
-
 async function requireDataAccess() {
   return requireAnyRole(EDITOR_ROLES, "/dashboard/data");
-}
-
-async function createPeriod(formData: FormData) {
-  "use server";
-
-  await requireDataAccess();
-
-  const year = yearSchema.safeParse(formData.get("year"));
-
-  const hospitalId = formString(formData, "hospitalId");
-  const statementType = formString(formData, "statementType");
-  if (!hospitalId) redirect("/dashboard/data");
-
-  if (!year.success) {
-    redirect(`/dashboard/data?hospitalId=${encodeURIComponent(hospitalId)}`);
-  }
-
-  const period = await prisma.period.upsert({
-    where: { year: year.data },
-    update: {},
-    create: { year: year.data },
-    select: { id: true, year: true },
-  });
-
-  await prisma.hospitalPeriod.upsert({
-    where: { hospitalId_periodId: { hospitalId, periodId: period.id } },
-    update: {},
-    create: { hospitalId, periodId: period.id },
-  });
-
-  const qs = new URLSearchParams();
-  qs.set("hospitalId", hospitalId);
-  qs.set("year", String(year.data));
-  if (parseStatementTab(statementType)) qs.set("statementType", statementType);
-  redirect(`/dashboard/data?${qs.toString()}`);
 }
 
 export default async function DashboardDataPage({ searchParams }: PageProps) {
   await requireDataAccess();
 
   const sp = await resolveSearchParams(searchParams);
-
-  const hospitals = await prisma.hospital.findMany({
-    orderBy: { name: "asc" },
-  });
-
-  const selectedHospitalId =
-    typeof firstSearchParam(sp.hospitalId) === "string" && firstSearchParam(sp.hospitalId)
-      ? (firstSearchParam(sp.hospitalId) as string)
-      : hospitals[0]?.id;
-
-  const hospitalPeriods = selectedHospitalId
-    ? await prisma.hospitalPeriod.findMany({
-        where: { hospitalId: selectedHospitalId },
-        include: { period: { select: { id: true, year: true } } },
-        orderBy: { period: { year: "desc" } },
-      })
-    : [];
-
-  const periods = hospitalPeriods.map((hp) => hp.period);
-  const availableYears = new Set(periods.map((p) => p.year));
-
-  const requestedYearResult = yearSchema.safeParse(firstSearchParam(sp.year));
-  const requestedYear = requestedYearResult.success ? requestedYearResult.data : undefined;
-
-  const selectedYear = requestedYear !== undefined && availableYears.has(requestedYear) ? requestedYear : periods[0]?.year;
-
-  const selectedStatementTab: StatementTab = parseStatementTab(firstSearchParam(sp.statementType)) ?? BALANCE_TAB;
-
-  const selectedPeriod = selectedYear ? (periods.find((p) => p.year === selectedYear) ?? null) : null;
-
-  const statementTypesToLoad: StatementType[] =
-    selectedStatementTab === BALANCE_TAB ? [StatementType.BALANCE_ASSET, StatementType.BALANCE_LIAB] : [selectedStatementTab];
-
-  const lineItemsByType = new Map<
-    StatementType,
-    Array<{ code: string; label: string; unit: Unit; isInput: boolean; parentCode: string | null; sortOrder: number }>
-  >();
-  for (const st of statementTypesToLoad) {
-    const lineItemsRaw = await prisma.lineItem.findMany({
-      where: { statementType: st },
-      orderBy: { sortOrder: "asc" },
-      select: { code: true, label: true, unit: true, isInput: true, parentCode: true, sortOrder: true },
-    });
-
-    const seenCodes = new Set<string>();
-    const lineItems = lineItemsRaw.filter((li) => {
-      if (seenCodes.has(li.code)) return false;
-      seenCodes.add(li.code);
-      return true;
-    });
-
-    lineItemsByType.set(st, lineItems);
-  }
-
-  const codes = Array.from(lineItemsByType.values()).flatMap((items) => items.map((li) => li.code));
-  const facts =
-    selectedHospitalId && selectedPeriod
-      ? await prisma.factValue.findMany({
-          where: {
-            hospitalId: selectedHospitalId,
-            periodId: selectedPeriod.id,
-            lineItemCode: { in: codes },
-          },
-        })
-      : [];
-
-  const factMap = new Map<string, string>();
-  for (const f of facts) {
-    if (f.value === null) continue;
-    factMap.set(f.lineItemCode, String(f.value));
-  }
-
-  const { formulasByCode } = getStatementCatalog();
-
-  const selectedPrimaryStatementType: StatementType =
-    selectedStatementTab === BALANCE_TAB ? StatementType.BALANCE_ASSET : selectedStatementTab;
+  const {
+    hospitals,
+    periods,
+    selectedHospitalId,
+    selectedYear,
+    selectedPeriod,
+    selectedStatementTab,
+    selectedPrimaryStatementType,
+    lineItemsByType,
+    factMap,
+    formulasByCode,
+  } = await loadStatementContext(sp);
 
   return (
     <section className={styles.page}>
