@@ -145,19 +145,6 @@ export async function analyzeBackup(filename: string): Promise<BackupAnalysis> {
   }
 }
 
-export async function restoreBackup(filename: string): Promise<void> {
-  if (!backupsFeatureEnabled()) throw new Error("Backups are disabled.");
-  if (!backupsRestoreEnabled()) throw new Error("Restore is disabled.");
-
-  const dumpPath = resolveBackupPath(filename);
-
-  return withBackupLock(async () => {
-    await stat(dumpPath);
-    await terminateOtherDbConnections();
-    await runPgRestore(["--clean", "--if-exists", "--no-owner", "--no-privileges", "--single-transaction", dumpPath]);
-  });
-}
-
 export async function importBackup(filename: string, mode: RestoreMode): Promise<void> {
   if (!backupsFeatureEnabled()) throw new Error("Backups are disabled.");
   if (!backupsRestoreEnabled()) throw new Error("Restore is disabled.");

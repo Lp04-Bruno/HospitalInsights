@@ -5,14 +5,6 @@ import { Role, StatementType } from "@/prisma/generated/enums";
 const roleValues = Object.values(Role) as [Role, ...Role[]];
 const statementTypeValues = Object.values(StatementType) as [StatementType, ...StatementType[]];
 
-export const nonEmptyStringSchema = z.string().trim().min(1);
-
-export const optionalNonEmptyStringSchema = z
-  .string()
-  .trim()
-  .transform((value) => (value ? value : undefined))
-  .optional();
-
 export const roleSchema = z.enum(roleValues);
 export const statementTypeSchema = z.enum(statementTypeValues);
 
@@ -45,11 +37,6 @@ export function parseBooleanString(raw: string | undefined, fallback: boolean) {
 
 export function parseEnvBoolean(raw: string | undefined, fallback: boolean) {
   return parseBooleanString(raw, fallback);
-}
-
-export function parseRole(raw: unknown, fallback: Role = Role.VIEWER): Role {
-  const parsed = roleSchema.safeParse(raw);
-  return parsed.success ? parsed.data : fallback;
 }
 
 export function parseStatementType(raw: unknown): StatementType | undefined {
