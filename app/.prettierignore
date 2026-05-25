@@ -17,4 +17,5 @@ build/
 
 # Generated
 *.tsbuildinfo
+next-env.d.ts
 prisma/generated/
