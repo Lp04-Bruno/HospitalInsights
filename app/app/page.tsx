@@ -3,59 +3,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { getServerAuthSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getInitialMetabaseView, getMetabaseLandingViews, type MetabaseLandingView } from "@/lib/metabase";
 import LandingExplorer from "@/app/_components/LandingExplorer";
 import Footer from "@/app/_components/Footer";
 import LandingThemeToggle from "@/app/_components/LandingThemeToggle";
 
 const logoIcon = "/assets/hospitalinsights-logo-icon.png";
 
-type ViewOption = {
-  type: "dashboard" | "question";
-  id: number;
-  name: string;
-  hospitalParamKey?: string;
-};
-
 export default async function Home() {
   const session = await getServerAuthSession();
-
-  const initialDashboardId = process.env.METABASE_DASHBOARD_ID ? Number(process.env.METABASE_DASHBOARD_ID) : Number.NaN;
-  const initialView = Number.isFinite(initialDashboardId) ? ({ type: "dashboard", id: initialDashboardId } as const) : undefined;
-  const dashboardsFromEnvRaw = process.env.METABASE_DASHBOARD_CATALOG;
-
-  const views: ViewOption[] = (() => {
-    if (dashboardsFromEnvRaw) {
-      try {
-        const parsed = JSON.parse(dashboardsFromEnvRaw) as Array<
-          Partial<{
-            type: "dashboard" | "question";
-            id: number;
-            name: string;
-            hospitalParamKey: string;
-          }>
-        >;
-
-        const normalized: ViewOption[] = parsed
-          .filter((d) => Number.isFinite(Number(d.id)) && typeof d.name === "string" && d.name)
-          .map((d) => ({
-            type: (d.type === "question" ? "question" : "dashboard") as ViewOption["type"],
-            id: Number(d.id),
-            name: String(d.name),
-            ...(typeof d.hospitalParamKey === "string" && d.hospitalParamKey ? { hospitalParamKey: d.hospitalParamKey } : null),
-          }));
-
-        if (normalized.length > 0) return normalized;
-      } catch {
-        // Ignore invalid env JSON
-      }
-    }
-
-    if (Number.isFinite(initialDashboardId)) {
-      return [{ type: "dashboard" as const, id: initialDashboardId, name: "Dashboard" }];
-    }
-
-    return [];
-  })();
+  const initialView = getInitialMetabaseView();
+  const views: MetabaseLandingView[] = getMetabaseLandingViews();
 
   const hospitals = await prisma.hospital.findMany({
     orderBy: [{ name: "asc" }],
