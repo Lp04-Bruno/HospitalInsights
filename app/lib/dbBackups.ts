@@ -98,7 +98,7 @@ function backupKindFromFilename(filename: string): BackupKind {
 }
 
 function safeFilename(input: string): string {
-  const cleaned = input.replace(/[^a-zA-Z0-9._\-]/g, "_");
+  const cleaned = input.replace(/[^a-zA-Z0-9._-]/g, "_");
   return path.basename(cleaned);
 }
 
@@ -210,7 +210,7 @@ async function withLock<T>(fn: () => Promise<T>): Promise<T> {
       }
 
       if (Date.now() - startedAt >= BACKUP_LOCK_TIMEOUT_MS) {
-        throw new Error("Backup operation is busy. Another backup or restore is still running.");
+        throw new Error("Backup operation is busy. Another backup or restore is still running.", { cause: err });
       }
 
       await new Promise((resolve) => setTimeout(resolve, BACKUP_LOCK_RETRY_MS));

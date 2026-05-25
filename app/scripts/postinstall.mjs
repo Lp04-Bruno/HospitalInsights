@@ -15,7 +15,6 @@ function run(cmd, args) {
   return new Promise((resolve, reject) => {
     const child = spawn(cmd, args, {
       stdio: "inherit",
-      shell: process.platform === "win32",
     });
     child.on("exit", (code) => {
       if (code === 0) resolve();
@@ -34,7 +33,7 @@ async function main() {
     return;
   }
 
-  await run("npx", ["prisma", "generate"]);
+  await run(process.execPath, [path.join(process.cwd(), "node_modules", "prisma", "build", "index.js"), "generate"]);
 }
 
 main().catch((e) => {

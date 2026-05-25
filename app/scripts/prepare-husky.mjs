@@ -16,7 +16,6 @@ function run(cmd, args, cwd) {
     const child = spawn(cmd, args, {
       cwd,
       stdio: "inherit",
-      shell: process.platform === "win32",
     });
     child.on("exit", (code) => {
       if (code === 0) resolve();

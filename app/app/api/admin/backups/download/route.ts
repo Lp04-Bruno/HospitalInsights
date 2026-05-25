@@ -32,7 +32,7 @@ export async function GET(req: Request) {
     status: 200,
     headers: {
       "Content-Type": "application/octet-stream",
-      "Content-Disposition": `attachment; filename=\"${downloadName}\"`,
+      "Content-Disposition": `attachment; filename="${downloadName}"`,
       "Cache-Control": "no-store",
     },
   });
