@@ -2,19 +2,15 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
-import { getServerAuthSession } from "@/lib/auth";
+import { requireAdmin } from "@/lib/access";
+import { formString, parseStatementType, yearSchema } from "@/lib/validation";
 import { StatementType } from "@/prisma/generated/enums";
 import { ConfirmSubmitButton } from "@/app/dashboard/_components/ConfirmSubmitButton";
+import { DashboardButtonLink, DashboardCard, DashboardHeader, DashboardPage, dashboardUi } from "@/app/dashboard/_components/DashboardUi";
 
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
-
-function parseStatementType(raw: string | undefined): StatementType | undefined {
-  if (!raw) return undefined;
-  const values = Object.values(StatementType) as string[];
-  return values.includes(raw) ? (raw as StatementType) : undefined;
-}
 
 function parseISODate(raw: string | undefined): Date | undefined {
   if (!raw) return undefined;
@@ -33,17 +29,13 @@ function endOfDayUTC(d: Date): Date {
 }
 
 export default async function AuditManagePage() {
-  const session = await getServerAuthSession();
-  if (!session) redirect("/signin?callbackUrl=/dashboard/audit/manage");
-  if (session.user.role !== "ADMIN") redirect("/dashboard/forbidden");
+  await requireAdmin("/dashboard/audit/manage");
 
   async function deleteRun(formData: FormData) {
     "use server";
-    const session = await getServerAuthSession();
-    if (!session) redirect("/signin?callbackUrl=/dashboard/audit/manage");
-    if (session.user.role !== "ADMIN") redirect("/dashboard/forbidden");
+    await requireAdmin("/dashboard/audit/manage");
 
-    const runId = String(formData.get("runId") ?? "").trim();
+    const runId = formString(formData, "runId");
     if (!runId) redirect("/dashboard/audit/manage");
 
     await prisma.factChangeRun.delete({ where: { id: runId } });
@@ -52,11 +44,9 @@ export default async function AuditManagePage() {
 
   async function deleteAll(formData: FormData) {
     "use server";
-    const session = await getServerAuthSession();
-    if (!session) redirect("/signin?callbackUrl=/dashboard/audit/manage");
-    if (session.user.role !== "ADMIN") redirect("/dashboard/forbidden");
+    await requireAdmin("/dashboard/audit/manage");
 
-    const confirmed = String(formData.get("confirmed") ?? "").trim();
+    const confirmed = formString(formData, "confirmed");
     if (confirmed !== "1") redirect("/dashboard/audit/manage");
 
     await prisma.factChangeRun.deleteMany({});
@@ -65,21 +55,20 @@ export default async function AuditManagePage() {
 
   async function deleteByFilter(formData: FormData) {
     "use server";
-    const session = await getServerAuthSession();
-    if (!session) redirect("/signin?callbackUrl=/dashboard/audit/manage");
-    if (session.user.role !== "ADMIN") redirect("/dashboard/forbidden");
+    await requireAdmin("/dashboard/audit/manage");
 
-    const hospitalId = String(formData.get("hospitalId") ?? "").trim();
-    const yearRaw = String(formData.get("year") ?? "").trim();
-    const statementTypeRaw = String(formData.get("statementType") ?? "").trim();
-    const userId = String(formData.get("userId") ?? "").trim();
-    const fromRaw = String(formData.get("from") ?? "").trim();
-    const toRaw = String(formData.get("to") ?? "").trim();
+    const hospitalId = formString(formData, "hospitalId");
+    const yearRaw = formString(formData, "year");
+    const statementTypeRaw = formString(formData, "statementType");
+    const userId = formString(formData, "userId");
+    const fromRaw = formString(formData, "from");
+    const toRaw = formString(formData, "to");
 
-    const confirmed = String(formData.get("confirmed") ?? "").trim();
+    const confirmed = formString(formData, "confirmed");
     if (confirmed !== "1") redirect("/dashboard/audit/manage");
 
-    const year = yearRaw && Number.isFinite(Number(yearRaw)) ? Number(yearRaw) : undefined;
+    const yearResult = yearSchema.safeParse(yearRaw);
+    const year = yearResult.success ? yearResult.data : undefined;
     const statementType = parseStatementType(statementTypeRaw);
     const fromDate = parseISODate(fromRaw);
     const toDate = parseISODate(toRaw);
@@ -140,18 +129,14 @@ export default async function AuditManagePage() {
   ]);
 
   return (
-    <section className={styles.page}>
-      <div className={styles.header}>
-        <div>
-          <h1 className={styles.title}>Audit Log – Management</h1>
-          <div className={styles.muted}>Admin-Funktionen: Einträge/Runs löschen oder kompletten Audit Log leeren</div>
-        </div>
-        <Link className={styles.secondary} href="/dashboard/audit">
-          ← Zurück zum Audit Log
-        </Link>
-      </div>
+    <DashboardPage>
+      <DashboardHeader
+        title="Audit Log Management"
+        subtitle="Admin-Funktionen: Einträge/Runs löschen oder kompletten Audit Log leeren."
+        actions={<DashboardButtonLink href="/dashboard/audit">Zurück zum Audit Log</DashboardButtonLink>}
+      />
 
-      <div className={styles.card}>
+      <DashboardCard>
         <div className={styles.row}>
           <div>
             <div>
@@ -163,27 +148,24 @@ export default async function AuditManagePage() {
           <form className={styles.actions} action={deleteAll}>
             <input type="hidden" name="confirmed" value="1" />
             <ConfirmSubmitButton
-              className={styles.danger}
+              className={`${dashboardUi.button} ${dashboardUi.danger}`}
               confirmMessage="Audit Log wirklich komplett löschen? Das kann nicht rückgängig gemacht werden."
             >
               Audit Log komplett löschen
             </ConfirmSubmitButton>
           </form>
         </div>
-      </div>
+      </DashboardCard>
 
-      <div className={styles.card}>
+      <DashboardCard title="Löschen nach Filter" hint="Sicherheit: Ohne Filter wird nichts gelöscht.">
         <div className={styles.row}>
           <div>
-            <div>
-              <strong>Löschen nach Filter</strong>
-            </div>
             <div className={styles.muted}>Sicherheit: Ohne Filter wird nichts gelöscht. Bestätige mit „LÖSCHEN“.</div>
           </div>
         </div>
 
         <form className={styles.actions} action={deleteByFilter}>
-          <select className={styles.input} name="hospitalId" defaultValue="">
+          <select className={`${dashboardUi.select} ${styles.filterControl}`} name="hospitalId" defaultValue="">
             <option value="">Hospital: alle</option>
             {hospitals.map((h) => (
               <option key={h.id} value={h.id}>
@@ -192,7 +174,7 @@ export default async function AuditManagePage() {
             ))}
           </select>
 
-          <select className={styles.input} name="year" defaultValue="">
+          <select className={`${dashboardUi.select} ${styles.filterControl}`} name="year" defaultValue="">
             <option value="">Jahr: alle</option>
             {periods.map((p) => (
               <option key={p.id} value={String(p.year)}>
@@ -201,7 +183,7 @@ export default async function AuditManagePage() {
             ))}
           </select>
 
-          <select className={styles.input} name="statementType" defaultValue="">
+          <select className={`${dashboardUi.select} ${styles.filterControl}`} name="statementType" defaultValue="">
             <option value="">Statement: alle</option>
             {Object.values(StatementType).map((st) => (
               <option key={st} value={st}>
@@ -210,7 +192,7 @@ export default async function AuditManagePage() {
             ))}
           </select>
 
-          <select className={styles.input} name="userId" defaultValue="">
+          <select className={`${dashboardUi.select} ${styles.filterControl}`} name="userId" defaultValue="">
             <option value="">Benutzer: alle</option>
             {users.map((u) => (
               <option key={u.id} value={u.id}>
@@ -219,18 +201,18 @@ export default async function AuditManagePage() {
             ))}
           </select>
 
-          <input className={styles.input} type="date" name="from" aria-label="Von" />
-          <input className={styles.input} type="date" name="to" aria-label="Bis" />
+          <input className={`${dashboardUi.input} ${styles.filterControl}`} type="date" name="from" aria-label="Von" />
+          <input className={`${dashboardUi.input} ${styles.filterControl}`} type="date" name="to" aria-label="Bis" />
 
           <input type="hidden" name="confirmed" value="1" />
           <ConfirmSubmitButton
-            className={styles.danger}
+            className={`${dashboardUi.button} ${dashboardUi.danger}`}
             confirmMessage="Wirklich alle Audit-Runs löschen, die zu diesen Filtern passen? Das kann nicht rückgängig gemacht werden."
           >
             Nach Filter löschen
           </ConfirmSubmitButton>
         </form>
-      </div>
+      </DashboardCard>
 
       <div className={styles.tableWrap}>
         <table className={styles.table}>
@@ -262,16 +244,19 @@ export default async function AuditManagePage() {
                     <span className={styles.mono}>{r.id}</span>
                   </td>
                   <td className={styles.td}>
-                    <Link className={styles.secondary} href={`/dashboard/audit/manage/${r.id}`}>
+                    <Link className={`${dashboardUi.button} ${dashboardUi.secondary}`} href={`/dashboard/audit/manage/${r.id}`}>
                       Öffnen
                     </Link>
                   </td>
                   <td className={styles.td}>
                     <form action={deleteRun}>
                       <input type="hidden" name="runId" value={r.id} />
-                      <button className={styles.danger} type="submit">
+                      <ConfirmSubmitButton
+                        className={`${dashboardUi.button} ${dashboardUi.danger}`}
+                        confirmMessage={`Audit-Run ${r.id} wirklich löschen?`}
+                      >
                         Run löschen
-                      </button>
+                      </ConfirmSubmitButton>
                     </form>
                   </td>
                 </tr>
@@ -288,6 +273,6 @@ export default async function AuditManagePage() {
           </tbody>
         </table>
       </div>
-    </section>
+    </DashboardPage>
   );
 }

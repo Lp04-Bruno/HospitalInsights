@@ -1,18 +1,26 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { getServerAuthSession } from "@/lib/auth";
+import { EDITOR_ROLES, requireAnyRole } from "@/lib/access";
+import { formString, yearSchema } from "@/lib/validation";
 import { ConfirmSubmitButton } from "@/app/dashboard/_components/ConfirmSubmitButton";
 import styles from "./page.module.css";
+import {
+  DashboardActions,
+  DashboardButton,
+  DashboardCard,
+  DashboardField,
+  DashboardGrid,
+  DashboardHeader,
+  DashboardNotice,
+  DashboardPage,
+  dashboardUi,
+} from "@/app/dashboard/_components/DashboardUi";
 
 export const dynamic = "force-dynamic";
 
 async function requireHospitalAccess() {
-  const session = await getServerAuthSession();
-  if (!session) redirect("/signin?callbackUrl=/dashboard/hospitals");
-  if (session.user.role !== "ADMIN" && session.user.role !== "EDITOR") {
-    redirect("/dashboard/forbidden");
-  }
+  await requireAnyRole(EDITOR_ROLES, "/dashboard/hospitals");
 }
 
 async function createHospital(formData: FormData) {
@@ -20,9 +28,9 @@ async function createHospital(formData: FormData) {
 
   await requireHospitalAccess();
 
-  const name = String(formData.get("name") ?? "").trim();
-  const city = String(formData.get("city") ?? "").trim();
-  const state = String(formData.get("state") ?? "").trim();
+  const name = formString(formData, "name");
+  const city = formString(formData, "city");
+  const state = formString(formData, "state");
 
   if (!name || !city || !state) redirect("/dashboard/hospitals");
 
@@ -43,8 +51,9 @@ async function deleteHospital(formData: FormData) {
 
   await requireHospitalAccess();
 
-  const hospitalId = String(formData.get("hospitalId") ?? "");
-  if (!hospitalId) redirect("/dashboard/hospitals");
+  const hospitalId = formString(formData, "hospitalId");
+  const confirmed = formString(formData, "confirmed");
+  if (!hospitalId || confirmed !== "1") redirect("/dashboard/hospitals");
 
   await prisma.hospital.delete({ where: { id: hospitalId } });
 
@@ -57,12 +66,14 @@ async function deleteHospitalYear(formData: FormData) {
 
   await requireHospitalAccess();
 
-  const hospitalId = String(formData.get("hospitalId") ?? "");
-  const year = Number(String(formData.get("year") ?? "").trim());
+  const hospitalId = formString(formData, "hospitalId");
+  const confirmed = formString(formData, "confirmed");
+  const year = yearSchema.safeParse(formData.get("year"));
   if (!hospitalId) redirect("/dashboard/hospitals");
-  if (!Number.isInteger(year) || year < 1900 || year > 2100) redirect("/dashboard/hospitals");
+  if (confirmed !== "1") redirect("/dashboard/hospitals");
+  if (!year.success) redirect("/dashboard/hospitals");
 
-  const period = await prisma.period.findUnique({ where: { year } });
+  const period = await prisma.period.findUnique({ where: { year: year.data } });
   if (!period) redirect("/dashboard/hospitals");
 
   await prisma.factChangeRun.deleteMany({
@@ -87,7 +98,7 @@ async function deleteHospitalYear(formData: FormData) {
   });
 
   revalidatePath("/dashboard/hospitals");
-  redirect(`/dashboard/hospitals?notice=${encodeURIComponent(`Jahr ${year} gelöscht (${res.count} Werte entfernt).`)}`);
+  redirect(`/dashboard/hospitals?notice=${encodeURIComponent(`Jahr ${year.data} gelöscht (${res.count} Werte entfernt).`)}`);
 }
 
 type HospitalsPageProps = {
@@ -121,48 +132,32 @@ export default async function HospitalsPage({ searchParams }: HospitalsPageProps
   const notice = typeof searchParams?.notice === "string" ? searchParams.notice : undefined;
 
   return (
-    <section className={styles.page}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>Hospitalverwaltung</h1>
-        <p className={styles.subtitle}>Krankenhäuser anlegen und verwalten.</p>
-      </header>
+    <DashboardPage>
+      <DashboardHeader title="Hospitalverwaltung" subtitle="Krankenhäuser anlegen und verwalten." />
 
-      {notice ? <div className={styles.empty}>{notice}</div> : null}
+      {notice ? <DashboardNotice>{notice}</DashboardNotice> : null}
 
-      <div className={styles.grid}>
-        <div className={styles.card}>
-          <h2 className={styles.cardTitle}>Neues Krankenhaus</h2>
+      <DashboardGrid>
+        <DashboardCard title="Neues Krankenhaus">
           <form action={createHospital} className={styles.form}>
-            <div className={styles.row}>
-              <label className={styles.label}>
-                Name
-                <input name="name" className={styles.input} placeholder="z.B. Klinikum Musterstadt" required />
-              </label>
-            </div>
-            <div className={styles.row}>
-              <label className={styles.label}>
-                Stadt
-                <input name="city" className={styles.input} placeholder="z.B. Hannover" required />
-              </label>
-            </div>
-            <div className={styles.row}>
-              <label className={styles.label}>
-                Bundesland
-                <input name="state" className={styles.input} placeholder="z.B. Niedersachsen" required />
-              </label>
-            </div>
-            <div className={styles.actions}>
-              <button className={styles.button} type="submit">
-                Anlegen
-              </button>
-            </div>
+            <DashboardField label="Name">
+              <input name="name" className={dashboardUi.input} placeholder="z.B. Klinikum Musterstadt" required />
+            </DashboardField>
+            <DashboardField label="Stadt">
+              <input name="city" className={dashboardUi.input} placeholder="z.B. Hannover" required />
+            </DashboardField>
+            <DashboardField label="Bundesland">
+              <input name="state" className={dashboardUi.input} placeholder="z.B. Niedersachsen" required />
+            </DashboardField>
+            <DashboardActions>
+              <DashboardButton type="submit">Anlegen</DashboardButton>
+            </DashboardActions>
           </form>
-        </div>
+        </DashboardCard>
 
-        <div className={styles.card}>
-          <h2 className={styles.cardTitle}>Bestehende Krankenhäuser</h2>
+        <DashboardCard title="Bestehende Krankenhäuser">
           {hospitals.length === 0 ? (
-            <div className={styles.empty}>Noch keine Krankenhäuser vorhanden.</div>
+            <DashboardNotice>Noch keine Krankenhäuser vorhanden.</DashboardNotice>
           ) : (
             <div className={styles.list}>
               {hospitals.map((h) => (
@@ -183,7 +178,8 @@ export default async function HospitalsPage({ searchParams }: HospitalsPageProps
                     ) : (
                       <form action={deleteHospitalYear} className={styles.inlineForm}>
                         <input type="hidden" name="hospitalId" value={h.id} />
-                        <select name="year" className={styles.select} defaultValue={String((yearsByHospitalId.get(h.id) ?? [])[0])}>
+                        <input type="hidden" name="confirmed" value="1" />
+                        <select name="year" className={dashboardUi.select} defaultValue={String((yearsByHospitalId.get(h.id) ?? [])[0])}>
                           {(yearsByHospitalId.get(h.id) ?? []).map((y) => (
                             <option key={y} value={String(y)}>
                               {y}
@@ -192,7 +188,7 @@ export default async function HospitalsPage({ searchParams }: HospitalsPageProps
                         </select>
 
                         <ConfirmSubmitButton
-                          className={styles.dangerSmall}
+                          className={`${dashboardUi.button} ${dashboardUi.danger}`}
                           confirmMessage="Soll das ausgewählte Jahr wirklich gelöscht werden? Alle Eingaben für dieses Krankenhaus/Jahr werden entfernt."
                         >
                           Jahr löschen
@@ -202,17 +198,21 @@ export default async function HospitalsPage({ searchParams }: HospitalsPageProps
 
                     <form action={deleteHospital}>
                       <input type="hidden" name="hospitalId" value={h.id} />
-                      <button className={styles.danger} type="submit">
+                      <input type="hidden" name="confirmed" value="1" />
+                      <ConfirmSubmitButton
+                        className={`${dashboardUi.button} ${dashboardUi.danger}`}
+                        confirmMessage={`Krankenhaus ${h.name} wirklich löschen?`}
+                      >
                         Hospital löschen
-                      </button>
+                      </ConfirmSubmitButton>
                     </form>
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </div>
-      </div>
-    </section>
+        </DashboardCard>
+      </DashboardGrid>
+    </DashboardPage>
   );
 }

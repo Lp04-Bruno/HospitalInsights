@@ -13,11 +13,9 @@ function normalizeNumberString(raw: string): string {
 
   if (lastComma !== -1 && lastDot !== -1) {
     if (lastComma > lastDot) {
-      // DE style: 1.234.567,89
       s = s.replace(/\./g, "");
       s = s.replace(/,/g, ".");
     } else {
-      // EN style: 1,234,567.89
       s = s.replace(/,/g, "");
     }
     return s;
@@ -36,7 +34,6 @@ function normalizeNumberString(raw: string): string {
   if (lastDot !== -1) {
     const dotCount = (s.match(/\./g) ?? []).length;
     if (dotCount > 1) {
-      // treat dots as thousands separators
       s = s.replace(/\./g, "");
     }
     return s;

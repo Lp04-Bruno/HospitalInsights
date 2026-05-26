@@ -19,10 +19,27 @@
 }
 
 .brand {
-  padding: 10px 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
   border: 1px solid var(--hi-border);
   border-radius: 14px;
   background: var(--hi-brand-bg);
+  color: inherit;
+  text-decoration: none;
+}
+
+.brandIcon {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 12px rgba(14, 165, 233, 0.16));
+}
+
+.brandCopy {
+  min-width: 0;
 }
 
 .brandTitle {

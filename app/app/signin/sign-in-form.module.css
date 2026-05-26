@@ -97,6 +97,37 @@
   opacity: 0.7;
 }
 
+.actions {
+  margin-top: 18px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--hi-border);
+  background: var(--hi-button-outline-bg);
+  color: var(--hi-button-outline-fg);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    opacity 120ms ease;
+}
+
+.link:hover {
+  background: var(--hi-hover-bg);
+}
+
 .error {
   margin: 0;
   font-size: 13px;

@@ -1,40 +1,5 @@
-.page {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.title {
-  margin: 0;
-  font-size: 22px;
-  font-weight: 650;
-  color: var(--hi-text);
-}
-
 .muted {
   opacity: 0.8;
-}
-
-.card {
-  padding: 12px;
-  border: 1px solid var(--hi-border);
-  border-radius: 10px;
-  background: var(--hi-surface);
-}
-
-.row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-  justify-content: space-between;
 }
 
 .actions {
@@ -42,27 +7,6 @@
   gap: 8px;
   flex-wrap: wrap;
   align-items: center;
-}
-
-.danger {
-  padding: 9px 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(185, 28, 28, 0.35);
-  background: rgba(220, 38, 38, 0.08);
-  color: rgb(185, 28, 28);
-  cursor: pointer;
-  font-weight: 700;
-}
-
-.secondary {
-  padding: 9px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--hi-border);
-  background: var(--hi-button-outline-bg);
-  color: var(--hi-button-outline-fg);
-  cursor: pointer;
-  font-weight: 650;
-  text-decoration: none;
 }
 
 .tableWrap {
@@ -98,14 +42,4 @@
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 12px;
-}
-
-.dangerSmall {
-  padding: 7px 10px;
-  border-radius: 8px;
-  border: 1px solid rgba(185, 28, 28, 0.35);
-  background: rgba(220, 38, 38, 0.08);
-  color: rgb(185, 28, 28);
-  cursor: pointer;
-  font-weight: 650;
 }

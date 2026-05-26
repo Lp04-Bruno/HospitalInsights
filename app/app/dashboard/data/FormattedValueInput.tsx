@@ -3,23 +3,15 @@
 import { Unit } from "@/prisma/generated/enums";
 import { useCallback, useRef } from "react";
 
-import { parseUserNumberDetailed } from "./numberParsing";
-
-function formatNumberDE(value: number, unit: Unit, useGrouping: boolean): string {
-  const maximumFractionDigits = unit === Unit.PERCENT ? 2 : 0;
-  return new Intl.NumberFormat("de-DE", {
-    useGrouping,
-    maximumFractionDigits,
-    minimumFractionDigits: 0,
-  }).format(value);
-}
+import { formatNumberDE } from "@/lib/facts/numberFormat";
+import { parseUserNumberDetailed } from "@/lib/facts/numberParsing";
 
 function formatForEditing(value: number, unit: Unit): string {
-  return formatNumberDE(value, unit, false);
+  return formatNumberDE(value, unit, { useGrouping: false });
 }
 
 function formatForDisplay(value: number, unit: Unit): string {
-  return formatNumberDE(value, unit, true);
+  return formatNumberDE(value, unit);
 }
 
 export type FormattedValueInputProps = {

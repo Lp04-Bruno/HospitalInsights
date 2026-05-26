@@ -6,37 +6,16 @@ import { Unit, type StatementType } from "@/prisma/generated/enums";
 
 import styles from "./page.module.css";
 import { ValueEntryTable } from "./ValueEntryTable";
-import { parseUserNumberDetailed } from "./numberParsing";
-
-type FlatRow = {
-  code: string;
-  depth: number;
-  label: string;
-  unit: Unit;
-  isInput: boolean;
-  isSection: boolean;
-  hasChildren: boolean;
-  isCollapsible: boolean;
-  prettyValue: string;
-  suggestedPrettyValue?: string;
-};
+import { parseUserNumberDetailed } from "@/lib/facts/numberParsing";
+import type { FlatRow, SaveFactsAction, SaveFactsState } from "@/lib/facts/types";
+import { dashboardUi } from "@/app/dashboard/_components/DashboardUi";
 
 type DirtySaveFormProps = {
-  saveAction: (prevState: SaveFactsState, formData: FormData) => Promise<SaveFactsState>;
+  saveAction: SaveFactsAction;
   hospitalId: string;
   periodId: string;
   statementType: StatementType;
   rows: FlatRow[];
-};
-
-export type SaveFactsState = {
-  ok: boolean;
-  message?: string;
-  globalError?: string;
-  savedAt?: string;
-  savedBy?: string;
-  changesApplied?: number;
-  fieldErrors?: Record<string, string>;
 };
 
 function canonicalizeNumber(raw: string, unit: Unit): { kind: "empty" } | { kind: "invalid" } | { kind: "value"; value: number } {
@@ -111,10 +90,10 @@ function DirtyBottomBar({
           )}
         </div>
         <div className={styles.bottomBarButtons}>
-          <button type="button" className={styles.secondary} onClick={onDiscard} disabled={pending}>
+          <button type="button" className={`${dashboardUi.button} ${dashboardUi.secondary}`} onClick={onDiscard} disabled={pending}>
             Verwerfen
           </button>
-          <button className={styles.button} type="submit" disabled={pending || invalidCount > 0}>
+          <button className={dashboardUi.button} type="submit" disabled={pending || invalidCount > 0}>
             {pending ? "Speichert…" : "Speichern"}
           </button>
         </div>

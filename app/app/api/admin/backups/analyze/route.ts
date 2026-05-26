@@ -1,14 +1,12 @@
-import { getServerAuthSession } from "@/lib/auth";
+import { requireApiAdmin } from "@/lib/access";
 import { analyzeBackup } from "@/lib/dbBackups";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  const session = await getServerAuthSession();
-  if (!session || session.user.role !== "ADMIN") {
-    return new Response("Forbidden", { status: 403 });
-  }
+  const access = await requireApiAdmin();
+  if (!access.ok) return access.response;
 
   const u = new URL(req.url);
   const filename = String(u.searchParams.get("file") ?? "").trim();

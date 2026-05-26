@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-import { getServerAuthSession } from "@/lib/auth";
+import { requireAdmin as requireAdminAccess } from "@/lib/access";
 import {
   backupsAutoDailyEnabled,
   backupsFeatureEnabled,
@@ -17,6 +17,14 @@ import {
 import { NoticeBanner, PendingActionButton, RestoreWithPreview, UploadBackupForm } from "./BackupsClient";
 
 import styles from "./page.module.css";
+import {
+  DashboardCard,
+  DashboardGrid,
+  DashboardHeader,
+  DashboardNotice,
+  DashboardPage,
+  dashboardUi,
+} from "@/app/dashboard/_components/DashboardUi";
 
 export const dynamic = "force-dynamic";
 
@@ -36,16 +44,13 @@ type PageProps = {
   searchParams?: Record<string, string | string[] | undefined> | Promise<Record<string, string | string[] | undefined>>;
 };
 
-async function requireAdmin(callbackUrl: string) {
-  const session = await getServerAuthSession();
-  if (!session) redirect(`/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`);
-  if (session.user.role !== "ADMIN") redirect("/dashboard/forbidden");
-  return session;
+async function requireBackupAdmin(callbackUrl: string) {
+  return requireAdminAccess(callbackUrl);
 }
 
 async function createManualBackup() {
   "use server";
-  await requireAdmin("/dashboard/backups");
+  await requireBackupAdmin("/dashboard/backups");
 
   if (!backupsFeatureEnabled()) redirect("/dashboard/backups?notice=Backups%20sind%20deaktiviert.");
 
@@ -63,7 +68,7 @@ async function createManualBackup() {
 
 async function ensureDailyBackupAction() {
   "use server";
-  await requireAdmin("/dashboard/backups");
+  await requireBackupAdmin("/dashboard/backups");
 
   if (!backupsAutoDailyEnabled()) {
     redirect("/dashboard/backups?notice=Daily-Backup%20ist%20deaktiviert%20(BACKUP_AUTO_DAILY).");
@@ -86,7 +91,7 @@ async function ensureDailyBackupAction() {
 
 async function createDataExportAction() {
   "use server";
-  await requireAdmin("/dashboard/backups");
+  await requireBackupAdmin("/dashboard/backups");
 
   if (!backupsFeatureEnabled()) redirect("/dashboard/backups?notice=Backups%20sind%20deaktiviert.");
 
@@ -104,7 +109,7 @@ async function createDataExportAction() {
 
 async function deleteBackupAction(formData: FormData) {
   "use server";
-  await requireAdmin("/dashboard/backups");
+  await requireBackupAdmin("/dashboard/backups");
 
   const filename = String(formData.get("filename") ?? "").trim();
   const confirmed = String(formData.get("confirmed") ?? "").trim();
@@ -123,7 +128,7 @@ async function deleteBackupAction(formData: FormData) {
 
 async function restoreBackupAction(formData: FormData) {
   "use server";
-  await requireAdmin("/dashboard/backups");
+  await requireBackupAdmin("/dashboard/backups");
 
   const filename = String(formData.get("filename") ?? "").trim();
   const modeRaw = String(formData.get("mode") ?? "replace").trim();
@@ -152,7 +157,7 @@ async function restoreBackupAction(formData: FormData) {
 
 async function uploadBackupAction(formData: FormData) {
   "use server";
-  await requireAdmin("/dashboard/backups");
+  await requireBackupAdmin("/dashboard/backups");
 
   const file = formData.get("file");
   if (!(file instanceof File)) redirect("/dashboard/backups?notice=Kein%20Backup%20hochgeladen.");
@@ -170,7 +175,7 @@ async function uploadBackupAction(formData: FormData) {
 }
 
 export default async function BackupsPage({ searchParams }: PageProps) {
-  await requireAdmin("/dashboard/backups");
+  await requireBackupAdmin("/dashboard/backups");
 
   const enabled = backupsFeatureEnabled();
   const restoreEnabled = backupsRestoreEnabled();
@@ -182,36 +187,37 @@ export default async function BackupsPage({ searchParams }: PageProps) {
   const backups = enabled ? await listBackups() : [];
 
   return (
-    <section className={styles.page}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>Backups</h1>
-        <p className={styles.subtitle}>Datenbank-Backups erstellen, verwalten und wiederherstellen.</p>
-      </header>
+    <DashboardPage>
+      <DashboardHeader title="Backups" subtitle="Datenbank-Backups erstellen, verwalten und wiederherstellen." />
 
       <NoticeBanner notice={notice} />
 
-      <div className={styles.grid}>
-        <div className={styles.card}>
-          <h2 className={styles.cardTitle}>Aktionen</h2>
-
+      <DashboardGrid>
+        <DashboardCard title="Aktionen">
           {!enabled ? (
-            <div className={styles.notice}>Backups sind deaktiviert. Setze `BACKUP_ENABLED=true` (oder aktiviere es in Dev).</div>
+            <DashboardNotice tone="warning">
+              Backups sind deaktiviert. Setze `BACKUP_ENABLED=true` (oder aktiviere es in Dev).
+            </DashboardNotice>
           ) : (
             <div className={styles.actions}>
               <form action={createManualBackup}>
-                <PendingActionButton className={styles.button} pendingText="Backup wird erstellt…">
+                <PendingActionButton className={dashboardUi.button} pendingText="Backup wird erstellt…">
                   Backup erstellen
                 </PendingActionButton>
               </form>
 
               <form action={createDataExportAction}>
-                <PendingActionButton className={styles.secondary} pendingText="Datenexport wird erstellt…">
+                <PendingActionButton className={`${dashboardUi.button} ${dashboardUi.secondary}`} pendingText="Datenexport wird erstellt…">
                   Datenexport erstellen
                 </PendingActionButton>
               </form>
 
               <form action={ensureDailyBackupAction}>
-                <PendingActionButton className={styles.secondary} pendingText="Prüfe/erstelle Daily-Backup…" disabled={!autoDailyEnabled}>
+                <PendingActionButton
+                  className={`${dashboardUi.button} ${dashboardUi.secondary}`}
+                  pendingText="Prüfe/erstelle Daily-Backup…"
+                  disabled={!autoDailyEnabled}
+                >
                   Daily-Backup prüfen
                 </PendingActionButton>
               </form>
@@ -219,19 +225,16 @@ export default async function BackupsPage({ searchParams }: PageProps) {
               <UploadBackupForm action={uploadBackupAction} />
             </div>
           )}
-        </div>
+        </DashboardCard>
 
-        <div className={styles.card}>
-          <h2 className={styles.cardTitle}>Status</h2>
+        <DashboardCard title="Status">
           <div className={styles.backupMeta}>`BACKUP_ENABLED`: {String(enabled)}</div>
           <div className={styles.backupMeta}>`BACKUP_RESTORE_ENABLED`: {String(restoreEnabled)}</div>
           <div className={styles.backupMeta}>`BACKUP_AUTO_DAILY`: {String(autoDailyEnabled)}</div>
-        </div>
-      </div>
+        </DashboardCard>
+      </DashboardGrid>
 
-      <div className={styles.card}>
-        <h2 className={styles.cardTitle}>Vorhandene Backups</h2>
-
+      <DashboardCard title="Vorhandene Backups">
         {!enabled ? (
           <div className={styles.backupMeta}>Feature deaktiviert.</div>
         ) : backups.length === 0 ? (
@@ -248,7 +251,11 @@ export default async function BackupsPage({ searchParams }: PageProps) {
                 </div>
 
                 <div className={styles.rowActions}>
-                  <a className={styles.link} href={`/api/admin/backups/download?file=${encodeURIComponent(b.filename)}`} download>
+                  <a
+                    className={`${dashboardUi.button} ${dashboardUi.secondary}`}
+                    href={`/api/admin/backups/download?file=${encodeURIComponent(b.filename)}`}
+                    download
+                  >
                     Download
                   </a>
 
@@ -258,7 +265,7 @@ export default async function BackupsPage({ searchParams }: PageProps) {
                     <input type="hidden" name="filename" value={b.filename} />
                     <input type="hidden" name="confirmed" value="1" />
                     <PendingActionButton
-                      className={styles.dangerSmall}
+                      className={`${dashboardUi.button} ${dashboardUi.danger}`}
                       pendingText="Lösche…"
                       confirmMessage={`Backup ${b.filename} wirklich löschen?`}
                     >
@@ -270,7 +277,7 @@ export default async function BackupsPage({ searchParams }: PageProps) {
             ))}
           </div>
         )}
-      </div>
-    </section>
+      </DashboardCard>
+    </DashboardPage>
   );
 }

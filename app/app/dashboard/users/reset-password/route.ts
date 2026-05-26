@@ -3,12 +3,12 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 
 import { prisma } from "@/lib/prisma";
-import { getServerAuthSession } from "@/lib/auth";
+import { requireApiAdmin } from "@/lib/access";
 
 export async function POST(req: Request) {
-  const session = await getServerAuthSession();
-  if (!session) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-  if (session.user.role !== "ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const access = await requireApiAdmin();
+  if (!access.ok) return access.response;
+  const { session } = access;
 
   let body: unknown;
   try {

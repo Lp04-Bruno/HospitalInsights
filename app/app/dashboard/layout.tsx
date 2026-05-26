@@ -1,10 +1,12 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import Image from "next/image";
 
-import { getServerAuthSession } from "@/lib/auth";
+import { requireSession } from "@/lib/access";
 import { DashboardNav } from "./DashboardNav";
 
 import styles from "./layout.module.css";
+
+const logoIcon = "/assets/hospitalinsights-logo-icon.png";
 
 export const dynamic = "force-dynamic";
 
@@ -13,8 +15,7 @@ type DashboardLayoutProps = {
 };
 
 export default async function DashboardLayout({ children }: DashboardLayoutProps) {
-  const session = await getServerAuthSession();
-  if (!session) redirect("/signin?callbackUrl=/dashboard");
+  const session = await requireSession("/dashboard");
 
   const role = session.user.role;
   const navItems =
@@ -40,10 +41,13 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
   return (
     <div className={styles.shell}>
       <aside className={styles.sidebar}>
-        <div className={styles.brand}>
-          <div className={styles.brandTitle}>Hospitalinsights</div>
-          <div className={styles.brandSubtitle}>Dashboard</div>
-        </div>
+        <Link href="/" className={styles.brand} aria-label="Hospitalinsights Startseite">
+          <Image className={styles.brandIcon} src={logoIcon} alt="" width={42} height={42} priority />
+          <div className={styles.brandCopy}>
+            <div className={styles.brandTitle}>Hospitalinsights</div>
+            <div className={styles.brandSubtitle}>Dashboard</div>
+          </div>
+        </Link>
 
         <DashboardNav items={navItems} />
 

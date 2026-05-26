@@ -1,6 +1,5 @@
 import { SignInForm } from "./SignInForm";
-import Link from "next/link";
-import styles from "./page.module.css";
+import { AuthShell } from "@/app/_components/AuthShell";
 
 type SignInPageProps = {
   searchParams?: { callbackUrl?: string | string[] } | Promise<{ callbackUrl?: string | string[] }>;
@@ -22,15 +21,8 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
   const callbackUrl = typeof callbackUrlRaw === "string" && callbackUrlRaw ? callbackUrlRaw : "/dashboard";
 
   return (
-    <main className={styles.page}>
-      <header className={styles.header}>
-        <Link href="/" className={styles.topLink}>
-          Startseite
-        </Link>
-      </header>
-      <div className={styles.center}>
-        <SignInForm callbackUrl={callbackUrl} />
-      </div>
-    </main>
+    <AuthShell>
+      <SignInForm callbackUrl={callbackUrl} />
+    </AuthShell>
   );
 }

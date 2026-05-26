@@ -1,27 +1,36 @@
 import bcrypt from "bcrypt";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getServerAuthSession } from "@/lib/auth";
+import { requireAdmin } from "@/lib/access";
+import { formString, roleSchema } from "@/lib/validation";
 import { Role } from "@/prisma/generated/enums";
 import styles from "./page.module.css";
 import { ConfirmSubmitButton } from "@/app/dashboard/_components/ConfirmSubmitButton";
 import { ResetPasswordButton } from "./ResetPasswordButton";
+import {
+  DashboardActions,
+  DashboardButton,
+  DashboardCard,
+  DashboardField,
+  DashboardGrid,
+  DashboardHeader,
+  DashboardPage,
+  dashboardUi,
+} from "@/app/dashboard/_components/DashboardUi";
 
 async function createUser(formData: FormData) {
   "use server";
 
-  const session = await getServerAuthSession();
-  if (!session) redirect("/signin?callbackUrl=/dashboard/users");
-  if (session.user.role !== "ADMIN") redirect("/dashboard/forbidden");
+  const session = await requireAdmin("/dashboard/users");
 
-  const email = String(formData.get("email") ?? "")
-    .trim()
-    .toLowerCase();
-  const name = String(formData.get("name") ?? "").trim();
-  const password = String(formData.get("password") ?? "");
-  const role = String(formData.get("role") ?? "VIEWER") as Role;
+  const roleResult = roleSchema.safeParse(formData.get("role"));
+  const email = formString(formData, "email").toLowerCase();
+  const name = formString(formData, "name");
+  const password = typeof formData.get("password") === "string" ? String(formData.get("password")) : "";
 
-  if (!email || !name) redirect("/dashboard/users");
+  if (!email || !name || !roleResult.success) redirect("/dashboard/users");
+
+  const role = roleResult.data;
 
   const sessionEmail = String(session.user.email ?? "")
     .trim()
@@ -64,13 +73,13 @@ async function createUser(formData: FormData) {
 async function setRole(formData: FormData) {
   "use server";
 
-  const session = await getServerAuthSession();
-  if (!session) redirect("/signin?callbackUrl=/dashboard/users");
-  if (session.user.role !== "ADMIN") redirect("/dashboard/forbidden");
+  const session = await requireAdmin("/dashboard/users");
 
-  const userId = String(formData.get("userId") ?? "");
-  const role = String(formData.get("role") ?? "VIEWER") as Role;
-  if (!userId) redirect("/dashboard/users");
+  const userId = formString(formData, "userId");
+  const roleResult = roleSchema.safeParse(formData.get("role"));
+  if (!userId || !roleResult.success) redirect("/dashboard/users");
+
+  const role = roleResult.data;
 
   if (userId === session.user.id) {
     redirect("/dashboard/users");
@@ -87,12 +96,10 @@ async function setRole(formData: FormData) {
 async function deleteUser(formData: FormData) {
   "use server";
 
-  const session = await getServerAuthSession();
-  if (!session) redirect("/signin?callbackUrl=/dashboard/users");
-  if (session.user.role !== "ADMIN") redirect("/dashboard/forbidden");
+  const session = await requireAdmin("/dashboard/users");
 
-  const confirmed = String(formData.get("confirmed") ?? "").trim();
-  const userId = String(formData.get("userId") ?? "").trim();
+  const confirmed = formString(formData, "confirmed");
+  const userId = formString(formData, "userId");
   if (confirmed !== "1" || !userId) redirect("/dashboard/users");
 
   if (userId === session.user.id) {
@@ -104,12 +111,7 @@ async function deleteUser(formData: FormData) {
 }
 
 export default async function UsersPage() {
-  const session = await getServerAuthSession();
-  if (!session) redirect("/signin?callbackUrl=/dashboard/users");
-
-  if (session.user.role !== "ADMIN") {
-    redirect("/dashboard/forbidden");
-  }
+  await requireAdmin("/dashboard/users");
 
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
@@ -123,56 +125,40 @@ export default async function UsersPage() {
   });
 
   return (
-    <section className={styles.page}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>Benutzerverwaltung</h1>
-        <p className={styles.subtitle}>Benutzer anlegen, Stammdaten pflegen, Rollen zuweisen, Passwörter zurücksetzen.</p>
-      </header>
+    <DashboardPage>
+      <DashboardHeader
+        title="Benutzerverwaltung"
+        subtitle="Benutzer anlegen, Stammdaten pflegen, Rollen zuweisen, Passwörter zurücksetzen."
+      />
 
-      <div className={styles.grid}>
-        <div className={styles.card}>
-          <h2 className={styles.cardTitle}>Benutzer anlegen oder aktualisieren</h2>
+      <DashboardGrid>
+        <DashboardCard title="Benutzer anlegen oder aktualisieren">
           <form action={createUser} className={styles.form}>
-            <div className={styles.row}>
-              <label className={styles.label}>
-                Email
-                <input name="email" className={styles.input} placeholder="z.B. editor@hospitalinsights.local" type="email" required />
-              </label>
-            </div>
-            <div className={styles.row}>
-              <label className={styles.label}>
-                Name
-                <input name="name" className={styles.input} placeholder="z.B. Max Mustermann" required />
-              </label>
-            </div>
-            <div className={styles.row}>
-              <label className={styles.label}>
-                Initialpasswort
-                <input name="password" className={styles.input} type="password" placeholder="Nur für neue Benutzer erforderlich" />
-              </label>
-            </div>
-            <div className={styles.row}>
-              <label className={styles.label}>
-                Rolle
-                <select name="role" className={styles.select} defaultValue={Role.EDITOR}>
-                  {Object.values(Role).map((r) => (
-                    <option key={r} value={r}>
-                      {r}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <div className={styles.actions}>
-              <button className={styles.button} type="submit">
-                Benutzer speichern
-              </button>
-            </div>
+            <DashboardField label="Email">
+              <input name="email" className={dashboardUi.input} placeholder="z.B. editor@hospitalinsights.local" type="email" required />
+            </DashboardField>
+            <DashboardField label="Name">
+              <input name="name" className={dashboardUi.input} placeholder="z.B. Max Mustermann" required />
+            </DashboardField>
+            <DashboardField label="Initialpasswort">
+              <input name="password" className={dashboardUi.input} type="password" placeholder="Nur für neue Benutzer erforderlich" />
+            </DashboardField>
+            <DashboardField label="Rolle">
+              <select name="role" className={dashboardUi.select} defaultValue={Role.EDITOR}>
+                {Object.values(Role).map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+            </DashboardField>
+            <DashboardActions>
+              <DashboardButton type="submit">Benutzer speichern</DashboardButton>
+            </DashboardActions>
           </form>
-        </div>
+        </DashboardCard>
 
-        <div className={styles.card}>
-          <h2 className={styles.cardTitle}>Bestehende Benutzer</h2>
+        <DashboardCard title="Bestehende Benutzer">
           <div className={styles.list}>
             {users.map((u) => (
               <div key={u.id} className={styles.listItem}>
@@ -183,24 +169,27 @@ export default async function UsersPage() {
 
                 <form action={setRole} className={styles.roleForm}>
                   <input type="hidden" name="userId" value={u.id} />
-                  <select name="role" className={styles.roleSelect} defaultValue={u.role}>
+                  <select name="role" className={dashboardUi.select} defaultValue={u.role}>
                     {Object.values(Role).map((r) => (
                       <option key={r} value={r}>
                         {r}
                       </option>
                     ))}
                   </select>
-                  <button className={styles.secondary} type="submit">
+                  <DashboardButton tone="secondary" type="submit">
                     Setzen
-                  </button>
+                  </DashboardButton>
                 </form>
 
                 <div className={styles.rowActions}>
-                  <ResetPasswordButton userId={u.id} email={u.email} className={styles.secondary} />
+                  <ResetPasswordButton userId={u.id} email={u.email} className={`${dashboardUi.button} ${dashboardUi.secondary}`} />
                   <form action={deleteUser}>
                     <input type="hidden" name="userId" value={u.id} />
                     <input type="hidden" name="confirmed" value="1" />
-                    <ConfirmSubmitButton className={styles.dangerSmall} confirmMessage={`Benutzer ${u.email} wirklich löschen?`}>
+                    <ConfirmSubmitButton
+                      className={`${dashboardUi.button} ${dashboardUi.danger}`}
+                      confirmMessage={`Benutzer ${u.email} wirklich löschen?`}
+                    >
                       Löschen
                     </ConfirmSubmitButton>
                   </form>
@@ -208,8 +197,8 @@ export default async function UsersPage() {
               </div>
             ))}
           </div>
-        </div>
-      </div>
-    </section>
+        </DashboardCard>
+      </DashboardGrid>
+    </DashboardPage>
   );
 }
