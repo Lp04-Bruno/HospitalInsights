@@ -1,0 +1,172 @@
+# Changelog
+
+Das Projekt orientiert sich an [Semantic Versioning](https://semver.org/lang/de/).
+
+## [1.0.0] - 2026-05-26
+
+### Highlights
+
+- Modernisierte Landing Page mit responsivem Explorer, Light-/Dark-Mode, weicher Theme-Animation und konsistenter Branding-Nutzung.
+- Neues gemeinsames Dashboard-UI-Set für wiederverwendbare Page-, Header-, Card-, Button-, Field- und Notice-Komponenten.
+- Deutlich aufgeräumtere Dashboard-Architektur durch Auslagerung von Auth-/Role-Guards, Faktenlogik, Statement-Berechnung, Backup-Modulen, Metabase-Helfern und Validierung.
+- Upgrade auf aktuelle Plattformversionen: Node.js 24, Next.js 16, React 19, TypeScript 6, ESLint 10 und Prisma 7.
+- Neue Tests für zentrale Domainlogik und CI mit getrennten Checks für Lint, Typecheck, Tests, Format und Build.
+- Release-Automation: Tags im Format `v*` auf `master` erzeugen einen GitHub Release.
+
+### Added
+
+- `CHANGELOG.md` als zentrale Release-Historie.
+- GitHub Actions Workflow `.github/workflows/release.yml`:
+  - läuft bei Tags `v*`
+  - prüft, dass der Tag auf der `master`-Historie liegt
+  - führt `lint`, `typecheck`, `test`, `prettier --check` und `next build` aus
+  - erstellt anschließend einen GitHub Release mit dem Tag-Namen als Release-Namen
+- App-Version `1.0.0` in `app/package.json`, `app/package-lock.json` und `app/lib/version.ts`.
+- Versionsanzeige `v1.0.0` im Footer der Landing Page.
+- Neue zentrale Zugriffsschicht:
+  - `app/lib/access.ts`
+  - `app/lib/roles.ts`
+  - wiederverwendbare Role-Guards wie Admin- und Editor-Zugriff
+- Neue zentrale Validierung mit Zod:
+  - `app/lib/validation.ts`
+  - validierte Rollen, Jahre, Statement Types, Search Params und Formwerte
+- Neue Fakten-Domainmodule:
+  - `app/lib/facts/saveFacts.ts`
+  - `app/lib/facts/statementRows.ts`
+  - `app/lib/facts/numberFormat.ts`
+  - `app/lib/facts/numberParsing.ts`
+  - `app/lib/facts/loadStatementContext.ts`
+  - `app/lib/facts/periods.ts`
+  - `app/lib/facts/types.ts`
+- Neues Dashboard-UI-Set:
+  - `DashboardPage`
+  - `DashboardHeader`
+  - `DashboardCard`
+  - `DashboardGrid`
+  - `DashboardField`
+  - `DashboardActions`
+  - `DashboardButton`
+  - `DashboardButtonLink`
+  - `DashboardNotice`
+- Gemeinsame Auth-Shell für Login und Logout:
+  - `app/app/_components/AuthShell.tsx`
+  - `app/app/_components/AuthShell.module.css`
+- Konsolidierte Logo- und Icon-Assets unter `app/public/assets`.
+- Favicon/App-Icon über das neue Hospitalinsights-Icon.
+- Metabase-Helfer `app/lib/metabase.ts` für:
+  - Katalog-Parsing
+  - erlaubte Views
+  - Landing-Views
+  - JWT Embed URLs
+- Backup-Unterstruktur:
+  - `app/lib/backup/process.ts`
+  - `app/lib/backup/lock.ts`
+  - `app/lib/backup/postgres.ts`
+  - `app/lib/backup/files.ts`
+  - `app/lib/backup/types.ts`
+- Vitest-Konfiguration und Tests:
+  - `app/vitest.config.ts`
+  - `app/lib/facts/numberParsing.test.ts`
+  - `app/lib/facts/saveFacts.test.ts`
+  - `app/lib/facts/statementRows.test.ts`
+  - `app/lib/metabase.test.ts`
+  - `app/lib/dbBackups.test.ts`
+
+### Changed
+
+- Landing Page:
+  - Navigation von `Explorer/Vergleich` auf verständlichere Bereiche wie Auswahl und Ausgabe angepasst.
+  - Vergleichsmodus visuell geglättet und responsiver gemacht.
+  - Theme-Toggle repariert und mit weicher Übergangsanimation versehen.
+  - Footer kompakter gehalten und um Versionsanzeige ergänzt.
+- Dashboard:
+  - Dashboard-Seiten verwenden nun ein gemeinsames UI-System.
+  - Karten, Buttons, Inputs, Selects, Notices und Header sind konsistenter gestaltet.
+  - Dashboard-Übersicht, Datenverwaltung, Hospitalverwaltung, Benutzerverwaltung, Audit, Audit-Management, Audit-Details, Backups und Forbidden Page wurden visuell vereinheitlicht.
+- Login/Logout:
+  - Login und Logout nutzen eine gemeinsame Auth-Shell.
+  - Logo, Startseitenlink, Card-Positionierung und Scrollverhalten wurden vereinheitlicht.
+  - Weißer Browser-Default-Rand durch globales `body { margin: 0 }` entfernt.
+  - Wordmark-Asset wird im Auth-Header sauber gecroppt, damit der eingebaute PNG-Leerraum nicht wie Layout-Abstand wirkt.
+- Datenverwaltung:
+  - `dashboard/data/page.tsx` wurde stark verkleinert.
+  - Server Actions, Statement-Kontext, Periodenerstellung, Statement-Zeilen und Zahlenformatierung liegen jetzt in Domainmodulen.
+  - Eingabetabelle nutzt weiterhin spezifische Tabellenlogik, aber Buttons und Controls sind stärker vereinheitlicht.
+- Hospitalverwaltung:
+  - Löschen von Krankenhäusern und Jahren nutzt Confirm-Buttons.
+  - Serverseitige `confirmed=1` Prüfung ergänzt, damit Client-Confirm nicht die einzige Absicherung ist.
+- Audit:
+  - Audit-Filter nutzen gemeinsame Input-/Select-Styles.
+  - Admin-Löschaktionen verwenden Confirm-Buttons.
+  - Management- und Detailseiten wurden auf gemeinsame Dashboard-Komponenten umgestellt.
+- Backups:
+  - `dbBackups.ts` wurde in fokussierte Module aufgeteilt.
+  - Backup-UI nutzt gemeinsame Dashboard-Buttons und Cards.
+  - Ungenutzte Restore-Funktion wurde entfernt.
+- Metabase:
+  - Doppelte Katalog- und JWT-Logik in Landing Page und Embed-Routen wurde zentralisiert.
+  - `jsonwebtoken` wurde durch `jose` ersetzt.
+  - `@types/jsonwebtoken` ist nicht mehr nötig.
+- README:
+  - Veröffentlichungstauglicher neu strukturiert.
+  - Badges, Quickstart, Architektur, Qualitätssicherung, Production-Hinweise und Release-Status ergänzt.
+- CI:
+  - Workflow läuft für Pull Requests auf `develop` und `master` sowie Pushes auf `master`.
+  - Jobs sind in `lint`, `typecheck`, `test`, `format` und `build` aufgeteilt.
+  - Node.js Version auf 24.16.0 aktualisiert.
+
+### Upgraded
+
+- Node Docker Images auf Node.js 24 Alpine.
+- Prisma ORM auf Prisma 7 mit `@prisma/adapter-pg`.
+- TypeScript auf `^6.0.3`.
+- ESLint auf `^10.4.0` und Flat-Config-kompatible Konfiguration.
+- Next.js, React, React DOM, Tailwind-Pakete, Node-Typen und weitere Tooling-Abhängigkeiten auf aktuelle Versionen.
+- Metabase Docker Tag auf `v0.61.2.8`.
+
+### Removed
+
+- Veraltete Next.js Default-SVGs:
+  - `app/public/file.svg`
+  - `app/public/globe.svg`
+  - `app/public/next.svg`
+  - `app/public/vercel.svg`
+  - `app/public/window.svg`
+- Alte Logo-Assets unter `app/assets`.
+- Kurze doppelte `app/README.md`; die Root-README ist jetzt die zentrale Projektdokumentation.
+- Alte Login-/Logout-spezifische CSS-Module zugunsten der gemeinsamen Auth-Shell.
+- Ungenutzte Backup-Restore-Funktion, die nicht vom UI-Pfad verwendet wurde.
+- Nicht mehr genutzte Validierungshelfer.
+- Prisma Generated Files aus automatischer Formatierung.
+
+### Security
+
+- Rollenprüfungen wurden zentralisiert und serverseitig konsistenter gemacht.
+- Admin-/Editor-Zugriffe werden in Pages, Actions und API-Routen über gemeinsame Guards abgesichert.
+- Kritische Löschaktionen verwenden Confirm-Buttons und serverseitige Bestätigungsfelder.
+- Metabase Embed URLs werden serverseitig erzeugt und erlaubte Views werden validiert.
+- Backup-Dateinamen und Import-/Download-Pfade werden stärker validiert.
+
+### Testing
+
+- Neue Tests für:
+  - detailliertes Zahlenparsing
+  - Change-Erkennung beim Speichern von Fakten
+  - Statement-Tree- und Formel-Berechnung
+  - Metabase-Katalog-Parsing
+  - Backup-Dateinamen-Sicherheit
+- Tests laufen in CI und lokal über `npm test`.
+
+### Operational Notes
+
+- Production-Migrationen sollten mit `prisma migrate deploy` ausgeführt werden.
+- Für Prisma 7 muss `DATABASE_URL` über `prisma.config.ts` verfügbar sein.
+- Node.js 24 ist die Zielruntime für Docker, CI und lokale Entwicklung.
+- Tags für Releases sollten auf Commits gesetzt werden, die bereits auf `master` liegen:
+
+```bash
+git checkout master
+git pull origin master
+git tag v1.0.0
+git push origin v1.0.0
+```
