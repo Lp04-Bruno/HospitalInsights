@@ -3,36 +3,16 @@ import { StatementType, Unit } from "@/prisma/generated/enums";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/access";
 import { statementLabel } from "@/lib/statements";
+import { firstSearchParam, resolveSearchParams, yearSchema } from "@/lib/validation";
 
 import styles from "./page.module.css";
+import { DashboardCard, DashboardHeader, DashboardPage as DashboardShell } from "@/app/dashboard/_components/DashboardUi";
 
 export const dynamic = "force-dynamic";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
 };
-
-function firstParam(v: string | string[] | undefined): string | undefined {
-  if (typeof v === "string") return v;
-  if (Array.isArray(v)) return v[0];
-  return undefined;
-}
-
-async function resolveSearchParams(searchParams: PageProps["searchParams"]): Promise<Record<string, string | string[] | undefined>> {
-  if (!searchParams) return {};
-  const maybePromise = searchParams as unknown as { then?: unknown };
-  if (typeof maybePromise.then === "function") {
-    return (await (searchParams as Promise<Record<string, string | string[] | undefined>>)) ?? {};
-  }
-  return (searchParams as Record<string, string | string[] | undefined>) ?? {};
-}
-
-function parseYear(raw: string | undefined): number | undefined {
-  if (!raw) return undefined;
-  const year = Number(raw);
-  if (!Number.isInteger(year) || year < 1900 || year > 2100) return undefined;
-  return year;
-}
 
 function clampPercent(value: number) {
   if (!Number.isFinite(value)) return 0;
@@ -45,8 +25,9 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   const isAdmin = session.user.role === "ADMIN";
 
   const sp = await resolveSearchParams(searchParams);
-  const selectedHospitalId = firstParam(sp.hospitalId);
-  const requestedYear = parseYear(firstParam(sp.year));
+  const selectedHospitalId = firstSearchParam(sp.hospitalId);
+  const requestedYearResult = yearSchema.safeParse(firstSearchParam(sp.year));
+  const requestedYear = requestedYearResult.success ? requestedYearResult.data : undefined;
 
   const [hospitalCount, singleHospital, selectedHospital, allLineItems, latestSaveRunGlobal, globalPeriodCount, usedPeriodIds] =
     await Promise.all([
@@ -192,11 +173,11 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   const adminStats = isAdmin ? await Promise.all([prisma.user.count(), prisma.factChangeRun.count(), prisma.factChange.count()]) : null;
 
   return (
-    <section className={styles.page}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Übersicht</h1>
-        <div className={styles.subtitle}>
-          {periodActive ? (
+    <DashboardShell>
+      <DashboardHeader
+        title="Übersicht"
+        subtitle={
+          periodActive ? (
             <span>
               Jahr: <strong>{periodActive.year}</strong>
               {effectiveHospital?.name ? (
@@ -213,12 +194,11 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             </span>
           ) : (
             <span>Kein Jahr angelegt</span>
-          )}
-        </div>
-      </div>
+          )
+        }
+      />
 
-      <div className={styles.section}>
-        <div className={styles.sectionTitle}>Aktueller Kontext</div>
+      <DashboardCard title="Aktueller Kontext">
         <div className={styles.kpis}>
           <div className={styles.kpiCard}>
             <div className={styles.kpiLabel}>Krankenhaus</div>
@@ -252,10 +232,9 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             </div>
           </div>
         </div>
-      </div>
+      </DashboardCard>
 
-      <div className={styles.section}>
-        <div className={styles.sectionTitle}>Datenvollständigkeit</div>
+      <DashboardCard title="Datenvollständigkeit">
         <div className={styles.progressList}>
           {completion.map((row) => {
             const missing = Math.max(0, row.expected - row.actual);
@@ -272,10 +251,9 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             );
           })}
         </div>
-      </div>
+      </DashboardCard>
 
-      <div className={styles.section}>
-        <div className={styles.sectionTitle}>Gesamt</div>
+      <DashboardCard title="Gesamt">
         <div className={styles.kpis}>
           <div className={styles.kpiCard}>
             <div className={styles.kpiLabel}>Krankenhäuser</div>
@@ -302,11 +280,10 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             </div>
           </div>
         </div>
-      </div>
+      </DashboardCard>
 
       {isAdmin && adminStats ? (
-        <div className={styles.section}>
-          <div className={styles.sectionTitle}>Admin</div>
+        <DashboardCard title="Admin">
           <div className={styles.kpis}>
             <div className={styles.kpiCard}>
               <div className={styles.kpiLabel}>Benutzer</div>
@@ -321,8 +298,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               <div className={styles.kpiValue}>{adminStats[2]}</div>
             </div>
           </div>
-        </div>
+        </DashboardCard>
       ) : null}
-    </section>
+    </DashboardShell>
   );
 }

@@ -4,19 +4,22 @@ import { prisma } from "@/lib/prisma";
 import { EDITOR_ROLES, getSessionIfAllowed } from "@/lib/access";
 import { parseUserNumberDetailed } from "@/lib/facts/numberParsing";
 import type { SaveFactsState } from "@/lib/facts/types";
-import { StatementType, Unit } from "@/prisma/generated/enums";
+import { formString, statementTypeSchema } from "@/lib/validation";
+import { Unit } from "@/prisma/generated/enums";
 
 export async function saveFacts(_prevState: SaveFactsState, formData: FormData): Promise<SaveFactsState> {
-  const hospitalId = String(formData.get("hospitalId") ?? "");
-  const periodId = String(formData.get("periodId") ?? "");
-  const statementType = String(formData.get("statementType") ?? "") as StatementType;
+  const hospitalId = formString(formData, "hospitalId");
+  const periodId = formString(formData, "periodId");
+  const statementTypeResult = statementTypeSchema.safeParse(formData.get("statementType"));
 
   const session = await getSessionIfAllowed(EDITOR_ROLES);
   if (!session) return { ok: false, globalError: "Nicht angemeldet oder keine Berechtigung." };
 
-  if (!hospitalId || !periodId || !statementType) {
+  if (!hospitalId || !periodId || !statementTypeResult.success) {
     return { ok: false, globalError: "Ungültige Anfrage." };
   }
+
+  const statementType = statementTypeResult.data;
 
   try {
     await prisma.hospitalPeriod.upsert({

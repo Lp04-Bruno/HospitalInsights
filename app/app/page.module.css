@@ -22,8 +22,36 @@
     linear-gradient(180deg, var(--landing-bg) 0%, #ffffff 58%, var(--landing-bg-soft) 100%);
   color: var(--landing-text);
   transition:
-    background 180ms ease,
-    color 180ms ease;
+    background 360ms ease,
+    color 320ms ease;
+}
+
+.header,
+.brandIcon,
+.title,
+.navLink,
+.themeToggle,
+.controlsCard,
+.controlsHeader,
+.fieldCard,
+.togglePanel,
+.switchTrack,
+.select,
+.selectionCard,
+.hint,
+.embedCard,
+.embedHeader,
+.embedBody,
+.embedStatus,
+.notice {
+  transition:
+    background-color 320ms ease,
+    background 320ms ease,
+    border-color 320ms ease,
+    box-shadow 320ms ease,
+    color 320ms ease,
+    filter 320ms ease,
+    opacity 320ms ease;
 }
 
 :global(html[data-landing-theme="dark"]) .shell {
@@ -140,6 +168,11 @@
   background: transparent;
   color: var(--landing-text);
   cursor: pointer;
+  transition:
+    background 220ms ease,
+    border-color 220ms ease,
+    color 220ms ease,
+    transform 220ms ease;
 }
 
 .themeToggle:hover,
@@ -147,6 +180,7 @@
   border-color: var(--landing-line);
   background: var(--landing-card-soft);
   outline: none;
+  transform: translateY(-1px);
 }
 
 .themeIcon {
@@ -156,6 +190,7 @@
   align-items: center;
   justify-content: center;
   color: currentColor;
+  animation: themeIconIn 220ms ease both;
 }
 
 .hero {
@@ -623,6 +658,52 @@
   }
 }
 
+@keyframes themeIconIn {
+  from {
+    opacity: 0;
+    transform: rotate(-18deg) scale(0.76);
+  }
+
+  to {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+@keyframes landingThemeFade {
+  from {
+    opacity: 1;
+    filter: blur(0);
+  }
+
+  to {
+    opacity: 0;
+    filter: blur(1px);
+  }
+}
+
+@keyframes landingThemeReveal {
+  from {
+    opacity: 0;
+    filter: blur(2px);
+    transform: scale(1.008);
+  }
+
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+}
+
+:global(::view-transition-old(root)) {
+  animation: landingThemeFade 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+:global(::view-transition-new(root)) {
+  animation: landingThemeReveal 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 @media (max-width: 920px) {
   .controlsGrid,
   .embedsCompare {
@@ -779,8 +860,32 @@
   .navLink::after,
   .switchThumb,
   .frameReady,
-  .shell {
+  .shell,
+  .header,
+  .brandIcon,
+  .title,
+  .navLink,
+  .themeToggle,
+  .themeIcon,
+  .controlsCard,
+  .controlsHeader,
+  .fieldCard,
+  .togglePanel,
+  .switchTrack,
+  .select,
+  .selectionCard,
+  .hint,
+  .embedCard,
+  .embedHeader,
+  .embedBody,
+  .embedStatus,
+  .notice {
     animation: none;
     transition: none;
+  }
+
+  :global(::view-transition-old(root)),
+  :global(::view-transition-new(root)) {
+    animation: none;
   }
 }

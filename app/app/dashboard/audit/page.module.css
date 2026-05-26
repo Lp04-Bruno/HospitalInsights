@@ -36,23 +36,6 @@
   color: var(--hi-text-muted);
 }
 
-.field select,
-.field input {
-  width: 100%;
-  padding: 8px 10px;
-  border-radius: 8px;
-  border: 1px solid var(--hi-border);
-  background: var(--hi-surface);
-  color: var(--hi-text);
-}
-
-.field select:focus,
-.field input:focus {
-  outline: none;
-  border-color: var(--hi-focus-border);
-  box-shadow: 0 0 0 3px var(--hi-focus-ring);
-}
-
 .checkRow {
   display: flex;
   align-items: center;

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
+import { dashboardUi } from "@/app/dashboard/_components/DashboardUi";
 import styles from "./page.module.css";
 
 type Option = { value: string; label: string };
@@ -85,7 +86,12 @@ export default function AuditFilters(props: AuditFiltersProps) {
     >
       <div className={styles.field}>
         <label>Hospital</label>
-        <select name="hospitalId" value={state.hospitalId} onChange={(e) => setState((s) => ({ ...s, hospitalId: e.target.value }))}>
+        <select
+          className={dashboardUi.select}
+          name="hospitalId"
+          value={state.hospitalId}
+          onChange={(e) => setState((s) => ({ ...s, hospitalId: e.target.value }))}
+        >
           <option value="">Alle</option>
           {props.hospitals.map((h) => (
             <option key={h.value} value={h.value}>
@@ -98,6 +104,7 @@ export default function AuditFilters(props: AuditFiltersProps) {
       <div className={styles.field}>
         <label>Benutzer</label>
         <select
+          className={dashboardUi.select}
           name="userId"
           value={state.userId}
           disabled={state.mine}
@@ -114,17 +121,30 @@ export default function AuditFilters(props: AuditFiltersProps) {
 
       <div className={styles.field}>
         <label>Zeitraum von</label>
-        <input type="date" name="from" value={state.from} onChange={(e) => setState((s) => ({ ...s, from: e.target.value }))} />
+        <input
+          className={dashboardUi.input}
+          type="date"
+          name="from"
+          value={state.from}
+          onChange={(e) => setState((s) => ({ ...s, from: e.target.value }))}
+        />
       </div>
 
       <div className={styles.field}>
         <label>Zeitraum bis</label>
-        <input type="date" name="to" value={state.to} onChange={(e) => setState((s) => ({ ...s, to: e.target.value }))} />
+        <input
+          className={dashboardUi.input}
+          type="date"
+          name="to"
+          value={state.to}
+          onChange={(e) => setState((s) => ({ ...s, to: e.target.value }))}
+        />
       </div>
 
       <div className={styles.field}>
         <label>LineItem (Code/Label)</label>
         <input
+          className={dashboardUi.input}
           name="q"
           placeholder="z.B. 1.1 oder Erlöse"
           value={state.q}
@@ -150,7 +170,12 @@ export default function AuditFilters(props: AuditFiltersProps) {
 
       <div className={styles.field}>
         <label>Jahr</label>
-        <select name="year" value={state.year} onChange={(e) => setState((s) => ({ ...s, year: e.target.value }))}>
+        <select
+          className={dashboardUi.select}
+          name="year"
+          value={state.year}
+          onChange={(e) => setState((s) => ({ ...s, year: e.target.value }))}
+        >
           <option value="">Alle</option>
           {props.years.map((y) => (
             <option key={y} value={String(y)}>
@@ -163,6 +188,7 @@ export default function AuditFilters(props: AuditFiltersProps) {
       <div className={styles.field}>
         <label>Statement</label>
         <select
+          className={dashboardUi.select}
           name="statementType"
           value={state.statementType}
           onChange={(e) => setState((s) => ({ ...s, statementType: e.target.value }))}
@@ -177,7 +203,7 @@ export default function AuditFilters(props: AuditFiltersProps) {
       </div>
 
       <div className={styles.actions}>
-        <Link className={styles.secondary} href="/dashboard/audit">
+        <Link className={`${dashboardUi.button} ${dashboardUi.secondary}`} href="/dashboard/audit">
           Reset
         </Link>
       </div>

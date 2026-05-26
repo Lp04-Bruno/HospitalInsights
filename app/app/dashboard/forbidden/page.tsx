@@ -1,11 +1,13 @@
-import styles from "./page.module.css";
+import { DashboardHeader, DashboardNotice, DashboardPage } from "@/app/dashboard/_components/DashboardUi";
 
 export default function ForbiddenPage() {
   return (
-    <section className={styles.page}>
-      <h1 className={styles.title}>Zugriff verweigert</h1>
-      <p className={styles.text}>Du bist eingeloggt, hast aber keine Berechtigung für diesen Bereich.</p>
-      <p className={styles.text}>Wenn du glaubst, dass das ein Fehler ist, wende dich an einen Admin.</p>
-    </section>
+    <DashboardPage>
+      <DashboardHeader title="Zugriff verweigert" />
+      <DashboardNotice tone="warning">
+        Du bist eingeloggt, hast aber keine Berechtigung für diesen Bereich. Wenn du glaubst, dass das ein Fehler ist, wende dich an einen
+        Admin.
+      </DashboardNotice>
+    </DashboardPage>
   );
 }

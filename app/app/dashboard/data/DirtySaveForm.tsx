@@ -8,6 +8,7 @@ import styles from "./page.module.css";
 import { ValueEntryTable } from "./ValueEntryTable";
 import { parseUserNumberDetailed } from "@/lib/facts/numberParsing";
 import type { FlatRow, SaveFactsAction, SaveFactsState } from "@/lib/facts/types";
+import { dashboardUi } from "@/app/dashboard/_components/DashboardUi";
 
 type DirtySaveFormProps = {
   saveAction: SaveFactsAction;
@@ -89,10 +90,10 @@ function DirtyBottomBar({
           )}
         </div>
         <div className={styles.bottomBarButtons}>
-          <button type="button" className={styles.secondary} onClick={onDiscard} disabled={pending}>
+          <button type="button" className={`${dashboardUi.button} ${dashboardUi.secondary}`} onClick={onDiscard} disabled={pending}>
             Verwerfen
           </button>
-          <button className={styles.button} type="submit" disabled={pending || invalidCount > 0}>
+          <button className={dashboardUi.button} type="submit" disabled={pending || invalidCount > 0}>
             {pending ? "Speichert…" : "Speichern"}
           </button>
         </div>

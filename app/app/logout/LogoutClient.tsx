@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 
-import styles from "./page.module.css";
+import styles from "@/app/signin/sign-in-form.module.css";
 
 export function LogoutClient({ callbackUrl }: { callbackUrl: string }) {
   const router = useRouter();
@@ -22,7 +22,7 @@ export function LogoutClient({ callbackUrl }: { callbackUrl: string }) {
   }, [router, callbackUrl]);
 
   return (
-    <div className={styles.card}>
+    <section className={styles.card}>
       <h1 className={styles.title}>Abmelden</h1>
       <p className={styles.subtitle}>Willst du dich wirklich abmelden?</p>
       <div className={styles.actions}>
@@ -33,6 +33,6 @@ export function LogoutClient({ callbackUrl }: { callbackUrl: string }) {
           Zurück
         </button>
       </div>
-    </div>
+    </section>
   );
 }
