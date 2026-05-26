@@ -9,7 +9,6 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Lp04-Bruno/HospitalInsights/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Lp04-Bruno/HospitalInsights/actions/workflows/ci.yml/badge.svg?branch=master"></a>
   <img alt="Node.js 24" src="https://img.shields.io/badge/Node.js-24-5FA04E?style=for-the-badge&logo=nodedotjs&logoColor=white">
   <img alt="Next.js 16" src="https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=nextdotjs&logoColor=white">
   <img alt="React 19" src="https://img.shields.io/badge/React-19-149ECA?style=for-the-badge&logo=react&logoColor=white">
