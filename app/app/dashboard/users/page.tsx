@@ -7,6 +7,16 @@ import { Role } from "@/prisma/generated/enums";
 import styles from "./page.module.css";
 import { ConfirmSubmitButton } from "@/app/dashboard/_components/ConfirmSubmitButton";
 import { ResetPasswordButton } from "./ResetPasswordButton";
+import {
+  DashboardActions,
+  DashboardButton,
+  DashboardCard,
+  DashboardField,
+  DashboardGrid,
+  DashboardHeader,
+  DashboardPage,
+  dashboardUi,
+} from "@/app/dashboard/_components/DashboardUi";
 
 async function createUser(formData: FormData) {
   "use server";
@@ -115,56 +125,40 @@ export default async function UsersPage() {
   });
 
   return (
-    <section className={styles.page}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>Benutzerverwaltung</h1>
-        <p className={styles.subtitle}>Benutzer anlegen, Stammdaten pflegen, Rollen zuweisen, Passwörter zurücksetzen.</p>
-      </header>
+    <DashboardPage>
+      <DashboardHeader
+        title="Benutzerverwaltung"
+        subtitle="Benutzer anlegen, Stammdaten pflegen, Rollen zuweisen, Passwörter zurücksetzen."
+      />
 
-      <div className={styles.grid}>
-        <div className={styles.card}>
-          <h2 className={styles.cardTitle}>Benutzer anlegen oder aktualisieren</h2>
+      <DashboardGrid>
+        <DashboardCard title="Benutzer anlegen oder aktualisieren">
           <form action={createUser} className={styles.form}>
-            <div className={styles.row}>
-              <label className={styles.label}>
-                Email
-                <input name="email" className={styles.input} placeholder="z.B. editor@hospitalinsights.local" type="email" required />
-              </label>
-            </div>
-            <div className={styles.row}>
-              <label className={styles.label}>
-                Name
-                <input name="name" className={styles.input} placeholder="z.B. Max Mustermann" required />
-              </label>
-            </div>
-            <div className={styles.row}>
-              <label className={styles.label}>
-                Initialpasswort
-                <input name="password" className={styles.input} type="password" placeholder="Nur für neue Benutzer erforderlich" />
-              </label>
-            </div>
-            <div className={styles.row}>
-              <label className={styles.label}>
-                Rolle
-                <select name="role" className={styles.select} defaultValue={Role.EDITOR}>
-                  {Object.values(Role).map((r) => (
-                    <option key={r} value={r}>
-                      {r}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <div className={styles.actions}>
-              <button className={styles.button} type="submit">
-                Benutzer speichern
-              </button>
-            </div>
+            <DashboardField label="Email">
+              <input name="email" className={dashboardUi.input} placeholder="z.B. editor@hospitalinsights.local" type="email" required />
+            </DashboardField>
+            <DashboardField label="Name">
+              <input name="name" className={dashboardUi.input} placeholder="z.B. Max Mustermann" required />
+            </DashboardField>
+            <DashboardField label="Initialpasswort">
+              <input name="password" className={dashboardUi.input} type="password" placeholder="Nur für neue Benutzer erforderlich" />
+            </DashboardField>
+            <DashboardField label="Rolle">
+              <select name="role" className={dashboardUi.select} defaultValue={Role.EDITOR}>
+                {Object.values(Role).map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+            </DashboardField>
+            <DashboardActions>
+              <DashboardButton type="submit">Benutzer speichern</DashboardButton>
+            </DashboardActions>
           </form>
-        </div>
+        </DashboardCard>
 
-        <div className={styles.card}>
-          <h2 className={styles.cardTitle}>Bestehende Benutzer</h2>
+        <DashboardCard title="Bestehende Benutzer">
           <div className={styles.list}>
             {users.map((u) => (
               <div key={u.id} className={styles.listItem}>
@@ -175,24 +169,27 @@ export default async function UsersPage() {
 
                 <form action={setRole} className={styles.roleForm}>
                   <input type="hidden" name="userId" value={u.id} />
-                  <select name="role" className={styles.roleSelect} defaultValue={u.role}>
+                  <select name="role" className={dashboardUi.select} defaultValue={u.role}>
                     {Object.values(Role).map((r) => (
                       <option key={r} value={r}>
                         {r}
                       </option>
                     ))}
                   </select>
-                  <button className={styles.secondary} type="submit">
+                  <DashboardButton tone="secondary" type="submit">
                     Setzen
-                  </button>
+                  </DashboardButton>
                 </form>
 
                 <div className={styles.rowActions}>
-                  <ResetPasswordButton userId={u.id} email={u.email} className={styles.secondary} />
+                  <ResetPasswordButton userId={u.id} email={u.email} className={`${dashboardUi.button} ${dashboardUi.secondary}`} />
                   <form action={deleteUser}>
                     <input type="hidden" name="userId" value={u.id} />
                     <input type="hidden" name="confirmed" value="1" />
-                    <ConfirmSubmitButton className={styles.dangerSmall} confirmMessage={`Benutzer ${u.email} wirklich löschen?`}>
+                    <ConfirmSubmitButton
+                      className={`${dashboardUi.button} ${dashboardUi.danger}`}
+                      confirmMessage={`Benutzer ${u.email} wirklich löschen?`}
+                    >
                       Löschen
                     </ConfirmSubmitButton>
                   </form>
@@ -200,8 +197,8 @@ export default async function UsersPage() {
               </div>
             ))}
           </div>
-        </div>
-      </div>
-    </section>
+        </DashboardCard>
+      </DashboardGrid>
+    </DashboardPage>
   );
 }

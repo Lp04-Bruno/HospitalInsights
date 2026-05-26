@@ -5,6 +5,9 @@ import { Moon, Sun } from "lucide-react";
 import styles from "../page.module.css";
 
 type Theme = "light" | "dark";
+type ViewTransitionDocument = Document & {
+  startViewTransition?: (callback: () => void) => { finished: Promise<void> };
+};
 
 const listeners = new Set<() => void>();
 
@@ -38,6 +41,10 @@ function applyTheme(theme: Theme) {
   emit();
 }
 
+function prefersReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
 export default function LandingThemeToggle() {
   const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
@@ -46,7 +53,15 @@ export default function LandingThemeToggle() {
   }, []);
 
   function toggleTheme() {
-    applyTheme(theme === "dark" ? "light" : "dark");
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    const doc = document as ViewTransitionDocument;
+
+    if (doc.startViewTransition && !prefersReducedMotion()) {
+      doc.startViewTransition(() => applyTheme(nextTheme));
+      return;
+    }
+
+    applyTheme(nextTheme);
   }
 
   return (
@@ -57,7 +72,7 @@ export default function LandingThemeToggle() {
       title={theme === "dark" ? "Light Mode" : "Dark Mode"}
       onClick={toggleTheme}
     >
-      <span className={styles.themeIcon} aria-hidden="true">
+      <span key={theme} className={styles.themeIcon} aria-hidden="true">
         {theme === "dark" ? <Sun size={19} strokeWidth={2.2} /> : <Moon size={19} strokeWidth={2.2} />}
       </span>
     </button>

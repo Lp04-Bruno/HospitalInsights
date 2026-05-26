@@ -7,6 +7,7 @@ import { useFormStatus } from "react-dom";
 import type { BackupAnalysis, RestoreMode } from "@/lib/dbBackups";
 import { useRouter, useSearchParams } from "next/navigation";
 
+import { dashboardUi } from "@/app/dashboard/_components/DashboardUi";
 import styles from "./page.module.css";
 
 function useEstimatedProgress(pending: boolean) {
@@ -126,7 +127,7 @@ export function UploadBackupForm({ action }: UploadBackupFormProps) {
         <span className={styles.labelText}>Backup hochladen (.dump)</span>
         <div className={styles.filePickerRow}>
           <input ref={inputRef} className={styles.fileInput} type="file" name="file" accept=".dump" required onChange={onChange} />
-          <button type="button" className={styles.secondary} onClick={onPick}>
+          <button type="button" className={`${dashboardUi.button} ${dashboardUi.secondary}`} onClick={onPick}>
             Durchsuchen…
           </button>
           <div className={styles.fileName} title={fileName || "Keine Datei ausgewählt"}>
@@ -136,7 +137,7 @@ export function UploadBackupForm({ action }: UploadBackupFormProps) {
       </div>
 
       <div className={styles.actions}>
-        <PendingActionButton className={styles.secondary} pendingText="Upload läuft…">
+        <PendingActionButton className={`${dashboardUi.button} ${dashboardUi.secondary}`} pendingText="Upload läuft…">
           Upload
         </PendingActionButton>
       </div>
@@ -243,7 +244,7 @@ export function RestoreWithPreview({ filename, kind, action }: RestoreWithPrevie
 
   return (
     <>
-      <button type="button" className={styles.secondary} onClick={onOpen}>
+      <button type="button" className={`${dashboardUi.button} ${dashboardUi.secondary}`} onClick={onOpen}>
         Restore
       </button>
 
@@ -261,7 +262,7 @@ export function RestoreWithPreview({ filename, kind, action }: RestoreWithPrevie
                 <div className={styles.modalTitle}>Restore / Import</div>
                 <div className={styles.modalSubtitle}>{filename}</div>
               </div>
-              <button type="button" className={styles.secondary} onClick={close}>
+              <button type="button" className={`${dashboardUi.button} ${dashboardUi.secondary}`} onClick={close}>
                 Schließen
               </button>
             </div>
@@ -313,7 +314,7 @@ export function RestoreWithPreview({ filename, kind, action }: RestoreWithPrevie
               </div>
 
               <div className={styles.modalActions}>
-                <button type="button" className={styles.secondary} onClick={close}>
+                <button type="button" className={`${dashboardUi.button} ${dashboardUi.secondary}`} onClick={close}>
                   Abbrechen
                 </button>
 
@@ -321,7 +322,7 @@ export function RestoreWithPreview({ filename, kind, action }: RestoreWithPrevie
                   <input type="hidden" name="filename" value={filename} />
                   <input type="hidden" name="mode" value={mode} />
                   <input type="hidden" name="confirmed" value="1" />
-                  <PendingActionButton className={styles.button} pendingText="Import/Restore läuft…" disabled={loading}>
+                  <PendingActionButton className={dashboardUi.button} pendingText="Import/Restore läuft…" disabled={loading}>
                     Starten
                   </PendingActionButton>
                 </form>

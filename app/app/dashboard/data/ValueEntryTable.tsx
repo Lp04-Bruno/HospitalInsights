@@ -5,6 +5,7 @@ import { Unit } from "@/prisma/generated/enums";
 
 import styles from "./page.module.css";
 import { FormattedValueInput } from "./FormattedValueInput";
+import { dashboardUi } from "@/app/dashboard/_components/DashboardUi";
 
 type FlatRow = {
   code: string;
@@ -141,10 +142,10 @@ export function ValueEntryTable({
           {normalizedQuery ? <div className={styles.searchMeta}>{searchHitCount} Treffer</div> : null}
         </div>
         <div className={styles.tableToolbarActions}>
-          <button type="button" className={styles.secondarySmall} onClick={expandAll}>
+          <button type="button" className={`${dashboardUi.button} ${dashboardUi.secondary} ${styles.compactButton}`} onClick={expandAll}>
             Alles aufklappen
           </button>
-          <button type="button" className={styles.secondarySmall} onClick={collapseAll}>
+          <button type="button" className={`${dashboardUi.button} ${dashboardUi.secondary} ${styles.compactButton}`} onClick={collapseAll}>
             Alles einklappen
           </button>
         </div>

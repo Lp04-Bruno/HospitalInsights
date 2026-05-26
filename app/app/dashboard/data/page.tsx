@@ -9,6 +9,16 @@ import { resolveSearchParams } from "@/lib/validation";
 import { StatementType } from "@/prisma/generated/enums";
 import styles from "./page.module.css";
 import { DirtySaveForm } from "@/app/dashboard/data/DirtySaveForm";
+import {
+  DashboardActions,
+  DashboardButton,
+  DashboardCard,
+  DashboardField,
+  DashboardHeader,
+  DashboardNotice,
+  DashboardPage,
+  dashboardUi,
+} from "@/app/dashboard/_components/DashboardUi";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
@@ -34,61 +44,49 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
     factMap,
     formulasByCode,
   } = await loadStatementContext(sp);
+  const selectedHospitalName = hospitals.find((h) => h.id === selectedHospitalId)?.name ?? "—";
 
   return (
-    <section className={styles.page}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>Datenverwaltung</h1>
-      </header>
+    <DashboardPage>
+      <DashboardHeader title="Datenverwaltung" />
 
       {hospitals.length === 0 ? (
-        <div className={styles.notice}>
+        <DashboardNotice>
           Es gibt noch keine Krankenhäuser. Lege zuerst eins in der Hospitalverwaltung an.{" "}
           <Link className={styles.inlineLink} href="/dashboard/hospitals">
             Hospitalverwaltung öffnen
           </Link>
-        </div>
+        </DashboardNotice>
       ) : (
         <>
-          <div className={styles.card}>
-            <div className={styles.cardHeader}>
-              <div>
-                <div className={styles.cardTitle}>Auswahl</div>
-                <div className={styles.cardHint}>Wähle Kontext und lade dann die Positionen.</div>
-              </div>
-            </div>
-
+          <DashboardCard title="Auswahl" hint="Wähle Kontext und lade dann die Positionen.">
             {selectedHospitalId ? (
               <form method="get" className={styles.filters}>
-                <label className={styles.field}>
-                  Krankenhaus
-                  <select name="hospitalId" className={styles.select} defaultValue={selectedHospitalId}>
+                <DashboardField label="Krankenhaus">
+                  <select name="hospitalId" className={dashboardUi.select} defaultValue={selectedHospitalId}>
                     {hospitals.map((h) => (
                       <option key={h.id} value={h.id}>
                         {h.name}
                       </option>
                     ))}
                   </select>
-                </label>
+                </DashboardField>
 
-                <label className={styles.field}>
-                  Jahr
-                  <select name="year" className={styles.select} defaultValue={selectedYear ?? ""}>
+                <DashboardField label="Jahr">
+                  <select name="year" className={dashboardUi.select} defaultValue={selectedYear ?? ""}>
                     {periods.map((p) => (
                       <option key={p.id} value={p.year}>
                         {p.year}
                       </option>
                     ))}
                   </select>
-                </label>
+                </DashboardField>
 
                 <input type="hidden" name="statementType" value={selectedStatementTab} />
 
-                <div className={styles.filterActions}>
-                  <button className={styles.button} type="submit">
-                    Anzeigen
-                  </button>
-                </div>
+                <DashboardActions className={styles.filterActions}>
+                  <DashboardButton type="submit">Anzeigen</DashboardButton>
+                </DashboardActions>
               </form>
             ) : null}
 
@@ -113,39 +111,29 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
               <form action={createPeriod} className={styles.createYear}>
                 <input type="hidden" name="hospitalId" value={selectedHospitalId} />
                 <input type="hidden" name="statementType" value={selectedStatementTab} />
-                <label className={styles.field}>
-                  Jahr anlegen
-                  <input name="year" className={styles.input} placeholder="z.B. 2024" />
-                </label>
-                <div className={styles.filterActions}>
-                  <button className={styles.secondary} type="submit">
+                <DashboardField label="Jahr anlegen">
+                  <input name="year" className={dashboardUi.input} placeholder="z.B. 2024" />
+                </DashboardField>
+                <DashboardActions className={styles.filterActions}>
+                  <DashboardButton tone="secondary" type="submit">
                     Jahr anlegen
-                  </button>
-                </div>
+                  </DashboardButton>
+                </DashboardActions>
               </form>
             ) : null}
-          </div>
+          </DashboardCard>
 
           {!selectedPeriod ? (
-            <div className={styles.notice}>Bitte wähle ein Jahr aus (oder lege eins an).</div>
+            <DashboardNotice>Bitte wähle ein Jahr aus (oder lege eins an).</DashboardNotice>
           ) : selectedStatementTab === BALANCE_TAB ? (
             <>
               {([StatementType.BALANCE_ASSET, StatementType.BALANCE_LIAB] as const).every(
                 (st) => (lineItemsByType.get(st)?.length ?? 0) === 0
               ) ? (
-                <div className={styles.notice}>Keine Positionen vorhanden für Bilanz. (Seed noch nicht gelaufen?)</div>
+                <DashboardNotice tone="warning">Keine Positionen vorhanden für Bilanz. (Seed noch nicht gelaufen?)</DashboardNotice>
               ) : (
                 <>
-                  <div className={styles.card}>
-                    <div className={styles.cardHeader}>
-                      <div>
-                        <div className={styles.cardTitle}>Bilanz · Aktiva</div>
-                        <div className={styles.cardHint}>
-                          {selectedYear} · {hospitals.find((h) => h.id === selectedHospitalId)?.name}
-                        </div>
-                      </div>
-                    </div>
-
+                  <DashboardCard title="Bilanz · Aktiva" hint={`${selectedYear} · ${selectedHospitalName}`}>
                     <DirtySaveForm
                       key={`${selectedHospitalId}:${selectedPeriod.id}:${StatementType.BALANCE_ASSET}`}
                       saveAction={saveFacts}
@@ -158,18 +146,9 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
                         formulasByCode,
                       })}
                     />
-                  </div>
+                  </DashboardCard>
 
-                  <div className={styles.card}>
-                    <div className={styles.cardHeader}>
-                      <div>
-                        <div className={styles.cardTitle}>Bilanz · Passiva</div>
-                        <div className={styles.cardHint}>
-                          {selectedYear} · {hospitals.find((h) => h.id === selectedHospitalId)?.name}
-                        </div>
-                      </div>
-                    </div>
-
+                  <DashboardCard title="Bilanz · Passiva" hint={`${selectedYear} · ${selectedHospitalName}`}>
                     <DirtySaveForm
                       key={`${selectedHospitalId}:${selectedPeriod.id}:${StatementType.BALANCE_LIAB}`}
                       saveAction={saveFacts}
@@ -182,21 +161,12 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
                         formulasByCode,
                       })}
                     />
-                  </div>
+                  </DashboardCard>
                 </>
               )}
             </>
           ) : (
-            <div className={styles.card}>
-              <div className={styles.cardHeader}>
-                <div>
-                  <div className={styles.cardTitle}>{statementLabel(selectedPrimaryStatementType)}</div>
-                  <div className={styles.cardHint}>
-                    {selectedYear} · {hospitals.find((h) => h.id === selectedHospitalId)?.name}
-                  </div>
-                </div>
-              </div>
-
+            <DashboardCard title={statementLabel(selectedPrimaryStatementType)} hint={`${selectedYear} · ${selectedHospitalName}`}>
               <DirtySaveForm
                 key={`${selectedHospitalId}:${selectedPeriod.id}:${selectedPrimaryStatementType}`}
                 saveAction={saveFacts}
@@ -209,10 +179,10 @@ export default async function DashboardDataPage({ searchParams }: PageProps) {
                   formulasByCode,
                 })}
               />
-            </div>
+            </DashboardCard>
           )}
         </>
       )}
-    </section>
+    </DashboardPage>
   );
 }

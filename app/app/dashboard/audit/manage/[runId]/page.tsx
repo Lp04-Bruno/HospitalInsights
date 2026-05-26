@@ -1,9 +1,10 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/access";
 import { Unit } from "@/prisma/generated/enums";
+import { ConfirmSubmitButton } from "@/app/dashboard/_components/ConfirmSubmitButton";
+import { DashboardButtonLink, DashboardCard, DashboardHeader, DashboardPage, dashboardUi } from "@/app/dashboard/_components/DashboardUi";
 
 import styles from "./page.module.css";
 
@@ -100,17 +101,13 @@ export default async function AuditRunDetailsPage({ params }: PageProps) {
 
   if (!run) {
     return (
-      <section className={styles.page}>
-        <div className={styles.header}>
-          <div>
-            <h1 className={styles.title}>Run nicht gefunden</h1>
-            <div className={styles.muted}>{runId}</div>
-          </div>
-          <Link className={styles.secondary} href="/dashboard/audit/manage">
-            ← Zurück
-          </Link>
-        </div>
-      </section>
+      <DashboardPage>
+        <DashboardHeader
+          title="Run nicht gefunden"
+          subtitle={runId}
+          actions={<DashboardButtonLink href="/dashboard/audit/manage">Zurück</DashboardButtonLink>}
+        />
+      </DashboardPage>
     );
   }
 
@@ -127,34 +124,33 @@ export default async function AuditRunDetailsPage({ params }: PageProps) {
   const labelByCode = new Map(items.map((i) => [i.code, i.label] as const));
 
   return (
-    <section className={styles.page}>
-      <div className={styles.header}>
-        <div>
-          <h1 className={styles.title}>Run-Details</h1>
-          <div className={styles.muted}>
-            {run.createdAt.toLocaleString("de-DE")} · {who} · {run.hospital.name} · {run.period.year} · {run.statementType}
+    <DashboardPage>
+      <DashboardHeader
+        title="Run-Details"
+        subtitle={`${run.createdAt.toLocaleString("de-DE")} · ${who} · ${run.hospital.name} · ${run.period.year} · ${run.statementType}`}
+        actions={
+          <div className={styles.actions}>
+            <DashboardButtonLink href="/dashboard/audit/manage">Zurück</DashboardButtonLink>
+            <form action={deleteRun}>
+              <ConfirmSubmitButton
+                className={`${dashboardUi.button} ${dashboardUi.danger}`}
+                confirmMessage={`Audit-Run ${run.id} wirklich löschen?`}
+              >
+                Run löschen
+              </ConfirmSubmitButton>
+            </form>
           </div>
-        </div>
-        <div className={styles.actions}>
-          <Link className={styles.secondary} href="/dashboard/audit/manage">
-            ← Zurück
-          </Link>
-          <form action={deleteRun}>
-            <button className={styles.danger} type="submit">
-              Run löschen
-            </button>
-          </form>
-        </div>
-      </div>
+        }
+      />
 
-      <div className={styles.card}>
+      <DashboardCard>
         <div>
           <strong>Run-ID:</strong> <span className={styles.mono}>{run.id}</span>
         </div>
         <div className={styles.muted}>
           Hinweis: Einzelnes Löschen entfernt die Änderung aus der Historie. Falls der Run danach leer ist, wird er automatisch mitgelöscht.
         </div>
-      </div>
+      </DashboardCard>
 
       <div className={styles.tableWrap}>
         <table className={styles.table}>
@@ -184,9 +180,12 @@ export default async function AuditRunDetailsPage({ params }: PageProps) {
                   <td className={styles.td}>
                     <form action={deleteChange}>
                       <input type="hidden" name="changeId" value={c.id} />
-                      <button className={styles.dangerSmall} type="submit">
+                      <ConfirmSubmitButton
+                        className={`${dashboardUi.button} ${dashboardUi.danger}`}
+                        confirmMessage="Diese Audit-Änderung wirklich löschen?"
+                      >
                         Löschen
-                      </button>
+                      </ConfirmSubmitButton>
                     </form>
                   </td>
                 </tr>
@@ -203,6 +202,6 @@ export default async function AuditRunDetailsPage({ params }: PageProps) {
           </tbody>
         </table>
       </div>
-    </section>
+    </DashboardPage>
   );
 }

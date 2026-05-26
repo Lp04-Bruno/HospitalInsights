@@ -18,6 +18,8 @@ import type { FactChangeGetPayload } from "@/prisma/generated/models";
 
 import styles from "./page.module.css";
 import AuditFilters from "./AuditFilters";
+import { ConfirmSubmitButton } from "@/app/dashboard/_components/ConfirmSubmitButton";
+import { DashboardHeader, DashboardPage, dashboardUi } from "@/app/dashboard/_components/DashboardUi";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
@@ -313,11 +315,8 @@ export default async function AuditLogPage({ searchParams }: PageProps) {
   const isAdmin = session.user.role === "ADMIN";
 
   return (
-    <section className={styles.page}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Audit Log</h1>
-        <div className={styles.muted}>Letzte Änderungen (Seite {page})</div>
-      </div>
+    <DashboardPage>
+      <DashboardHeader title="Audit Log" subtitle={`Letzte Änderungen (Seite ${page})`} />
 
       <AuditFilters
         key={qsBase.toString()}
@@ -381,9 +380,12 @@ export default async function AuditLogPage({ searchParams }: PageProps) {
                       <form action={deleteChange}>
                         <input type="hidden" name="changeId" value={c.id} />
                         <input type="hidden" name="returnTo" value={returnTo} />
-                        <button className={styles.dangerSmall} type="submit">
+                        <ConfirmSubmitButton
+                          className={`${dashboardUi.button} ${dashboardUi.danger}`}
+                          confirmMessage="Diese Audit-Änderung wirklich löschen?"
+                        >
                           Löschen
-                        </button>
+                        </ConfirmSubmitButton>
                       </form>
                     </td>
                   ) : null}
@@ -421,6 +423,6 @@ export default async function AuditLogPage({ searchParams }: PageProps) {
           )}
         </div>
       </div>
-    </section>
+    </DashboardPage>
   );
 }
