@@ -109,6 +109,8 @@ html {
 }
 
 body {
+  min-height: 100vh;
+  margin: 0;
   background: var(--hi-page-bg);
   color: var(--hi-text);
   font-family: var(--font-geist-sans), "Segoe UI", sans-serif;
