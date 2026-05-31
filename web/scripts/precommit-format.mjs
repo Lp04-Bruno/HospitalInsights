@@ -43,20 +43,20 @@ function main() {
   const prettierFiles = stagedTargets.filter(isPrettierCandidate);
   const eslintFiles = staged
     .filter(isEslintCandidate)
-    .filter((f) => f.startsWith("app/"))
-    .map((f) => f.slice("app/".length));
+    .filter((f) => f.startsWith("web/"))
+    .map((f) => f.slice("web/".length));
 
   if (prettierFiles.length === 0 && eslintFiles.length === 0) {
     process.exit(0);
   }
 
   if (prettierFiles.length > 0) {
-    const code = execNpm(["--prefix", "app", "exec", "--", "prettier", "--write", "--ignore-unknown", ...prettierFiles], repoRoot);
+    const code = execNpm(["--prefix", "web", "exec", "--", "prettier", "--write", "--ignore-unknown", ...prettierFiles], repoRoot);
     if (code !== 0) process.exit(code);
   }
 
   if (eslintFiles.length > 0) {
-    const code = execNpm(["exec", "--", "eslint", "--fix", "--no-warn-ignored", ...eslintFiles], `${repoRoot}/app`);
+    const code = execNpm(["exec", "--", "eslint", "--fix", "--no-warn-ignored", ...eslintFiles], `${repoRoot}/web`);
     if (code !== 0) process.exit(code);
   }
 

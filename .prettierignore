@@ -18,7 +18,7 @@
 # Generated
 **/*.tsbuildinfo
 **/next-env.d.ts
-app/prisma/generated/
+web/prisma/generated/
 prisma/generated/
 
 # Docker

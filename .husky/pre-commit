@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
 set -e
 
-node app/scripts/precommit-format.mjs
+node web/scripts/precommit-format.mjs

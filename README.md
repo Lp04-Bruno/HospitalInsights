@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="app/public/assets/hospitalinsights-logo-with-text.png" alt="Hospitalinsights" width="520">
+  <img src="web/public/assets/hospitalinsights-logo-with-text.png" alt="Hospitalinsights" width="520">
 </p>
 
 <h1 align="center">Hospitalinsights</h1>
@@ -39,7 +39,7 @@ Die Anwendung ist auf einen klaren Betriebsfluss ausgelegt: Datenpflege durch Ad
 
 ```text
 HospitalInsights/
-├─ app/                         Next.js App Router Anwendung
+├─ web/                         Next.js App Router Anwendung
 │  ├─ app/                       Pages, API Routes, Komponenten
 │  ├─ lib/                       Domainlogik, Auth, Prisma, Metabase, Backups
 │  ├─ prisma/                    Schema, Migrationen, Seed, generierter Client
@@ -145,7 +145,7 @@ docker compose --env-file infra/.env -f infra/docker-compose.dev.yml down -v
 ## Entwicklung ohne Compose
 
 ```bash
-cd app
+cd web
 npm ci
 npm run generate
 npm run dev
@@ -158,7 +158,7 @@ Für lokale Ausführung außerhalb von Docker muss `DATABASE_URL` auf eine errei
 Die CI führt dieselben Basisprüfungen aus, die lokal empfohlen sind:
 
 ```bash
-cd app
+cd web
 npm run lint
 npm run typecheck
 npm test
@@ -252,8 +252,8 @@ Production-relevante Artefakte:
 
 | Datei                           | Zweck                            |
 | ------------------------------- | -------------------------------- |
-| `app/Dockerfile`                | Production Build der Next.js App |
-| `app/Dockerfile.dev`            | Development Container            |
+| `web/Dockerfile`                | Production Build der Next.js App |
+| `web/Dockerfile.dev`            | Development Container            |
 | `infra/docker-compose.prod.yml` | Production Compose Template      |
 | `infra/.env.prod.example`       | Production Env Template          |
 

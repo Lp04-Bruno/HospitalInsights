@@ -33,7 +33,7 @@ docker compose --env-file infra/.env -f infra/docker-compose.dev.yml exec -T app
 Führe vor einem Pull Request möglichst diese Checks aus:
 
 ```bash
-cd app
+cd web
 npm run lint
 npm run typecheck
 npm test

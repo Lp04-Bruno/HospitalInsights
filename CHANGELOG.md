@@ -22,16 +22,17 @@ Das Projekt orientiert sich an [Semantic Versioning](https://semver.org/lang/de/
 - README-Quickstart präzisiert: `prisma db seed` legt lokale Admin-Credentials und den LineItem-Katalog an, aber keine realistischen Beispiel-Faktendaten mehr.
 - Production-Env-Beispiel für öffentliche Nutzung bereinigt und an den aktuellen Backup-/Metabase-Betrieb angepasst.
 - Prisma Client Generierung als Build-/Install-Schritt bestätigt, damit generierte Dateien nicht mehr versioniert oder in Docker-Kontexte kopiert werden müssen.
+- Next.js-Projektordner von `app/` nach `web/` umbenannt, damit die Struktur für Außenstehende klarer ist (`web/app`, `web/lib`, `web/prisma`).
 - Styling-Stack auf CSS Modules vereinfacht und README-Tech-Stack entsprechend angepasst.
 
 ### Removed
 
-- Alte CSV-Beispieldatei `app/prisma/data/mabila_eingabe_stadtwerke_delmenhorst.csv` entfernt.
-- CSV-Matching- und Sample-Fact-Seeding aus `app/prisma/seed.ts` entfernt.
+- Alte CSV-Beispieldatei `web/prisma/data/mabila_eingabe_stadtwerke_delmenhorst.csv` entfernt.
+- CSV-Matching- und Sample-Fact-Seeding aus `web/prisma/seed.ts` entfernt.
 - Ungenutzte Prisma-Modelle `ImportRun` und `ImportError` entfernt; eine neue Migration droppt die alten Tracking-Tabellen.
 - Interne Ops-Runbooks `infra/go-live-audit.md`, `infra/dokploy-setup.md` und `infra/db-sync.md` aus der öffentlichen Dokumentation entfernt.
-- `app/prisma/generated/` aus Git entfernt und per `.gitignore` ausgeschlossen.
-- Einmaliges Cleanup-Skript `app/scripts/cleanup-lineitems-by-sortorder.js` entfernt und JavaScript-Dateien in der TypeScript-Config explizit deaktiviert.
+- `web/prisma/generated/` aus Git entfernt und per `.gitignore` ausgeschlossen.
+- Einmaliges Cleanup-Skript `web/scripts/cleanup-lineitems-by-sortorder.js` entfernt und JavaScript-Dateien in der TypeScript-Config explizit deaktiviert.
 - Ungenutzte Tailwind-Toolchain entfernt: `tailwindcss`, `@tailwindcss/postcss`, `postcss.config.mjs` und Tailwind-`@theme`-Block.
 
 ## [1.1.1] - 2026-05-31

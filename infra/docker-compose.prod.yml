@@ -27,7 +27,7 @@ services:
 
   app:
     build:
-      context: ../app
+      context: ../web
       dockerfile: Dockerfile
     restart: unless-stopped
     depends_on:
