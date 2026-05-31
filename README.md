@@ -50,17 +50,17 @@ HospitalInsights/
 
 ## Tech Stack
 
-| Bereich     | Technologie                         |
-| ----------- | ----------------------------------- |
-| Web App     | Next.js 16, React 19, TypeScript 6  |
-| Styling     | CSS Modules, Tailwind CSS Toolchain |
-| Auth        | NextAuth Credentials Provider       |
-| Datenbank   | PostgreSQL 18                       |
-| ORM         | Prisma 7 mit PostgreSQL Adapter     |
-| BI          | Metabase Signed Embedding           |
-| Validierung | Zod                                 |
-| Tests       | Vitest                              |
-| Runtime     | Node.js 24, Docker Compose          |
+| Bereich     | Technologie                        |
+| ----------- | ---------------------------------- |
+| Web App     | Next.js 16, React 19, TypeScript 6 |
+| Styling     | CSS Modules                        |
+| Auth        | NextAuth Credentials Provider      |
+| Datenbank   | PostgreSQL 18                      |
+| ORM         | Prisma 7 mit PostgreSQL Adapter    |
+| BI          | Metabase Signed Embedding          |
+| Validierung | Zod                                |
+| Tests       | Vitest                             |
+| Runtime     | Node.js 24, Docker Compose         |
 
 ## Quickstart
 
