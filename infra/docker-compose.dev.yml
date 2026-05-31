@@ -1,11 +1,12 @@
 services:
   db:
-    image: postgres:16
+    image: postgres:18.4-trixie
     container_name: hospitalinsights-db
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-hospitalinsights}
       POSTGRES_USER: ${POSTGRES_USER:-hospitalinsights}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hospitalinsights_pw}
+      PGDATA: /var/lib/postgresql/data
     ports:
       - "5433:5432"
     volumes:

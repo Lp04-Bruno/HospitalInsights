@@ -2,7 +2,7 @@ FROM node:24.16.0-alpine
 
 WORKDIR /app
 
-RUN apk add --no-cache postgresql16-client
+RUN apk add --no-cache postgresql18-client
 
 # Install dependencies
 COPY package.json package-lock.json* ./

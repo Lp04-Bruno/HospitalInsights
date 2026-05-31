@@ -9,13 +9,13 @@
 </p>
 
 <p align="center">
-  <img alt="Version 1.0.0" src="https://img.shields.io/badge/Version-v1.0.0-111827?style=for-the-badge">
+  <img alt="Version 1.1.0" src="https://img.shields.io/badge/Version-v1.1.0-111827?style=for-the-badge">
   <img alt="Node.js 24" src="https://img.shields.io/badge/Node.js-24-5FA04E?style=for-the-badge&logo=nodedotjs&logoColor=white">
   <img alt="Next.js 16" src="https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=nextdotjs&logoColor=white">
   <img alt="React 19" src="https://img.shields.io/badge/React-19-149ECA?style=for-the-badge&logo=react&logoColor=white">
   <img alt="TypeScript 6" src="https://img.shields.io/badge/TypeScript-6-3178C6?style=for-the-badge&logo=typescript&logoColor=white">
   <img alt="Prisma 7" src="https://img.shields.io/badge/Prisma-7-2D3748?style=for-the-badge&logo=prisma&logoColor=white">
-  <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-16+-4169E1?style=for-the-badge&logo=postgresql&logoColor=white">
+  <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-18-4169E1?style=for-the-badge&logo=postgresql&logoColor=white">
   <img alt="Docker" src="https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white">
 </p>
 
@@ -55,7 +55,7 @@ HospitalInsights/
 | Web App     | Next.js 16, React 19, TypeScript 6  |
 | Styling     | CSS Modules, Tailwind CSS Toolchain |
 | Auth        | NextAuth Credentials Provider       |
-| Datenbank   | PostgreSQL                          |
+| Datenbank   | PostgreSQL 18                       |
 | ORM         | Prisma 7 mit PostgreSQL Adapter     |
 | BI          | Metabase Signed Embedding           |
 | Validierung | Zod                                 |
@@ -173,8 +173,8 @@ Releases werden über Git Tags auf `master` erstellt. Tags im Format `v*` starte
 ```bash
 git checkout master
 git pull origin master
-git tag v1.0.0
-git push origin v1.0.0
+git tag v1.1.0
+git push origin v1.1.0
 ```
 
 Die Release-Historie steht in [CHANGELOG.md](CHANGELOG.md).
