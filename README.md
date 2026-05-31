@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version 1.1.0" src="https://img.shields.io/badge/Version-v1.1.0-111827?style=for-the-badge">
+  <img alt="Version 1.1.1" src="https://img.shields.io/badge/Version-v1.1.1-111827?style=for-the-badge">
   <img alt="Node.js 24" src="https://img.shields.io/badge/Node.js-24-5FA04E?style=for-the-badge&logo=nodedotjs&logoColor=white">
   <img alt="Next.js 16" src="https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=nextdotjs&logoColor=white">
   <img alt="React 19" src="https://img.shields.io/badge/React-19-149ECA?style=for-the-badge&logo=react&logoColor=white">
@@ -173,8 +173,8 @@ Releases werden über Git Tags auf `master` erstellt. Tags im Format `v*` starte
 ```bash
 git checkout master
 git pull origin master
-git tag v1.1.0
-git push origin v1.1.0
+git tag vX.Y.Z
+git push origin vX.Y.Z
 ```
 
 Die Release-Historie steht in [CHANGELOG.md](CHANGELOG.md).
