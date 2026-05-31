@@ -2,6 +2,33 @@
 
 Das Projekt orientiert sich an [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.1.0] - 2026-05-31
+
+### Changed
+
+- PostgreSQL Docker Image von der bisherigen 16er Runtime auf `postgres:18.4-trixie` umgestellt.
+- `PGDATA` in Dev- und Production-Compose explizit auf `/var/lib/postgresql/data` gesetzt, damit das PostgreSQL-18-Docker-Image nicht versehentlich ein anderes Datenverzeichnis initialisiert.
+- App-Version auf `1.1.0` aktualisiert und Versionsanzeige im Footer/README angepasst.
+
+### Upgraded
+
+- PostgreSQL-Client-Tools in `app/Dockerfile` und `app/Dockerfile.dev` auf Version 18 aktualisiert, damit Backup/Restore mit einem PostgreSQL-18-Server kompatibel bleiben.
+- Metabase Docker Image auf `v0.61.2.10`.
+- `typescript-eslint` auf `^8.60.0`.
+- `lucide-react` auf `^1.17.0`.
+
+### Verified
+
+- Production-Dump `backup_manual_2026-05-31T16-20-13-907Z.dump` erfolgreich in einem temporären `postgres:18.4-trixie` Container restored.
+- Restore-Test: Serverversion `18.4 (Debian 18.4-1.pgdg13+1)`, 5 Hospitals, 8 Prisma-Migrationen.
+- `docker compose config` für Dev und Prod erfolgreich.
+
+### Operational Notes
+
+- Bestehende PostgreSQL-16-Datenverzeichnisse können nicht direkt mit PostgreSQL 18 gestartet werden.
+- Vor dem automatischen Dokploy-Redeploy muss die Production-DB kontrolliert auf PostgreSQL 18.4 migriert sein oder der Autodeploy für dieses Deployment pausiert werden.
+- Metabase verwendet ein eigenes Volume und darf beim Dev-/Production-DB-Upgrade nicht mit `down -v` oder globalem Volume-Prune gelöscht werden.
+
 ## [1.0.0] - 2026-05-26
 
 ### Highlights
@@ -162,11 +189,3 @@ Das Projekt orientiert sich an [Semantic Versioning](https://semver.org/lang/de/
 - Production-Migrationen sollten mit `prisma migrate deploy` ausgeführt werden.
 - Für Prisma 7 muss `DATABASE_URL` über `prisma.config.ts` verfügbar sein.
 - Node.js 24 ist die Zielruntime für Docker, CI und lokale Entwicklung.
-- Tags für Releases sollten auf Commits gesetzt werden, die bereits auf `master` liegen:
-
-```bash
-git checkout master
-git pull origin master
-git tag v1.0.0
-git push origin v1.0.0
-```
