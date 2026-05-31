@@ -2,6 +2,20 @@
 
 Das Projekt orientiert sich an [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.1.1] - 2026-05-31
+
+### Fixed
+
+- CI-Install-Schritte robuster gemacht, damit ein transienter `esbuild`-Postinstall-Fehler (`ETXTBSY`) nicht den gesamten Workflow fehlschlagen lässt.
+- `npm ci` in CI und Release-Workflow von `--prefer-offline` auf `--prefer-online` umgestellt, damit der npm-Cache validiert statt blind bevorzugt wird.
+- Für den Format-Job `npm ci --ignore-scripts` verwendet, weil Prettier keine nativen Postinstall-Binaries benötigt und der Job dadurch weniger anfällig für Install-Races ist.
+- Retry-Pfad für `npm ci` ergänzt: kurzer Wait, sauberes `node_modules`, `npm cache verify`, danach zweiter Install-Versuch.
+
+### Changed
+
+- App-Version und sichtbare Versionsanzeige auf `1.1.1` aktualisiert.
+- README-Release-Beispiel auf generische Tag-Platzhalter umgestellt, damit die Dokumentation nicht bei jedem Patch-Release angepasst werden muss.
+
 ## [1.1.0] - 2026-05-31
 
 ### Changed
