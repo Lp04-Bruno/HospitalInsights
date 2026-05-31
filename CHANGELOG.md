@@ -30,6 +30,7 @@ Das Projekt orientiert sich an [Semantic Versioning](https://semver.org/lang/de/
 - Ungenutzte Prisma-Modelle `ImportRun` und `ImportError` entfernt; eine neue Migration droppt die alten Tracking-Tabellen.
 - Interne Ops-Runbooks `infra/go-live-audit.md`, `infra/dokploy-setup.md` und `infra/db-sync.md` aus der öffentlichen Dokumentation entfernt.
 - `app/prisma/generated/` aus Git entfernt und per `.gitignore` ausgeschlossen.
+- Einmaliges Cleanup-Skript `app/scripts/cleanup-lineitems-by-sortorder.js` entfernt und JavaScript-Dateien in der TypeScript-Config explizit deaktiviert.
 
 ## [1.1.1] - 2026-05-31
 
