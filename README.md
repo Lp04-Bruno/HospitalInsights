@@ -179,6 +179,10 @@ git push origin vX.Y.Z
 
 Die Release-Historie steht in [CHANGELOG.md](CHANGELOG.md).
 
+## Lizenz
+
+Hospitalinsights ist öffentlich einsehbar, aber nicht unter einer OSI-Open-Source-Lizenz veröffentlicht. Das Projekt steht unter der [HospitalInsights Source Available License 1.0](LICENSE). Private Evaluation, Lernen und Security Review sind erlaubt; produktive, kommerzielle, öffentliche oder gehostete Nutzung benötigt vorherige schriftliche Zustimmung.
+
 ## Metabase Signed Embedding
 
 ### Dev Setup

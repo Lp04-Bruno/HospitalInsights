@@ -2,6 +2,16 @@
 
 Das Projekt orientiert sich an [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.2.0] - Unreleased
+
+### Added
+
+- Source-available Lizenz für die öffentliche Repository-Veröffentlichung ergänzt.
+- `CONTRIBUTING.md` mit Entwicklungsfluss, lokalen Checks und PR-Konventionen ergänzt.
+- `SECURITY.md` mit Meldeweg, Scope und Disclosure-Hinweisen ergänzt.
+- `CODE_OF_CONDUCT.md` für respektvolle Zusammenarbeit ergänzt.
+- README-Lizenzhinweis und npm-Paketmetadaten für das öffentliche Repository ergänzt.
+
 ## [1.1.1] - 2026-05-31
 
 ### Fixed

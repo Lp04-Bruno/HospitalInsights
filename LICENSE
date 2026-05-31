@@ -1,0 +1,56 @@
+HospitalInsights Source Available License 1.0
+
+Copyright (c) 2026 Hospitalinsights project contributors.
+Primary maintainer: Lp04-Bruno.
+
+This license is intentionally source-available, not an OSI-approved open source
+license. The source code may be public, but the permissions below are narrower
+than licenses such as MIT, Apache-2.0, or GPL/AGPL.
+
+1. Permitted Use
+
+You may:
+
+- view, read, and inspect the source code;
+- fork or copy the repository for private evaluation, learning, security review,
+  or non-production experimentation;
+- make private modifications for the permitted purposes above;
+- submit issues, pull requests, and security reports to the original project.
+
+2. Attribution
+
+If you reference this project, publish screenshots, discuss derived work, or
+share non-production modifications, you must give visible credit to the
+Hospitalinsights project and link to the original repository when reasonably
+possible.
+
+3. Restricted Use
+
+Without prior written permission from the primary maintainer, you may not:
+
+- use the software or substantial parts of it in production;
+- offer the software, a modified version, or a derived service commercially;
+- operate the software as a hosted, SaaS, managed, or public service;
+- redistribute modified or unmodified copies outside private evaluation use;
+- remove copyright, attribution, or license notices;
+- use project names, logos, or branding in a way that suggests endorsement.
+
+4. Contributions
+
+Unless agreed otherwise in writing, contributions submitted to the original
+project are licensed under this same license. By submitting a contribution, you
+confirm that you have the right to provide it under these terms.
+
+5. Permission Requests
+
+For production, commercial, public, or redistribution use, contact the primary
+maintainer and request written permission before using the software.
+
+6. No Warranty
+
+The software is provided "as is", without warranty of any kind, express or
+implied, including but not limited to warranties of merchantability, fitness for
+a particular purpose, and non-infringement. The authors and contributors are not
+liable for any claim, damages, or other liability arising from use of the
+software.
+
