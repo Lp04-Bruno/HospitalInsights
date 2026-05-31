@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version 1.1.1" src="https://img.shields.io/badge/Version-v1.1.1-111827?style=for-the-badge">
+  <img alt="Version 1.2.0" src="https://img.shields.io/badge/Version-v1.2.0-111827?style=for-the-badge">
   <img alt="Node.js 24" src="https://img.shields.io/badge/Node.js-24-5FA04E?style=for-the-badge&logo=nodedotjs&logoColor=white">
   <img alt="Next.js 16" src="https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=nextdotjs&logoColor=white">
   <img alt="React 19" src="https://img.shields.io/badge/React-19-149ECA?style=for-the-badge&logo=react&logoColor=white">
@@ -138,9 +138,11 @@ docker compose --env-file infra/.env -f infra/docker-compose.dev.yml restart app
 # Stack stoppen, Volumes behalten
 docker compose --env-file infra/.env -f infra/docker-compose.dev.yml down
 
-# Komplett-Reset inklusive DB und Metabase Volume
+# Komplett-Reset inklusive App-DB, Metabase-Daten und Backups
 docker compose --env-file infra/.env -f infra/docker-compose.dev.yml down -v
 ```
+
+`down -v` löscht lokale Entwicklungsdaten inklusive Metabase-Setup und Backup-Volume. Für normale Neustarts deshalb `down` ohne `-v` verwenden.
 
 ## Entwicklung ohne Compose
 
@@ -276,6 +278,7 @@ docker compose --env-file infra/.env -f infra/docker-compose.dev.yml exec -T app
 Production:
 
 ```bash
+cd web
 npx prisma migrate deploy
 ```
 

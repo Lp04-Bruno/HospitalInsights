@@ -23,6 +23,7 @@ Das Projekt orientiert sich an [Semantic Versioning](https://semver.org/lang/de/
 - Production-Env-Beispiel für öffentliche Nutzung bereinigt und an den aktuellen Backup-/Metabase-Betrieb angepasst.
 - Prisma Client Generierung als Build-/Install-Schritt bestätigt, damit generierte Dateien nicht mehr versioniert oder in Docker-Kontexte kopiert werden müssen.
 - Next.js-Projektordner von `app/` nach `web/` umbenannt, damit die Struktur für Außenstehende klarer ist (`web/app`, `web/lib`, `web/prisma`).
+- App-Version und README-Badge auf `1.2.0` aktualisiert.
 - Styling-Stack auf CSS Modules vereinfacht und README-Tech-Stack entsprechend angepasst.
 
 ### Removed
