@@ -20,12 +20,14 @@ Das Projekt orientiert sich an [Semantic Versioning](https://semver.org/lang/de/
 
 - Demo-Datenfluss von gebündelten CSV-Sample-Daten auf bereitstellbare PostgreSQL-Dumps umgestellt.
 - README-Quickstart präzisiert: `prisma db seed` legt lokale Admin-Credentials und den LineItem-Katalog an, aber keine realistischen Beispiel-Faktendaten mehr.
+- Production-Env-Beispiel für öffentliche Nutzung bereinigt und an den aktuellen Backup-/Metabase-Betrieb angepasst.
 
 ### Removed
 
 - Alte CSV-Beispieldatei `app/prisma/data/mabila_eingabe_stadtwerke_delmenhorst.csv` entfernt.
 - CSV-Matching- und Sample-Fact-Seeding aus `app/prisma/seed.ts` entfernt.
 - Ungenutzte Prisma-Modelle `ImportRun` und `ImportError` entfernt; eine neue Migration droppt die alten Tracking-Tabellen.
+- Interne Ops-Runbooks `infra/go-live-audit.md`, `infra/dokploy-setup.md` und `infra/db-sync.md` aus der öffentlichen Dokumentation entfernt.
 
 ## [1.1.1] - 2026-05-31
 

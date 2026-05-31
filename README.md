@@ -261,13 +261,9 @@ Production-relevante Artefakte:
 
 Hospitalinsights bringt Admin-Werkzeuge für PostgreSQL-Dumps mit. Je nach Env-Konfiguration können Backups erstellt, heruntergeladen, hochgeladen, analysiert und wiederhergestellt oder importiert werden.
 
-Gebündelte CSV-Sample-Daten werden bewusst nicht mehr ausgeliefert. Für eine realistische Demo-Datenbasis kann stattdessen ein freigegebener `.dump` bereitgestellt und über die Backup-/Restore-Funktion oder per `pg_restore` importiert werden.
+Gebündelte CSV-Sample-Daten werden bewusst nicht mehr ausgeliefert. Für eine realistische Demo-Datenbasis kann stattdessen ein freigegebener `.dump` bereitgestellt und über die Backup-/Restore-Funktion oder per `pg_restore` importiert werden. Für Production-to-Development-Syncs ist ebenfalls der Dump-Import über die Backup-Werkzeuge der bevorzugte Weg.
 
 Metabase nutzt in Development ein eigenes Volume `metabase_data`, damit Metabase-interne Daten von der App-Datenbank getrennt bleiben.
-
-Für kontrollierten Production-to-Development Sync:
-
-- [infra/db-sync.md](infra/db-sync.md)
 
 ## Migrationen
 
