@@ -11,6 +11,10 @@ Das Projekt orientiert sich an [Semantic Versioning](https://semver.org/lang/de/
 - `SECURITY.md` mit Meldeweg, Scope und Disclosure-Hinweisen ergänzt.
 - `CODE_OF_CONDUCT.md` für respektvolle Zusammenarbeit ergänzt.
 - README-Lizenzhinweis und npm-Paketmetadaten für das öffentliche Repository ergänzt.
+- `CODEOWNERS` ergänzt, damit Pull Requests automatisch den primären Maintainer anfragen.
+- GitHub Issue Templates für Bug Reports und Feature Requests ergänzt.
+- Pull Request Template mit Changelog-, Security-, Lizenz- und Test-Checkliste ergänzt.
+- README-Hinweis zur eingeschränkten Nutzung von Name, Logo, Wortmarke und Branding-Assets ergänzt.
 
 ## [1.1.1] - 2026-05-31
 

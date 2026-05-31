@@ -183,6 +183,8 @@ Die Release-Historie steht in [CHANGELOG.md](CHANGELOG.md).
 
 Hospitalinsights ist öffentlich einsehbar, aber nicht unter einer OSI-Open-Source-Lizenz veröffentlicht. Das Projekt steht unter der [HospitalInsights Source Available License 1.0](LICENSE). Private Evaluation, Lernen und Security Review sind erlaubt; produktive, kommerzielle, öffentliche oder gehostete Nutzung benötigt vorherige schriftliche Zustimmung.
 
+Name, Logo, Wortmarke und sonstige Branding-Assets von Hospitalinsights fallen ebenfalls unter diese Nutzungsbeschränkungen. Sie dürfen nicht für eigene Produkte, Dienste, Forks, öffentliche Präsentationen oder kommerzielle Zwecke verwendet werden, außer mit vorheriger Zustimmung oder mit klarer Referenz auf das Originalprojekt.
+
 ## Metabase Signed Embedding
 
 ### Dev Setup
