@@ -44,6 +44,7 @@ Desktop.ini
 **/*.log
 
 # --- Prisma ---
+**/prisma/generated/
 **/prisma/dev.db
 **/prisma/dev.db-journal
 **/prisma/*.db
