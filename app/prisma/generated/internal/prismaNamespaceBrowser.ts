@@ -56,8 +56,6 @@ export const ModelName = {
   Period: 'Period',
   HospitalPeriod: 'HospitalPeriod',
   LineItem: 'LineItem',
-  ImportRun: 'ImportRun',
-  ImportError: 'ImportError',
   FactValue: 'FactValue',
   FactChangeRun: 'FactChangeRun',
   FactChange: 'FactChange'
@@ -134,29 +132,6 @@ export const LineItemScalarFieldEnum = {
 } as const
 
 export type LineItemScalarFieldEnum = (typeof LineItemScalarFieldEnum)[keyof typeof LineItemScalarFieldEnum]
-
-
-export const ImportRunScalarFieldEnum = {
-  id: 'id',
-  uploadedBy: 'uploadedBy',
-  filename: 'filename',
-  status: 'status',
-  createdAt: 'createdAt',
-  finishedAt: 'finishedAt'
-} as const
-
-export type ImportRunScalarFieldEnum = (typeof ImportRunScalarFieldEnum)[keyof typeof ImportRunScalarFieldEnum]
-
-
-export const ImportErrorScalarFieldEnum = {
-  id: 'id',
-  importRunId: 'importRunId',
-  message: 'message',
-  rowInfo: 'rowInfo',
-  createdAt: 'createdAt'
-} as const
-
-export type ImportErrorScalarFieldEnum = (typeof ImportErrorScalarFieldEnum)[keyof typeof ImportErrorScalarFieldEnum]
 
 
 export const FactValueScalarFieldEnum = {

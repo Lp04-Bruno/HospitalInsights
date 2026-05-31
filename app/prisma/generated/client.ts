@@ -67,16 +67,6 @@ export type HospitalPeriod = Prisma.HospitalPeriodModel
  */
 export type LineItem = Prisma.LineItemModel
 /**
- * Model ImportRun
- * 
- */
-export type ImportRun = Prisma.ImportRunModel
-/**
- * Model ImportError
- * 
- */
-export type ImportError = Prisma.ImportErrorModel
-/**
  * Model FactValue
  * 
  */

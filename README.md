@@ -98,6 +98,8 @@ docker compose --env-file infra/.env -f infra/docker-compose.dev.yml exec -T app
 docker compose --env-file infra/.env -f infra/docker-compose.dev.yml exec -T app npx prisma db seed
 ```
 
+Der Seed legt lokale Admin-Credentials und den LineItem-Katalog an. Realistische Beispiel-Faktendaten werden nicht als CSV mitgeliefert; für Demo- oder Testdaten kann ein bereitgestellter PostgreSQL-Dump über die Backup-/Restore-Werkzeuge importiert werden.
+
 ### 4. Anwendung öffnen
 
 | Ziel                 | URL                               |
@@ -258,6 +260,8 @@ Production-relevante Artefakte:
 ## Datenbank und Backups
 
 Hospitalinsights bringt Admin-Werkzeuge für PostgreSQL-Dumps mit. Je nach Env-Konfiguration können Backups erstellt, heruntergeladen, hochgeladen, analysiert und wiederhergestellt oder importiert werden.
+
+Gebündelte CSV-Sample-Daten werden bewusst nicht mehr ausgeliefert. Für eine realistische Demo-Datenbasis kann stattdessen ein freigegebener `.dump` bereitgestellt und über die Backup-/Restore-Funktion oder per `pg_restore` importiert werden.
 
 Metabase nutzt in Development ein eigenes Volume `metabase_data`, damit Metabase-interne Daten von der App-Datenbank getrennt bleiben.
 

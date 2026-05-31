@@ -389,8 +389,6 @@ export const ModelName = {
   Period: 'Period',
   HospitalPeriod: 'HospitalPeriod',
   LineItem: 'LineItem',
-  ImportRun: 'ImportRun',
-  ImportError: 'ImportError',
   FactValue: 'FactValue',
   FactChangeRun: 'FactChangeRun',
   FactChange: 'FactChange'
@@ -409,7 +407,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "hospital" | "period" | "hospitalPeriod" | "lineItem" | "importRun" | "importError" | "factValue" | "factChangeRun" | "factChange"
+    modelProps: "user" | "hospital" | "period" | "hospitalPeriod" | "lineItem" | "factValue" | "factChangeRun" | "factChange"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -783,154 +781,6 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
-    ImportRun: {
-      payload: Prisma.$ImportRunPayload<ExtArgs>
-      fields: Prisma.ImportRunFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.ImportRunFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportRunPayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.ImportRunFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportRunPayload>
-        }
-        findFirst: {
-          args: Prisma.ImportRunFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportRunPayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.ImportRunFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportRunPayload>
-        }
-        findMany: {
-          args: Prisma.ImportRunFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportRunPayload>[]
-        }
-        create: {
-          args: Prisma.ImportRunCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportRunPayload>
-        }
-        createMany: {
-          args: Prisma.ImportRunCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.ImportRunCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportRunPayload>[]
-        }
-        delete: {
-          args: Prisma.ImportRunDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportRunPayload>
-        }
-        update: {
-          args: Prisma.ImportRunUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportRunPayload>
-        }
-        deleteMany: {
-          args: Prisma.ImportRunDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.ImportRunUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.ImportRunUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportRunPayload>[]
-        }
-        upsert: {
-          args: Prisma.ImportRunUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportRunPayload>
-        }
-        aggregate: {
-          args: Prisma.ImportRunAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateImportRun>
-        }
-        groupBy: {
-          args: Prisma.ImportRunGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.ImportRunGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.ImportRunCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.ImportRunCountAggregateOutputType> | number
-        }
-      }
-    }
-    ImportError: {
-      payload: Prisma.$ImportErrorPayload<ExtArgs>
-      fields: Prisma.ImportErrorFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.ImportErrorFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportErrorPayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.ImportErrorFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportErrorPayload>
-        }
-        findFirst: {
-          args: Prisma.ImportErrorFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportErrorPayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.ImportErrorFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportErrorPayload>
-        }
-        findMany: {
-          args: Prisma.ImportErrorFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportErrorPayload>[]
-        }
-        create: {
-          args: Prisma.ImportErrorCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportErrorPayload>
-        }
-        createMany: {
-          args: Prisma.ImportErrorCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.ImportErrorCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportErrorPayload>[]
-        }
-        delete: {
-          args: Prisma.ImportErrorDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportErrorPayload>
-        }
-        update: {
-          args: Prisma.ImportErrorUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportErrorPayload>
-        }
-        deleteMany: {
-          args: Prisma.ImportErrorDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.ImportErrorUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.ImportErrorUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportErrorPayload>[]
-        }
-        upsert: {
-          args: Prisma.ImportErrorUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportErrorPayload>
-        }
-        aggregate: {
-          args: Prisma.ImportErrorAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateImportError>
-        }
-        groupBy: {
-          args: Prisma.ImportErrorGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.ImportErrorGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.ImportErrorCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.ImportErrorCountAggregateOutputType> | number
-        }
-      }
-    }
     FactValue: {
       payload: Prisma.$FactValuePayload<ExtArgs>
       fields: Prisma.FactValueFieldRefs
@@ -1249,29 +1099,6 @@ export const LineItemScalarFieldEnum = {
 export type LineItemScalarFieldEnum = (typeof LineItemScalarFieldEnum)[keyof typeof LineItemScalarFieldEnum]
 
 
-export const ImportRunScalarFieldEnum = {
-  id: 'id',
-  uploadedBy: 'uploadedBy',
-  filename: 'filename',
-  status: 'status',
-  createdAt: 'createdAt',
-  finishedAt: 'finishedAt'
-} as const
-
-export type ImportRunScalarFieldEnum = (typeof ImportRunScalarFieldEnum)[keyof typeof ImportRunScalarFieldEnum]
-
-
-export const ImportErrorScalarFieldEnum = {
-  id: 'id',
-  importRunId: 'importRunId',
-  message: 'message',
-  rowInfo: 'rowInfo',
-  createdAt: 'createdAt'
-} as const
-
-export type ImportErrorScalarFieldEnum = (typeof ImportErrorScalarFieldEnum)[keyof typeof ImportErrorScalarFieldEnum]
-
-
 export const FactValueScalarFieldEnum = {
   id: 'id',
   hospitalId: 'hospitalId',
@@ -1575,8 +1402,6 @@ export type GlobalOmitConfig = {
   period?: Prisma.PeriodOmit
   hospitalPeriod?: Prisma.HospitalPeriodOmit
   lineItem?: Prisma.LineItemOmit
-  importRun?: Prisma.ImportRunOmit
-  importError?: Prisma.ImportErrorOmit
   factValue?: Prisma.FactValueOmit
   factChangeRun?: Prisma.FactChangeRunOmit
   factChange?: Prisma.FactChangeOmit

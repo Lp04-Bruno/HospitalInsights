@@ -94,26 +94,6 @@ model LineItem {
   @@unique([statementType, sortOrder])
 }
 
-model ImportRun {
-  id          String   @id @default(cuid())
-  uploadedBy  String?
-  filename    String
-  status      String   @default("PENDING") // PENDING, SUCCESS, FAILED
-  createdAt   DateTime @default(now())
-  finishedAt  DateTime?
-  errors      ImportError[]
-}
-
-model ImportError {
-  id         String   @id @default(cuid())
-  importRunId String
-  message    String
-  rowInfo    String?
-  createdAt  DateTime @default(now())
-
-  importRun  ImportRun @relation(fields: [importRunId], references: [id], onDelete: Cascade)
-}
-
 model FactValue {
   id          String   @id @default(cuid())
   hospitalId  String

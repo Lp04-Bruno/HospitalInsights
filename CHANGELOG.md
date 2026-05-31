@@ -16,6 +16,17 @@ Das Projekt orientiert sich an [Semantic Versioning](https://semver.org/lang/de/
 - Pull Request Template mit Changelog-, Security-, Lizenz- und Test-Checkliste ergänzt.
 - README-Hinweis zur eingeschränkten Nutzung von Name, Logo, Wortmarke und Branding-Assets ergänzt.
 
+### Changed
+
+- Demo-Datenfluss von gebündelten CSV-Sample-Daten auf bereitstellbare PostgreSQL-Dumps umgestellt.
+- README-Quickstart präzisiert: `prisma db seed` legt lokale Admin-Credentials und den LineItem-Katalog an, aber keine realistischen Beispiel-Faktendaten mehr.
+
+### Removed
+
+- Alte CSV-Beispieldatei `app/prisma/data/mabila_eingabe_stadtwerke_delmenhorst.csv` entfernt.
+- CSV-Matching- und Sample-Fact-Seeding aus `app/prisma/seed.ts` entfernt.
+- Ungenutzte Prisma-Modelle `ImportRun` und `ImportError` entfernt; eine neue Migration droppt die alten Tracking-Tabellen.
+
 ## [1.1.1] - 2026-05-31
 
 ### Fixed
