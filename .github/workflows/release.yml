@@ -47,7 +47,13 @@ jobs:
           npm config set fetch-retry-maxtimeout 120000
 
       - name: Install deps
-        run: npm ci --prefer-offline --no-audit --no-fund
+        run: |
+          npm ci --prefer-online --no-audit --no-fund || (
+            sleep 5
+            rm -rf node_modules
+            npm cache verify
+            npm ci --prefer-online --no-audit --no-fund
+          )
 
       - name: Lint
         run: npm run lint
