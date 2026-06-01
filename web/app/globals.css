@@ -108,3 +108,44 @@ body {
   color: var(--hi-text);
   font-family: var(--font-geist-sans), "Segoe UI", sans-serif;
 }
+
+@keyframes landingThemeFade {
+  from {
+    opacity: 1;
+    filter: blur(0);
+  }
+
+  to {
+    opacity: 0;
+    filter: blur(1px);
+  }
+}
+
+@keyframes landingThemeReveal {
+  from {
+    opacity: 0;
+    filter: blur(2px);
+    transform: scale(1.008);
+  }
+
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+}
+
+::view-transition-old(root) {
+  animation: landingThemeFade 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+::view-transition-new(root) {
+  animation: landingThemeReveal 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
