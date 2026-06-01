@@ -1,9 +1,9 @@
 import bcrypt from "bcrypt";
 import { NextResponse } from "next/server";
-import crypto from "crypto";
 
 import { prisma } from "@/lib/prisma";
 import { requireApiAdmin } from "@/lib/access";
+import { generateTemporaryPassword } from "@/lib/passwordPolicy";
 
 export async function POST(req: Request) {
   const access = await requireApiAdmin();
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-  const tempPassword = crypto.randomBytes(9).toString("base64url");
+  const tempPassword = generateTemporaryPassword();
   const hash = await bcrypt.hash(tempPassword, 12);
 
   await prisma.user.update({ where: { id: userId }, data: { password: hash } });

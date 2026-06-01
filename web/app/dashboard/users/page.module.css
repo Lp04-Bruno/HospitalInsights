@@ -3,6 +3,11 @@
   gap: 10px;
 }
 
+.helperText {
+  font-size: 12px;
+  color: var(--hi-text-subtle);
+}
+
 .list {
   display: grid;
   gap: 10px;

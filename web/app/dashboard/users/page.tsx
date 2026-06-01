@@ -2,6 +2,8 @@ import bcrypt from "bcrypt";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireDashboardRouteAccess } from "@/lib/access";
+import { parseFlashMessage, redirectWithFlash } from "@/lib/actionResult";
+import { PASSWORD_POLICY_MESSAGE, passwordSchema } from "@/lib/passwordPolicy";
 import { formString, roleSchema } from "@/lib/validation";
 import { Role } from "@/prisma/generated/enums";
 import styles from "./page.module.css";
@@ -14,6 +16,7 @@ import {
   DashboardField,
   DashboardGrid,
   DashboardHeader,
+  DashboardNotice,
   DashboardPage,
   dashboardUi,
 } from "@/app/dashboard/_components/DashboardUi";
@@ -26,7 +29,7 @@ async function createUser(formData: FormData) {
   const roleResult = roleSchema.safeParse(formData.get("role"));
   const email = formString(formData, "email").toLowerCase();
   const name = formString(formData, "name");
-  const password = typeof formData.get("password") === "string" ? String(formData.get("password")) : "";
+  const passwordRaw = typeof formData.get("password") === "string" ? String(formData.get("password")) : "";
 
   if (!email || !name || !roleResult.success) redirect("/dashboard/users");
 
@@ -53,9 +56,12 @@ async function createUser(formData: FormData) {
       },
     });
   } else {
-    if (!password) redirect("/dashboard/users");
+    const passwordResult = passwordSchema.safeParse(passwordRaw);
+    if (!passwordResult.success) {
+      redirectWithFlash("/dashboard/users", { tone: "warning", message: PASSWORD_POLICY_MESSAGE });
+    }
 
-    const hash = await bcrypt.hash(password, 12);
+    const hash = await bcrypt.hash(passwordResult.data, 12);
 
     await prisma.user.create({
       data: {
@@ -110,8 +116,15 @@ async function deleteUser(formData: FormData) {
   redirect("/dashboard/users");
 }
 
-export default async function UsersPage() {
+type UsersPageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
+};
+
+export default async function UsersPage({ searchParams }: UsersPageProps) {
   await requireDashboardRouteAccess("/dashboard/users");
+  const resolvedSearchParams = await searchParams;
+  const flash = parseFlashMessage(resolvedSearchParams);
+  const flashTone = flash?.tone === "info" ? "neutral" : flash?.tone;
 
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
@@ -131,6 +144,8 @@ export default async function UsersPage() {
         subtitle="Benutzer anlegen, Stammdaten pflegen, Rollen zuweisen, Passwörter zurücksetzen."
       />
 
+      {flash ? <DashboardNotice tone={flashTone}>{flash.message}</DashboardNotice> : null}
+
       <DashboardGrid>
         <DashboardCard title="Benutzer anlegen oder aktualisieren">
           <form action={createUser} className={styles.form}>
@@ -141,7 +156,18 @@ export default async function UsersPage() {
               <input name="name" className={dashboardUi.input} placeholder="z.B. Max Mustermann" required />
             </DashboardField>
             <DashboardField label="Initialpasswort">
-              <input name="password" className={dashboardUi.input} type="password" placeholder="Nur für neue Benutzer erforderlich" />
+              <input
+                name="password"
+                className={dashboardUi.input}
+                type="password"
+                minLength={12}
+                autoComplete="new-password"
+                placeholder="Nur für neue Benutzer erforderlich"
+                aria-describedby="password-policy"
+              />
+              <span id="password-policy" className={styles.helperText}>
+                {PASSWORD_POLICY_MESSAGE}
+              </span>
             </DashboardField>
             <DashboardField label="Rolle">
               <select name="role" className={dashboardUi.select} defaultValue={Role.EDITOR}>

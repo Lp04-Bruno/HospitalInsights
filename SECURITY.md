@@ -46,3 +46,8 @@ theoretische Probleme ohne Auswirkung und Scans gegen fremde Infrastruktur.
 Bitte gib uns angemessene Zeit zur Analyse und Behebung, bevor Details
 veröffentlicht werden. Wir bemühen uns um eine zeitnahe Rückmeldung, können aber
 keine feste SLA garantieren.
+
+## Dependency-Triage
+
+Bewusst akzeptierte oder transitive Dependency-Findings werden in
+[SECURITY-AUDIT.md](SECURITY-AUDIT.md) dokumentiert.
