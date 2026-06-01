@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-import { requireAdmin as requireAdminAccess } from "@/lib/access";
+import { requireDashboardRouteAccess } from "@/lib/access";
+import { parseFlashMessage, redirectWithFlash } from "@/lib/actionResult";
 import {
   backupsAutoDailyEnabled,
   backupsFeatureEnabled,
@@ -45,25 +46,27 @@ type PageProps = {
 };
 
 async function requireBackupAdmin(callbackUrl: string) {
-  return requireAdminAccess(callbackUrl);
+  return requireDashboardRouteAccess(callbackUrl);
 }
 
 async function createManualBackup() {
   "use server";
   await requireBackupAdmin("/dashboard/backups");
 
-  if (!backupsFeatureEnabled()) redirect("/dashboard/backups?notice=Backups%20sind%20deaktiviert.");
+  if (!backupsFeatureEnabled()) {
+    redirectWithFlash("/dashboard/backups", { tone: "warning", message: "Backups sind deaktiviert." });
+  }
 
   let filename: string;
   try {
     filename = await createBackup("manual");
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Backup fehlgeschlagen.";
-    redirect(`/dashboard/backups?notice=${encodeURIComponent(`Backup fehlgeschlagen: ${msg}`)}`);
+    redirectWithFlash("/dashboard/backups", { tone: "danger", message: `Backup fehlgeschlagen: ${msg}` });
   }
 
   revalidatePath("/dashboard/backups");
-  redirect(`/dashboard/backups?notice=${encodeURIComponent(`Backup erstellt: ${filename}`)}`);
+  redirectWithFlash("/dashboard/backups", { tone: "success", message: `Backup erstellt: ${filename}` });
 }
 
 async function ensureDailyBackupAction() {
@@ -71,7 +74,7 @@ async function ensureDailyBackupAction() {
   await requireBackupAdmin("/dashboard/backups");
 
   if (!backupsAutoDailyEnabled()) {
-    redirect("/dashboard/backups?notice=Daily-Backup%20ist%20deaktiviert%20(BACKUP_AUTO_DAILY).");
+    redirectWithFlash("/dashboard/backups", { tone: "warning", message: "Daily-Backup ist deaktiviert (BACKUP_AUTO_DAILY)." });
   }
 
   let res: { created: boolean; filename?: string };
@@ -79,32 +82,34 @@ async function ensureDailyBackupAction() {
     res = await ensureDailyBackup();
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Daily-Backup fehlgeschlagen.";
-    redirect(`/dashboard/backups?notice=${encodeURIComponent(`Daily-Backup fehlgeschlagen: ${msg}`)}`);
+    redirectWithFlash("/dashboard/backups", { tone: "danger", message: `Daily-Backup fehlgeschlagen: ${msg}` });
   }
 
   revalidatePath("/dashboard/backups");
   if (res.created && res.filename) {
-    redirect(`/dashboard/backups?notice=${encodeURIComponent(`Daily-Backup erstellt: ${res.filename}`)}`);
+    redirectWithFlash("/dashboard/backups", { tone: "success", message: `Daily-Backup erstellt: ${res.filename}` });
   }
-  redirect(`/dashboard/backups?notice=${encodeURIComponent(`Daily-Backup ist für heute bereits vorhanden.`)}`);
+  redirectWithFlash("/dashboard/backups", { tone: "info", message: "Daily-Backup ist für heute bereits vorhanden." });
 }
 
 async function createDataExportAction() {
   "use server";
   await requireBackupAdmin("/dashboard/backups");
 
-  if (!backupsFeatureEnabled()) redirect("/dashboard/backups?notice=Backups%20sind%20deaktiviert.");
+  if (!backupsFeatureEnabled()) {
+    redirectWithFlash("/dashboard/backups", { tone: "warning", message: "Backups sind deaktiviert." });
+  }
 
   let filename: string;
   try {
     filename = await createDataExport();
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Datenexport fehlgeschlagen.";
-    redirect(`/dashboard/backups?notice=${encodeURIComponent(`Datenexport fehlgeschlagen: ${msg}`)}`);
+    redirectWithFlash("/dashboard/backups", { tone: "danger", message: `Datenexport fehlgeschlagen: ${msg}` });
   }
 
   revalidatePath("/dashboard/backups");
-  redirect(`/dashboard/backups?notice=${encodeURIComponent(`Datenexport erstellt: ${filename}`)}`);
+  redirectWithFlash("/dashboard/backups", { tone: "success", message: `Datenexport erstellt: ${filename}` });
 }
 
 async function deleteBackupAction(formData: FormData) {
@@ -119,11 +124,11 @@ async function deleteBackupAction(formData: FormData) {
     await deleteBackup(filename);
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Löschen fehlgeschlagen.";
-    redirect(`/dashboard/backups?notice=${encodeURIComponent(`Löschen fehlgeschlagen: ${msg}`)}`);
+    redirectWithFlash("/dashboard/backups", { tone: "danger", message: `Löschen fehlgeschlagen: ${msg}` });
   }
 
   revalidatePath("/dashboard/backups");
-  redirect(`/dashboard/backups?notice=${encodeURIComponent(`Backup gelöscht: ${filename}`)}`);
+  redirectWithFlash("/dashboard/backups", { tone: "success", message: `Backup gelöscht: ${filename}` });
 }
 
 async function restoreBackupAction(formData: FormData) {
@@ -137,22 +142,21 @@ async function restoreBackupAction(formData: FormData) {
   if (!filename || confirmed !== "1") redirect("/dashboard/backups");
 
   if (!backupsRestoreEnabled()) {
-    redirect("/dashboard/backups?notice=Restore%20ist%20deaktiviert%20(BACKUP_RESTORE_ENABLED).");
+    redirectWithFlash("/dashboard/backups", { tone: "warning", message: "Restore ist deaktiviert (BACKUP_RESTORE_ENABLED)." });
   }
 
   try {
     await importBackup(filename, mode);
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Restore fehlgeschlagen.";
-    redirect(`/dashboard/backups?notice=${encodeURIComponent(`Restore fehlgeschlagen: ${msg}`)}`);
+    redirectWithFlash("/dashboard/backups", { tone: "danger", message: `Restore fehlgeschlagen: ${msg}` });
   }
 
   revalidatePath("/dashboard/backups");
-  redirect(
-    `/dashboard/backups?notice=${encodeURIComponent(
-      mode === "append" ? `Daten importiert aus: ${filename}` : `DB wiederhergestellt aus: ${filename}`
-    )}`
-  );
+  redirectWithFlash("/dashboard/backups", {
+    tone: "success",
+    message: mode === "append" ? `Daten importiert aus: ${filename}` : `DB wiederhergestellt aus: ${filename}`,
+  });
 }
 
 async function uploadBackupAction(formData: FormData) {
@@ -160,18 +164,20 @@ async function uploadBackupAction(formData: FormData) {
   await requireBackupAdmin("/dashboard/backups");
 
   const file = formData.get("file");
-  if (!(file instanceof File)) redirect("/dashboard/backups?notice=Kein%20Backup%20hochgeladen.");
+  if (!(file instanceof File)) {
+    redirectWithFlash("/dashboard/backups", { tone: "warning", message: "Kein Backup hochgeladen." });
+  }
 
   let filename: string;
   try {
     filename = await uploadBackup(file);
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Upload fehlgeschlagen.";
-    redirect(`/dashboard/backups?notice=${encodeURIComponent(`Upload fehlgeschlagen: ${msg}`)}`);
+    redirectWithFlash("/dashboard/backups", { tone: "danger", message: `Upload fehlgeschlagen: ${msg}` });
   }
 
   revalidatePath("/dashboard/backups");
-  redirect(`/dashboard/backups?notice=${encodeURIComponent(`Backup hochgeladen: ${filename}`)}`);
+  redirectWithFlash("/dashboard/backups", { tone: "success", message: `Backup hochgeladen: ${filename}` });
 }
 
 export default async function BackupsPage({ searchParams }: PageProps) {
@@ -182,7 +188,7 @@ export default async function BackupsPage({ searchParams }: PageProps) {
   const autoDailyEnabled = backupsAutoDailyEnabled();
 
   const resolvedSearchParams = await searchParams;
-  const notice = typeof resolvedSearchParams?.notice === "string" ? resolvedSearchParams.notice : undefined;
+  const flash = parseFlashMessage(resolvedSearchParams);
 
   const backups = enabled ? await listBackups() : [];
 
@@ -190,7 +196,7 @@ export default async function BackupsPage({ searchParams }: PageProps) {
     <DashboardPage>
       <DashboardHeader title="Backups" subtitle="Datenbank-Backups erstellen, verwalten und wiederherstellen." />
 
-      <NoticeBanner notice={notice} />
+      <NoticeBanner flash={flash} />
 
       <DashboardGrid>
         <DashboardCard title="Aktionen">

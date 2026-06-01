@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { getServerAuthSession } from "@/lib/auth";
+import { getDashboardRouteRoles } from "@/lib/dashboardRoutes";
 import { ADMIN_ROLES, EDITOR_ROLES, hasAnyRoleValue, type AppRole } from "@/lib/roles";
 
 export { ADMIN_ROLES, EDITOR_ROLES };
@@ -23,6 +24,11 @@ export async function requireAnyRole(roles: readonly AppRole[], callbackUrl: str
 
 export async function requireAdmin(callbackUrl: string) {
   return requireAnyRole(ADMIN_ROLES, callbackUrl);
+}
+
+export async function requireDashboardRouteAccess(pathname: string) {
+  const roles = getDashboardRouteRoles(pathname);
+  return roles ? requireAnyRole(roles, pathname) : requireSession(pathname);
 }
 
 export async function getSessionIfAllowed(roles: readonly AppRole[]) {

@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/access";
+import { requireDashboardRouteAccess } from "@/lib/access";
 import { formString, roleSchema } from "@/lib/validation";
 import { Role } from "@/prisma/generated/enums";
 import styles from "./page.module.css";
@@ -21,7 +21,7 @@ import {
 async function createUser(formData: FormData) {
   "use server";
 
-  const session = await requireAdmin("/dashboard/users");
+  const session = await requireDashboardRouteAccess("/dashboard/users");
 
   const roleResult = roleSchema.safeParse(formData.get("role"));
   const email = formString(formData, "email").toLowerCase();
@@ -73,7 +73,7 @@ async function createUser(formData: FormData) {
 async function setRole(formData: FormData) {
   "use server";
 
-  const session = await requireAdmin("/dashboard/users");
+  const session = await requireDashboardRouteAccess("/dashboard/users");
 
   const userId = formString(formData, "userId");
   const roleResult = roleSchema.safeParse(formData.get("role"));
@@ -96,7 +96,7 @@ async function setRole(formData: FormData) {
 async function deleteUser(formData: FormData) {
   "use server";
 
-  const session = await requireAdmin("/dashboard/users");
+  const session = await requireDashboardRouteAccess("/dashboard/users");
 
   const confirmed = formString(formData, "confirmed");
   const userId = formString(formData, "userId");
@@ -111,7 +111,7 @@ async function deleteUser(formData: FormData) {
 }
 
 export default async function UsersPage() {
-  await requireAdmin("/dashboard/users");
+  await requireDashboardRouteAccess("/dashboard/users");
 
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },

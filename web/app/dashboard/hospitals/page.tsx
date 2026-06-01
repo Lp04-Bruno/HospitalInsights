@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { EDITOR_ROLES, requireAnyRole } from "@/lib/access";
+import { requireDashboardRouteAccess } from "@/lib/access";
+import { parseFlashMessage, redirectWithFlash } from "@/lib/actionResult";
 import { formString, yearSchema } from "@/lib/validation";
 import { ConfirmSubmitButton } from "@/app/dashboard/_components/ConfirmSubmitButton";
 import styles from "./page.module.css";
@@ -20,7 +21,7 @@ import {
 export const dynamic = "force-dynamic";
 
 async function requireHospitalAccess() {
-  await requireAnyRole(EDITOR_ROLES, "/dashboard/hospitals");
+  await requireDashboardRouteAccess("/dashboard/hospitals");
 }
 
 async function createHospital(formData: FormData) {
@@ -98,11 +99,11 @@ async function deleteHospitalYear(formData: FormData) {
   });
 
   revalidatePath("/dashboard/hospitals");
-  redirect(`/dashboard/hospitals?notice=${encodeURIComponent(`Jahr ${year.data} gelöscht (${res.count} Werte entfernt).`)}`);
+  redirectWithFlash("/dashboard/hospitals", { tone: "success", message: `Jahr ${year.data} gelöscht (${res.count} Werte entfernt).` });
 }
 
 type HospitalsPageProps = {
-  searchParams?: Record<string, string | string[] | undefined>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
 };
 
 export default async function HospitalsPage({ searchParams }: HospitalsPageProps) {
@@ -129,13 +130,15 @@ export default async function HospitalsPage({ searchParams }: HospitalsPageProps
     );
   }
 
-  const notice = typeof searchParams?.notice === "string" ? searchParams.notice : undefined;
+  const resolvedSearchParams = await searchParams;
+  const flash = parseFlashMessage(resolvedSearchParams);
+  const flashTone = flash?.tone === "info" ? "neutral" : flash?.tone;
 
   return (
     <DashboardPage>
       <DashboardHeader title="Hospitalverwaltung" subtitle="Krankenhäuser anlegen und verwalten." />
 
-      {notice ? <DashboardNotice>{notice}</DashboardNotice> : null}
+      {flash ? <DashboardNotice tone={flashTone}>{flash.message}</DashboardNotice> : null}
 
       <DashboardGrid>
         <DashboardCard title="Neues Krankenhaus">

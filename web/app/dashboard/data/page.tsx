@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { statementLabel } from "@/lib/statements";
-import { EDITOR_ROLES, requireAnyRole } from "@/lib/access";
+import { requireDashboardRouteAccess } from "@/lib/access";
 import { saveFacts } from "@/lib/facts/saveFacts";
 import { buildStatementRows } from "@/lib/facts/statementRows";
 import { createPeriod } from "@/lib/facts/periods";
@@ -25,7 +25,7 @@ type PageProps = {
 };
 
 async function requireDataAccess() {
-  return requireAnyRole(EDITOR_ROLES, "/dashboard/data");
+  return requireDashboardRouteAccess("/dashboard/data");
 }
 
 export default async function DashboardDataPage({ searchParams }: PageProps) {

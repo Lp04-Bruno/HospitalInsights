@@ -3,21 +3,10 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 
+import { isDashboardRouteActive, type DashboardRoute } from "@/lib/dashboardRoutes";
 import styles from "./layout.module.css";
 
-type NavItem = {
-  href: string;
-  label: string;
-  exact?: boolean;
-};
-
-function isActive(pathname: string, href: string, exact: boolean) {
-  if (exact) return pathname === href;
-  if (href === "/dashboard") return pathname === "/dashboard";
-  return pathname === href || pathname.startsWith(href + "/");
-}
-
-export function DashboardNav({ items }: { items: NavItem[] }) {
+export function DashboardNav({ items }: { items: readonly DashboardRoute[] }) {
   const pathname = usePathname() || "/";
   const searchParams = useSearchParams();
 
@@ -32,7 +21,7 @@ export function DashboardNav({ items }: { items: NavItem[] }) {
   return (
     <nav className={styles.nav}>
       {items.map((item) => {
-        const active = isActive(pathname, item.href, !!item.exact);
+        const active = isDashboardRouteActive(item, pathname);
 
         const hrefWithPreserved = preservedQs ? `${item.href}?${preservedQs}` : item.href;
         return (

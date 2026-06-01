@@ -25,6 +25,8 @@ Das Projekt orientiert sich an [Semantic Versioning](https://semver.org/lang/de/
 - Next.js-Projektordner von `app/` nach `web/` umbenannt, damit die Struktur für Außenstehende klarer ist (`web/app`, `web/lib`, `web/prisma`).
 - App-Version und README-Badge auf `1.2.0` aktualisiert.
 - Styling-Stack auf CSS Modules vereinfacht und README-Tech-Stack entsprechend angepasst.
+- Dashboard-Routen, Navigationslabels und Rollenanforderungen in `web/lib/dashboardRoutes.ts` zentralisiert und erste Zugriffspfade daraus abgeleitet.
+- Redirect-/Statusmeldungen für Dashboard-Aktionen über einen gemeinsamen Flash-Message-Helper gekapselt.
 
 ### Removed
 

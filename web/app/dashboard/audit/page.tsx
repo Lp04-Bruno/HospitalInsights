@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
-import { EDITOR_ROLES, requireAdmin, requireAnyRole } from "@/lib/access";
+import { requireAdmin, requireDashboardRouteAccess } from "@/lib/access";
 import { statementLabel } from "@/lib/statements";
 import {
   firstSearchParam,
@@ -104,7 +104,7 @@ type ChangeWithRun = FactChangeGetPayload<{ include: typeof changeInclude }>;
 export const dynamic = "force-dynamic";
 
 export default async function AuditLogPage({ searchParams }: PageProps) {
-  const session = await requireAnyRole(EDITOR_ROLES, "/dashboard/audit");
+  const session = await requireDashboardRouteAccess("/dashboard/audit");
 
   async function deleteChange(formData: FormData) {
     "use server";

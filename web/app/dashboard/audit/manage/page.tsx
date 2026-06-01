@@ -2,11 +2,19 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
+import { parseFlashMessage, redirectWithFlash } from "@/lib/actionResult";
 import { requireAdmin } from "@/lib/access";
 import { formString, parseStatementType, yearSchema } from "@/lib/validation";
 import { StatementType } from "@/prisma/generated/enums";
 import { ConfirmSubmitButton } from "@/app/dashboard/_components/ConfirmSubmitButton";
-import { DashboardButtonLink, DashboardCard, DashboardHeader, DashboardPage, dashboardUi } from "@/app/dashboard/_components/DashboardUi";
+import {
+  DashboardButtonLink,
+  DashboardCard,
+  DashboardHeader,
+  DashboardNotice,
+  DashboardPage,
+  dashboardUi,
+} from "@/app/dashboard/_components/DashboardUi";
 
 import styles from "./page.module.css";
 
@@ -28,7 +36,11 @@ function endOfDayUTC(d: Date): Date {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 23, 59, 59, 999));
 }
 
-export default async function AuditManagePage() {
+type AuditManagePageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
+};
+
+export default async function AuditManagePage({ searchParams }: AuditManagePageProps) {
   await requireAdmin("/dashboard/audit/manage");
 
   async function deleteRun(formData: FormData) {
@@ -75,7 +87,7 @@ export default async function AuditManagePage() {
 
     const hasAnyFilter = !!hospitalId || year !== undefined || !!statementType || !!userId || !!fromDate || !!toDate;
     if (!hasAnyFilter) {
-      redirect("/dashboard/audit/manage?error=nofilter");
+      redirectWithFlash("/dashboard/audit/manage", { tone: "warning", message: "Ohne Filter wird nichts gelöscht." });
     }
 
     const periodId = year !== undefined ? (await prisma.period.findUnique({ where: { year }, select: { id: true } }))?.id : undefined;
@@ -100,11 +112,14 @@ export default async function AuditManagePage() {
     ]);
 
     if (runsToDelete === 0) {
-      redirect("/dashboard/audit/manage?deletedRuns=0");
+      redirectWithFlash("/dashboard/audit/manage", { tone: "info", message: "Keine passenden Audit-Runs gefunden." });
     }
 
     await prisma.factChangeRun.deleteMany({ where: whereRun });
-    redirect(`/dashboard/audit/manage?deletedRuns=${runsToDelete}&deletedChanges=${changesToDelete}`);
+    redirectWithFlash("/dashboard/audit/manage", {
+      tone: "success",
+      message: `${runsToDelete} Audit-Runs und ${changesToDelete} Einzeländerungen gelöscht.`,
+    });
   }
 
   const [runCount, changeCount, latestRuns, hospitals, periods, users] = await Promise.all([
@@ -127,6 +142,9 @@ export default async function AuditManagePage() {
       select: { id: true, email: true, name: true },
     }),
   ]);
+  const resolvedSearchParams = await searchParams;
+  const flash = parseFlashMessage(resolvedSearchParams);
+  const flashTone = flash?.tone === "info" ? "neutral" : flash?.tone;
 
   return (
     <DashboardPage>
@@ -135,6 +153,8 @@ export default async function AuditManagePage() {
         subtitle="Admin-Funktionen: Einträge/Runs löschen oder kompletten Audit Log leeren."
         actions={<DashboardButtonLink href="/dashboard/audit">Zurück zum Audit Log</DashboardButtonLink>}
       />
+
+      {flash ? <DashboardNotice tone={flashTone}>{flash.message}</DashboardNotice> : null}
 
       <DashboardCard>
         <div className={styles.row}>

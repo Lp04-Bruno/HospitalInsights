@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 import { requireSession } from "@/lib/access";
+import { getDashboardRoutesForRole } from "@/lib/dashboardRoutes";
 import { DashboardNav } from "./DashboardNav";
 
 import styles from "./layout.module.css";
@@ -16,27 +17,8 @@ type DashboardLayoutProps = {
 
 export default async function DashboardLayout({ children }: DashboardLayoutProps) {
   const session = await requireSession("/dashboard");
-
   const role = session.user.role;
-  const navItems =
-    role === "ADMIN"
-      ? [
-          { href: "/dashboard", label: "Übersicht", exact: true },
-          { href: "/dashboard/data", label: "Datenverwaltung" },
-          { href: "/dashboard/audit", label: "Audit Log" },
-          { href: "/dashboard/audit/manage", label: "Audit Log – Management" },
-          { href: "/dashboard/hospitals", label: "Hospitalverwaltung" },
-          { href: "/dashboard/users", label: "Benutzerverwaltung" },
-          { href: "/dashboard/backups", label: "Backups" },
-        ]
-      : role === "EDITOR"
-        ? [
-            { href: "/dashboard", label: "Übersicht", exact: true },
-            { href: "/dashboard/data", label: "Datenverwaltung" },
-            { href: "/dashboard/audit", label: "Audit Log" },
-            { href: "/dashboard/hospitals", label: "Hospitalverwaltung" },
-          ]
-        : [{ href: "/dashboard", label: "Übersicht", exact: true }];
+  const navItems = getDashboardRoutesForRole(role);
 
   return (
     <div className={styles.shell}>
