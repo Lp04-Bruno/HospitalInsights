@@ -17,6 +17,7 @@
   border: 1px solid var(--hi-border);
   background: var(--hi-glass-strong);
   overflow: hidden;
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
 }
 
 .header {
@@ -29,7 +30,6 @@
   margin: 0;
   font-size: 22px;
   font-weight: 750;
-  letter-spacing: -0.02em;
   color: var(--hi-text);
 }
 
@@ -55,19 +55,24 @@
   color: var(--hi-text-muted);
 }
 
-.muted {
-  color: var(--hi-text-subtle);
-  font-size: 12px;
-}
-
 .back {
   align-self: flex-start;
   text-decoration: none;
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 700;
   color: var(--hi-text);
+}
+
+.back::before {
+  content: "← ";
 }
 
 .back:hover {
   text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .shell {
+    padding: 18px 12px 28px;
+  }
 }

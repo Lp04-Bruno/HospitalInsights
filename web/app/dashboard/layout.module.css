@@ -18,6 +18,11 @@
   gap: 14px;
 }
 
+.sidebarHeader {
+  display: grid;
+  gap: 10px;
+}
+
 .brand {
   display: flex;
   align-items: center;
@@ -53,6 +58,48 @@
   margin-top: 2px;
   font-size: 12px;
   color: var(--hi-muted);
+}
+
+.mobileMenu {
+  display: none;
+}
+
+.mobileMenuButton {
+  cursor: pointer;
+  list-style: none;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--hi-border);
+  background: var(--hi-glass-strong);
+  color: var(--hi-text);
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.mobileMenuButton::-webkit-details-marker {
+  display: none;
+}
+
+.mobileMenuButton::after {
+  content: " öffnen";
+  color: var(--hi-muted);
+  font-weight: 700;
+}
+
+.mobileMenu[open] .mobileMenuButton::after {
+  content: " schließen";
+}
+
+.mobileMenuPanel {
+  display: grid;
+  gap: 10px;
+  padding-top: 10px;
+}
+
+.desktopNav {
+  display: block;
 }
 
 .nav {
@@ -143,7 +190,8 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  padding: 16px 18px;
+  min-height: 64px;
+  padding: 0 18px;
   border-bottom: 1px solid var(--hi-border);
   background: var(--hi-glass-topbar);
   backdrop-filter: blur(8px);
@@ -171,7 +219,73 @@
   }
 
   .sidebar {
-    position: relative;
+    position: sticky;
+    z-index: 20;
     height: auto;
+    padding: 10px 12px;
+    border-right: 0;
+    border-bottom: 1px solid var(--hi-border);
+    gap: 10px;
+  }
+
+  .sidebarHeader {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+
+  .brand {
+    min-height: 56px;
+  }
+
+  .brandIcon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .mobileMenu {
+    display: block;
+    position: relative;
+  }
+
+  .mobileMenuPanel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: min(340px, calc(100vw - 24px));
+    padding: 12px;
+    border-radius: 16px;
+    border: 1px solid var(--hi-border);
+    background: var(--hi-glass-strong);
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+  }
+
+  .desktopNav,
+  .sidebarFooter {
+    display: none;
+  }
+
+  .sidebarFooterLinks {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .topbar {
+    display: none;
+  }
+
+  .content {
+    padding: 14px 12px 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebarHeader {
+    grid-template-columns: 1fr;
+  }
+
+  .mobileMenuPanel {
+    left: 0;
+    right: 0;
+    width: auto;
   }
 }

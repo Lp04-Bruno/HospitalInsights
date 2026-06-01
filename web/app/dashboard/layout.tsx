@@ -19,19 +19,45 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
   const session = await requireSession("/dashboard");
   const role = session.user.role;
   const navItems = getDashboardRoutesForRole(role);
+  const renderFooterLinks = () => (
+    <div className={styles.sidebarFooterLinks}>
+      <Link href="/" className={styles.footerLink}>
+        Startseite
+      </Link>
+      <Link href="/logout?callbackUrl=/" className={styles.footerLink}>
+        Abmelden
+      </Link>
+    </div>
+  );
 
   return (
     <div className={styles.shell}>
       <aside className={styles.sidebar}>
-        <Link href="/" className={styles.brand} aria-label="Hospitalinsights Startseite">
-          <Image className={styles.brandIcon} src={logoIcon} alt="" width={42} height={42} priority />
-          <div className={styles.brandCopy}>
-            <div className={styles.brandTitle}>Hospitalinsights</div>
-            <div className={styles.brandSubtitle}>Dashboard</div>
-          </div>
-        </Link>
+        <div className={styles.sidebarHeader}>
+          <Link href="/" className={styles.brand} aria-label="Hospitalinsights Startseite">
+            <Image className={styles.brandIcon} src={logoIcon} alt="" width={42} height={42} priority />
+            <div className={styles.brandCopy}>
+              <div className={styles.brandTitle}>Hospitalinsights</div>
+              <div className={styles.brandSubtitle}>Dashboard</div>
+            </div>
+          </Link>
 
-        <DashboardNav items={navItems} />
+          <details className={styles.mobileMenu}>
+            <summary className={styles.mobileMenuButton}>Menü</summary>
+            <div className={styles.mobileMenuPanel}>
+              <DashboardNav items={navItems} />
+              <div className={styles.userBox}>
+                <div className={styles.userEmail}>{session.user.email}</div>
+                <div className={styles.userRole}>Rolle: {role}</div>
+              </div>
+              {renderFooterLinks()}
+            </div>
+          </details>
+        </div>
+
+        <div className={styles.desktopNav}>
+          <DashboardNav items={navItems} />
+        </div>
 
         <div className={styles.sidebarFooter}>
           <div className={styles.userBox}>
@@ -39,14 +65,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
             <div className={styles.userRole}>Rolle: {role}</div>
           </div>
 
-          <div className={styles.sidebarFooterLinks}>
-            <Link href="/" className={styles.footerLink}>
-              Startseite
-            </Link>
-            <Link href="/logout?callbackUrl=/" className={styles.footerLink}>
-              Abmelden
-            </Link>
-          </div>
+          {renderFooterLinks()}
         </div>
       </aside>
 

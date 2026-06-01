@@ -33,6 +33,8 @@ Das Projekt orientiert sich an [Semantic Versioning](https://semver.org/lang/de/
 - Serverseitige Passwortregeln für neue Benutzer und generierte temporäre Passwörter ergänzt.
 - Restore-Aktionen zusätzlich durch Eingabe des vollständigen Backup-Dateinamens abgesichert.
 - `SECURITY-AUDIT.md` ergänzt und aktuelle moderate npm-Audit-Findings bewusst triagiert.
+- Legal Pages auf eine gemeinsame Public Page Shell umgestellt.
+- Dashboard-Sidebar auf Mobile als kompaktere App-Shell mit einklappbarer Navigation überarbeitet.
 
 ### Removed
 
