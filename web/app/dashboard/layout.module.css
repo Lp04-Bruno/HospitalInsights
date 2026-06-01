@@ -191,7 +191,7 @@
   top: 0;
   z-index: 10;
   min-height: 64px;
-  padding: 0 18px;
+  padding: 0 32px;
   border-bottom: 1px solid var(--hi-border);
   background: var(--hi-glass-topbar);
   backdrop-filter: blur(8px);
@@ -208,7 +208,7 @@
 }
 
 .content {
-  padding: 18px;
+  padding: 24px 32px 34px;
   width: 100%;
   max-width: none;
 }
@@ -274,7 +274,7 @@
   }
 
   .content {
-    padding: 14px 12px 18px;
+    padding: 18px 14px 22px;
   }
 }
 

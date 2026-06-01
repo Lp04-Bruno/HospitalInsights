@@ -273,21 +273,6 @@ export function RestoreWithPreview({ filename, kind, action }: RestoreWithPrevie
                 </label>
               </div>
 
-              <div className={styles.modalPreview}>
-                <label className={styles.confirmFilename}>
-                  <span className={styles.modalPreviewTitle}>Restore bestätigen</span>
-                  <span className={styles.modalHint}>Tippe den vollständigen Dateinamen ein, um den Restore freizugeben.</span>
-                  <input
-                    className={dashboardUi.input}
-                    name="confirmFilename"
-                    autoComplete="off"
-                    spellCheck={false}
-                    placeholder={filename}
-                    required
-                  />
-                </label>
-              </div>
-
               <div className={styles.modalActions}>
                 <button type="button" className={`${dashboardUi.button} ${dashboardUi.secondary}`} onClick={close}>
                   Abbrechen

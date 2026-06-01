@@ -137,14 +137,10 @@ async function restoreBackupAction(formData: FormData) {
   await requireBackupAdmin("/dashboard/backups");
 
   const filename = String(formData.get("filename") ?? "").trim();
-  const confirmFilename = String(formData.get("confirmFilename") ?? "").trim();
   const modeRaw = String(formData.get("mode") ?? "replace").trim();
   const mode = modeRaw === "append" ? "append" : "replace";
   const confirmed = String(formData.get("confirmed") ?? "").trim();
   if (!filename || confirmed !== "1") redirect("/dashboard/backups");
-  if (confirmFilename !== filename) {
-    redirectWithFlash("/dashboard/backups", { tone: "warning", message: "Restore abgebrochen: Dateiname wurde nicht korrekt bestätigt." });
-  }
 
   if (!backupsRestoreEnabled()) {
     redirectWithFlash("/dashboard/backups", { tone: "warning", message: "Restore ist deaktiviert (BACKUP_RESTORE_ENABLED)." });

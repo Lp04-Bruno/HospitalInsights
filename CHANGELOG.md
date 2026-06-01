@@ -32,11 +32,11 @@ Das Projekt orientiert sich an [Semantic Versioning](https://semver.org/lang/de/
 - Redis-basiertes Rate Limiting für Credentials-Logins ergänzt und Compose um einen Redis-8.8-Alpine-Service erweitert.
 - Dev-Compose-Start robuster gemacht: gemountete `node_modules` werden beim App-Start synchronisiert, damit neue Dependencies wie Redis-Client-Pakete nach Branch-Wechseln verfügbar sind.
 - Serverseitige Passwortregeln für neue Benutzer und generierte temporäre Passwörter ergänzt.
-- Restore-Aktionen zusätzlich durch Eingabe des vollständigen Backup-Dateinamens abgesichert.
 - `SECURITY-AUDIT.md` ergänzt und aktuelle moderate npm-Audit-Findings bewusst triagiert.
 - Legal Pages auf eine gemeinsame Public Page Shell umgestellt.
 - Dashboard-Sidebar auf Mobile als kompaktere App-Shell mit einklappbarer Navigation überarbeitet.
-- Dashboard-Flash-Meldungen als einheitliche Toast-Benachrichtigungen rechts oben umgesetzt und weitere Admin-Aktionen mit direktem Erfolgsfeedback versehen.
+- Dashboard-Flash-Meldungen als einheitliche Toast-Benachrichtigungen oben rechts umgesetzt und weitere Admin-Aktionen mit direktem Erfolgsfeedback versehen.
+- Dashboard-Inhaltsbereich etwas luftiger gesetzt, damit Header und Karten nicht mehr so eng am Shell-Rand kleben.
 
 ### Removed
 

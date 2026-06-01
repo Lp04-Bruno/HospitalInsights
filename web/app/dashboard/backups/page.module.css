@@ -243,11 +243,6 @@
   color: var(--hi-text-subtle);
 }
 
-.confirmFilename {
-  display: grid;
-  gap: 8px;
-}
-
 .radioRow {
   display: flex;
   gap: 10px;
