@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="app/public/assets/hospitalinsights-logo-with-text.png" alt="Hospitalinsights" width="520">
+  <img src="web/public/assets/hospitalinsights-logo-with-text.png" alt="Hospitalinsights" width="520">
 </p>
 
 <h1 align="center">Hospitalinsights</h1>
@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version 1.1.1" src="https://img.shields.io/badge/Version-v1.1.1-111827?style=for-the-badge">
+  <img alt="Version 1.2.0" src="https://img.shields.io/badge/Version-v1.2.0-111827?style=for-the-badge">
   <img alt="Node.js 24" src="https://img.shields.io/badge/Node.js-24-5FA04E?style=for-the-badge&logo=nodedotjs&logoColor=white">
   <img alt="Next.js 16" src="https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=nextdotjs&logoColor=white">
   <img alt="React 19" src="https://img.shields.io/badge/React-19-149ECA?style=for-the-badge&logo=react&logoColor=white">
@@ -39,7 +39,7 @@ Die Anwendung ist auf einen klaren Betriebsfluss ausgelegt: Datenpflege durch Ad
 
 ```text
 HospitalInsights/
-├─ app/                         Next.js App Router Anwendung
+├─ web/                         Next.js App Router Anwendung
 │  ├─ app/                       Pages, API Routes, Komponenten
 │  ├─ lib/                       Domainlogik, Auth, Prisma, Metabase, Backups
 │  ├─ prisma/                    Schema, Migrationen, Seed, generierter Client
@@ -50,17 +50,18 @@ HospitalInsights/
 
 ## Tech Stack
 
-| Bereich     | Technologie                         |
-| ----------- | ----------------------------------- |
-| Web App     | Next.js 16, React 19, TypeScript 6  |
-| Styling     | CSS Modules, Tailwind CSS Toolchain |
-| Auth        | NextAuth Credentials Provider       |
-| Datenbank   | PostgreSQL 18                       |
-| ORM         | Prisma 7 mit PostgreSQL Adapter     |
-| BI          | Metabase Signed Embedding           |
-| Validierung | Zod                                 |
-| Tests       | Vitest                              |
-| Runtime     | Node.js 24, Docker Compose          |
+| Bereich     | Technologie                        |
+| ----------- | ---------------------------------- |
+| Web App     | Next.js 16, React 19, TypeScript 6 |
+| Styling     | CSS Modules                        |
+| Auth        | NextAuth Credentials Provider      |
+| Datenbank   | PostgreSQL 18                      |
+| Rate Limit  | Redis                              |
+| ORM         | Prisma 7 mit PostgreSQL Adapter    |
+| BI          | Metabase Signed Embedding          |
+| Validierung | Zod                                |
+| Tests       | Vitest                             |
+| Runtime     | Node.js 24, Docker Compose         |
 
 ## Quickstart
 
@@ -97,6 +98,8 @@ docker compose --env-file infra/.env -f infra/docker-compose.dev.yml up -d --bui
 docker compose --env-file infra/.env -f infra/docker-compose.dev.yml exec -T app npx prisma migrate deploy
 docker compose --env-file infra/.env -f infra/docker-compose.dev.yml exec -T app npx prisma db seed
 ```
+
+Der Seed legt lokale Admin-Credentials und den LineItem-Katalog an. Realistische Beispiel-Faktendaten werden nicht als CSV mitgeliefert; für Demo- oder Testdaten kann ein bereitgestellter PostgreSQL-Dump über die Backup-/Restore-Werkzeuge importiert werden.
 
 ### 4. Anwendung öffnen
 
@@ -136,14 +139,16 @@ docker compose --env-file infra/.env -f infra/docker-compose.dev.yml restart app
 # Stack stoppen, Volumes behalten
 docker compose --env-file infra/.env -f infra/docker-compose.dev.yml down
 
-# Komplett-Reset inklusive DB und Metabase Volume
+# Komplett-Reset inklusive App-DB, Metabase-Daten und Backups
 docker compose --env-file infra/.env -f infra/docker-compose.dev.yml down -v
 ```
+
+`down -v` löscht lokale Entwicklungsdaten inklusive Metabase-Setup und Backup-Volume. Für normale Neustarts deshalb `down` ohne `-v` verwenden.
 
 ## Entwicklung ohne Compose
 
 ```bash
-cd app
+cd web
 npm ci
 npm run generate
 npm run dev
@@ -156,7 +161,7 @@ Für lokale Ausführung außerhalb von Docker muss `DATABASE_URL` auf eine errei
 Die CI führt dieselben Basisprüfungen aus, die lokal empfohlen sind:
 
 ```bash
-cd app
+cd web
 npm run lint
 npm run typecheck
 npm test
@@ -178,6 +183,12 @@ git push origin vX.Y.Z
 ```
 
 Die Release-Historie steht in [CHANGELOG.md](CHANGELOG.md).
+
+## Lizenz
+
+Hospitalinsights ist öffentlich einsehbar, aber nicht unter einer OSI-Open-Source-Lizenz veröffentlicht. Das Projekt steht unter der [HospitalInsights Source Available License 1.0](LICENSE). Private Evaluation, Lernen und Security Review sind erlaubt; produktive, kommerzielle, öffentliche oder gehostete Nutzung benötigt vorherige schriftliche Zustimmung.
+
+Name, Logo, Wortmarke und sonstige Branding-Assets von Hospitalinsights fallen ebenfalls unter diese Nutzungsbeschränkungen. Sie dürfen nicht für eigene Produkte, Dienste, Forks, öffentliche Präsentationen oder kommerzielle Zwecke verwendet werden, außer mit vorheriger Zustimmung oder mit klarer Referenz auf das Originalprojekt.
 
 ## Metabase Signed Embedding
 
@@ -233,8 +244,10 @@ Für Production sollten mindestens diese Punkte gesetzt oder geprüft sein:
 
 - `NEXTAUTH_SECRET` als starkes Secret
 - `NEXTAUTH_URL` mit der öffentlichen URL
+- `AUTH_RATE_LIMIT_REDIS_URL` als Redis-Verbindung für Login-Rate-Limiting
 - `DATABASE_URL` als direkte PostgreSQL-Verbindung
 - `METABASE_EMBED_SECRET` passend zur Production-Metabase-Instanz
+- `SECURITY_FRAME_SRC` mit der öffentlichen Metabase-Origin, falls sie von `https://metabase.hospitalinsights.de` abweicht
 - `BACKUP_ENABLED` und `BACKUP_RESTORE_ENABLED` bewusst konfigurieren
 - Keine Dev-Credentials oder Demo-Secrets verwenden
 - Metabase ohne Dev-CSP-Proxy betreiben
@@ -244,8 +257,8 @@ Production-relevante Artefakte:
 
 | Datei                           | Zweck                            |
 | ------------------------------- | -------------------------------- |
-| `app/Dockerfile`                | Production Build der Next.js App |
-| `app/Dockerfile.dev`            | Development Container            |
+| `web/Dockerfile`                | Production Build der Next.js App |
+| `web/Dockerfile.dev`            | Development Container            |
 | `infra/docker-compose.prod.yml` | Production Compose Template      |
 | `infra/.env.prod.example`       | Production Env Template          |
 
@@ -253,11 +266,9 @@ Production-relevante Artefakte:
 
 Hospitalinsights bringt Admin-Werkzeuge für PostgreSQL-Dumps mit. Je nach Env-Konfiguration können Backups erstellt, heruntergeladen, hochgeladen, analysiert und wiederhergestellt oder importiert werden.
 
+Gebündelte CSV-Sample-Daten werden bewusst nicht mehr ausgeliefert. Für eine realistische Demo-Datenbasis kann stattdessen ein freigegebener `.dump` bereitgestellt und über die Backup-/Restore-Funktion oder per `pg_restore` importiert werden. Für Production-to-Development-Syncs ist ebenfalls der Dump-Import über die Backup-Werkzeuge der bevorzugte Weg.
+
 Metabase nutzt in Development ein eigenes Volume `metabase_data`, damit Metabase-interne Daten von der App-Datenbank getrennt bleiben.
-
-Für kontrollierten Production-to-Development Sync:
-
-- [infra/db-sync.md](infra/db-sync.md)
 
 ## Migrationen
 
@@ -270,6 +281,7 @@ docker compose --env-file infra/.env -f infra/docker-compose.dev.yml exec -T app
 Production:
 
 ```bash
+cd web
 npx prisma migrate deploy
 ```
 

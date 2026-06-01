@@ -2,6 +2,51 @@
 
 Das Projekt orientiert sich an [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.2.0] - Unreleased
+
+### Added
+
+- Source-available Lizenz für die öffentliche Repository-Veröffentlichung ergänzt.
+- `CONTRIBUTING.md` mit Entwicklungsfluss, lokalen Checks und PR-Konventionen ergänzt.
+- `SECURITY.md` mit Meldeweg, Scope und Disclosure-Hinweisen ergänzt.
+- `CODE_OF_CONDUCT.md` für respektvolle Zusammenarbeit ergänzt.
+- README-Lizenzhinweis und npm-Paketmetadaten für das öffentliche Repository ergänzt.
+- `CODEOWNERS` ergänzt, damit Pull Requests automatisch den primären Maintainer anfragen.
+- GitHub Issue Templates für Bug Reports und Feature Requests ergänzt.
+- Pull Request Template mit Changelog-, Security-, Lizenz- und Test-Checkliste ergänzt.
+- README-Hinweis zur eingeschränkten Nutzung von Name, Logo, Wortmarke und Branding-Assets ergänzt.
+
+### Changed
+
+- Demo-Datenfluss von gebündelten CSV-Sample-Daten auf bereitstellbare PostgreSQL-Dumps umgestellt.
+- README-Quickstart präzisiert: `prisma db seed` legt lokale Admin-Credentials und den LineItem-Katalog an, aber keine realistischen Beispiel-Faktendaten mehr.
+- Production-Env-Beispiel für öffentliche Nutzung bereinigt und an den aktuellen Backup-/Metabase-Betrieb angepasst.
+- Prisma Client Generierung als Build-/Install-Schritt bestätigt, damit generierte Dateien nicht mehr versioniert oder in Docker-Kontexte kopiert werden müssen.
+- Next.js-Projektordner von `app/` nach `web/` umbenannt, damit die Struktur für Außenstehende klarer ist (`web/app`, `web/lib`, `web/prisma`).
+- App-Version und README-Badge auf `1.2.0` aktualisiert.
+- Styling-Stack auf CSS Modules vereinfacht und README-Tech-Stack entsprechend angepasst.
+- Dashboard-Routen, Navigationslabels und Rollenanforderungen in `web/lib/dashboardRoutes.ts` zentralisiert und erste Zugriffspfade daraus abgeleitet.
+- Redirect-/Statusmeldungen für Dashboard-Aktionen über einen gemeinsamen Flash-Message-Helper gekapselt.
+- Tests für Dashboard-Routen, Flash-Message-Parsing, Login-Rate-Limit-Keys und Security-Header ergänzt.
+- Security Headers inklusive vorsichtiger CSP mit Metabase-Frame-Ausnahme in `web/next.config.ts` ergänzt.
+- Redis-basiertes Rate Limiting für Credentials-Logins ergänzt und Compose um einen Redis-8.8-Alpine-Service erweitert.
+- Serverseitige Passwortregeln für neue Benutzer und generierte temporäre Passwörter ergänzt.
+- Restore-Aktionen zusätzlich durch Eingabe des vollständigen Backup-Dateinamens abgesichert.
+- `SECURITY-AUDIT.md` ergänzt und aktuelle moderate npm-Audit-Findings bewusst triagiert.
+- Legal Pages auf eine gemeinsame Public Page Shell umgestellt.
+- Dashboard-Sidebar auf Mobile als kompaktere App-Shell mit einklappbarer Navigation überarbeitet.
+- Dashboard-Flash-Meldungen als einheitliche Toast-Benachrichtigungen rechts oben umgesetzt und weitere Admin-Aktionen mit direktem Erfolgsfeedback versehen.
+
+### Removed
+
+- Alte CSV-Beispieldatei `web/prisma/data/mabila_eingabe_stadtwerke_delmenhorst.csv` entfernt.
+- CSV-Matching- und Sample-Fact-Seeding aus `web/prisma/seed.ts` entfernt.
+- Ungenutzte Prisma-Modelle `ImportRun` und `ImportError` entfernt; eine neue Migration droppt die alten Tracking-Tabellen.
+- Interne Ops-Runbooks `infra/go-live-audit.md`, `infra/dokploy-setup.md` und `infra/db-sync.md` aus der öffentlichen Dokumentation entfernt.
+- `web/prisma/generated/` aus Git entfernt und per `.gitignore` ausgeschlossen.
+- Einmaliges Cleanup-Skript `web/scripts/cleanup-lineitems-by-sortorder.js` entfernt und JavaScript-Dateien in der TypeScript-Config explizit deaktiviert.
+- Ungenutzte Tailwind-Toolchain entfernt: `tailwindcss`, `@tailwindcss/postcss`, `postcss.config.mjs` und Tailwind-`@theme`-Block.
+
 ## [1.1.1] - 2026-05-31
 
 ### Fixed

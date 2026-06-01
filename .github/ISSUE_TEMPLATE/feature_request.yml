@@ -1,0 +1,68 @@
+name: Feature Request
+description: Schlage eine Verbesserung oder neue Funktion für Hospitalinsights vor.
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Danke für den Vorschlag. Bitte beschreibe vor allem das Problem oder Ziel, nicht nur eine technische Lösung.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem oder Ziel
+      description: Welches Nutzer- oder Betriebsproblem soll gelöst werden?
+      placeholder: Als ... möchte ich ..., damit ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Bereich
+      options:
+        - Landing Page
+        - Dashboard
+        - Auth / Rollen
+        - Datenpflege
+        - Audit
+        - Backups / Restore
+        - Metabase Embedding
+        - Docker / Deployment
+        - CI / Tooling
+        - Dokumentation
+        - Sonstiges
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Vorschlag
+      description: Wie könnte die Lösung aussehen?
+      placeholder: Beschreibe die gewünschte Änderung.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativen
+      description: Welche anderen Wege oder Workarounds hast du bedacht?
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Auswirkungen
+      description: Gibt es Auswirkungen auf Betrieb, Migrationen, Env-Variablen, UI oder Datenmodell?
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Vor dem Absenden
+      options:
+        - label: Ich habe keine Secrets, produktiven Daten oder personenbezogenen Daten eingefügt.
+          required: true
+        - label: Ich habe geprüft, ob es bereits ein ähnliches Issue gibt.
+          required: true

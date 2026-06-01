@@ -1,0 +1,291 @@
+.shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  background: var(--hi-shell-bg);
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  padding: 16px;
+  border-right: 1px solid var(--hi-border);
+  background: var(--hi-glass);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sidebarHeader {
+  display: grid;
+  gap: 10px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1px solid var(--hi-border);
+  border-radius: 14px;
+  background: var(--hi-brand-bg);
+  color: inherit;
+  text-decoration: none;
+}
+
+.brandIcon {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 12px rgba(14, 165, 233, 0.16));
+}
+
+.brandCopy {
+  min-width: 0;
+}
+
+.brandTitle {
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: -0.02em;
+  color: var(--hi-text);
+}
+
+.brandSubtitle {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--hi-muted);
+}
+
+.mobileMenu {
+  display: none;
+}
+
+.mobileMenuButton {
+  cursor: pointer;
+  list-style: none;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--hi-border);
+  background: var(--hi-glass-strong);
+  color: var(--hi-text);
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.mobileMenuButton::-webkit-details-marker {
+  display: none;
+}
+
+.mobileMenuButton::after {
+  content: " öffnen";
+  color: var(--hi-muted);
+  font-weight: 700;
+}
+
+.mobileMenu[open] .mobileMenuButton::after {
+  content: " schließen";
+}
+
+.mobileMenuPanel {
+  display: grid;
+  gap: 10px;
+  padding-top: 10px;
+}
+
+.desktopNav {
+  display: block;
+}
+
+.nav {
+  display: grid;
+  gap: 6px;
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  color: var(--hi-text);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.navLink:not(.navLinkActive):hover {
+  background: var(--hi-hover-bg);
+  border-color: var(--hi-border);
+}
+
+.navLinkActive {
+  background: linear-gradient(135deg, var(--hi-accent) 0%, #6d28d9 45%, #0ea5e9 100%);
+  color: #fff;
+  box-shadow: 0 10px 18px rgba(79, 70, 229, 0.18);
+}
+
+.sidebarFooter {
+  margin-top: auto;
+  display: grid;
+  gap: 10px;
+}
+
+.userBox {
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--hi-border);
+  background: var(--hi-glass-soft);
+}
+
+.userEmail {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--hi-text);
+  word-break: break-all;
+}
+
+.userRole {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--hi-muted);
+}
+
+.sidebarFooterLinks {
+  display: flex;
+  gap: 10px;
+}
+
+.footerLink {
+  flex: 1;
+  display: inline-flex;
+  justify-content: center;
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--hi-border);
+  background: var(--hi-glass-strong);
+  color: var(--hi-text);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.footerLink:hover {
+  background: var(--hi-hover-bg);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  min-height: 64px;
+  padding: 0 18px;
+  border-bottom: 1px solid var(--hi-border);
+  background: var(--hi-glass-topbar);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.topbarTitle {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--hi-text);
+}
+
+.content {
+  padding: 18px;
+  width: 100%;
+  max-width: none;
+}
+
+@media (max-width: 980px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: sticky;
+    z-index: 20;
+    height: auto;
+    padding: 10px 12px;
+    border-right: 0;
+    border-bottom: 1px solid var(--hi-border);
+    gap: 10px;
+  }
+
+  .sidebarHeader {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+
+  .brand {
+    min-height: 56px;
+  }
+
+  .brandIcon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .mobileMenu {
+    display: block;
+    position: relative;
+  }
+
+  .mobileMenuPanel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: min(340px, calc(100vw - 24px));
+    padding: 12px;
+    border-radius: 16px;
+    border: 1px solid var(--hi-border);
+    background: var(--hi-glass-strong);
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+  }
+
+  .desktopNav,
+  .sidebarFooter {
+    display: none;
+  }
+
+  .sidebarFooterLinks {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .topbar {
+    display: none;
+  }
+
+  .content {
+    padding: 14px 12px 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebarHeader {
+    grid-template-columns: 1fr;
+  }
+
+  .mobileMenuPanel {
+    left: 0;
+    right: 0;
+    width: auto;
+  }
+}
