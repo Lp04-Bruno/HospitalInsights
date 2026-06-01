@@ -19,6 +19,11 @@ function hasEnv(name) {
   return Boolean(process.env[name] && String(process.env[name]).trim());
 }
 
+function requireOneEnv(names) {
+  if (names.some((name) => hasEnv(name))) return;
+  throw new Error(`Missing required env var: one of ${names.join(", ")}`);
+}
+
 function main() {
   const isProd = process.env.NODE_ENV === "production";
   if (!isProd) {
@@ -29,6 +34,7 @@ function main() {
   requireEnv("DATABASE_URL");
   requireEnv("NEXTAUTH_URL");
   requireEnv("NEXTAUTH_SECRET");
+  requireOneEnv(["AUTH_RATE_LIMIT_REDIS_URL", "REDIS_URL"]);
   requireEnv("BACKUP_DIR");
   requireBoolEnv("BACKUP_ENABLED");
   requireBoolEnv("BACKUP_RESTORE_ENABLED");

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
 
+import { assertLoginAllowed, clearLoginRateLimit } from "@/lib/loginRateLimit";
 import { prisma } from "@/lib/prisma";
 
 export const authOptions: NextAuthOptions = {
@@ -14,16 +15,27 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) return null;
+        const email = credentials.email.trim().toLowerCase();
+
+        const allowed = await assertLoginAllowed(email, req).catch((err) => {
+          console.error("[auth] Login rate limit check failed:", err);
+          return false;
+        });
+        if (!allowed) return null;
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email },
         });
         if (!user) return null;
 
         const ok = await bcrypt.compare(credentials.password, user.password);
         if (!ok) return null;
+
+        await clearLoginRateLimit(email, req).catch((err) => {
+          console.warn("[auth] Login rate limit reset failed:", err);
+        });
 
         return {
           id: user.id,

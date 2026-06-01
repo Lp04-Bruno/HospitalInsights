@@ -56,6 +56,7 @@ HospitalInsights/
 | Styling     | CSS Modules                        |
 | Auth        | NextAuth Credentials Provider      |
 | Datenbank   | PostgreSQL 18                      |
+| Rate Limit  | Redis                              |
 | ORM         | Prisma 7 mit PostgreSQL Adapter    |
 | BI          | Metabase Signed Embedding          |
 | Validierung | Zod                                |
@@ -243,8 +244,10 @@ Für Production sollten mindestens diese Punkte gesetzt oder geprüft sein:
 
 - `NEXTAUTH_SECRET` als starkes Secret
 - `NEXTAUTH_URL` mit der öffentlichen URL
+- `AUTH_RATE_LIMIT_REDIS_URL` als Redis-Verbindung für Login-Rate-Limiting
 - `DATABASE_URL` als direkte PostgreSQL-Verbindung
 - `METABASE_EMBED_SECRET` passend zur Production-Metabase-Instanz
+- `SECURITY_FRAME_SRC` mit der öffentlichen Metabase-Origin, falls sie von `https://metabase.hospitalinsights.de` abweicht
 - `BACKUP_ENABLED` und `BACKUP_RESTORE_ENABLED` bewusst konfigurieren
 - Keine Dev-Credentials oder Demo-Secrets verwenden
 - Metabase ohne Dev-CSP-Proxy betreiben

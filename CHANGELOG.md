@@ -27,7 +27,9 @@ Das Projekt orientiert sich an [Semantic Versioning](https://semver.org/lang/de/
 - Styling-Stack auf CSS Modules vereinfacht und README-Tech-Stack entsprechend angepasst.
 - Dashboard-Routen, Navigationslabels und Rollenanforderungen in `web/lib/dashboardRoutes.ts` zentralisiert und erste Zugriffspfade daraus abgeleitet.
 - Redirect-/Statusmeldungen für Dashboard-Aktionen über einen gemeinsamen Flash-Message-Helper gekapselt.
-- Tests für Dashboard-Routen und Flash-Message-Parsing ergänzt.
+- Tests für Dashboard-Routen, Flash-Message-Parsing, Login-Rate-Limit-Keys und Security-Header ergänzt.
+- Security Headers inklusive vorsichtiger CSP mit Metabase-Frame-Ausnahme in `web/next.config.ts` ergänzt.
+- Redis-basiertes Rate Limiting für Credentials-Logins ergänzt und Compose um einen Redis-8.8-Alpine-Service erweitert.
 
 ### Removed
 

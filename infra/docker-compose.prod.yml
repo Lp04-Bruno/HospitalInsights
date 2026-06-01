@@ -25,6 +25,15 @@ services:
     volumes:
       - metabase_data:/metabase.db
 
+  redis:
+    image: redis:8.8-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   app:
     build:
       context: ../web
@@ -33,10 +42,16 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       DATABASE_URL: ${DATABASE_URL}
       NEXTAUTH_URL: ${NEXTAUTH_URL}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      AUTH_RATE_LIMIT_REDIS_URL: ${AUTH_RATE_LIMIT_REDIS_URL:-redis://redis:6379}
+      AUTH_RATE_LIMIT_MAX_ATTEMPTS: ${AUTH_RATE_LIMIT_MAX_ATTEMPTS:-8}
+      AUTH_RATE_LIMIT_WINDOW_SECONDS: ${AUTH_RATE_LIMIT_WINDOW_SECONDS:-900}
+      SECURITY_FRAME_SRC: ${SECURITY_FRAME_SRC:-https://metabase.hospitalinsights.de}
       METABASE_SITE_URL: ${METABASE_SITE_URL}
       METABASE_EMBED_SECRET: ${METABASE_EMBED_SECRET}
       METABASE_DASHBOARD_ID: ${METABASE_DASHBOARD_ID}
