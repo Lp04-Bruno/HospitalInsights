@@ -15,9 +15,10 @@ import {
   listBackups,
   uploadBackup,
 } from "@/lib/dbBackups";
-import { NoticeBanner, PendingActionButton, RestoreWithPreview, UploadBackupForm } from "./BackupsClient";
+import { PendingActionButton, RestoreWithPreview, UploadBackupForm } from "./BackupsClient";
 
 import styles from "./page.module.css";
+import { DashboardToast } from "@/app/dashboard/_components/DashboardToast";
 import {
   DashboardCard,
   DashboardGrid,
@@ -200,7 +201,7 @@ export default async function BackupsPage({ searchParams }: PageProps) {
     <DashboardPage>
       <DashboardHeader title="Backups" subtitle="Datenbank-Backups erstellen, verwalten und wiederherstellen." />
 
-      <NoticeBanner flash={flash} />
+      <DashboardToast flash={flash} />
 
       <DashboardGrid>
         <DashboardCard title="Aktionen">

@@ -5,6 +5,7 @@ import { requireDashboardRouteAccess } from "@/lib/access";
 import { parseFlashMessage, redirectWithFlash } from "@/lib/actionResult";
 import { formString, yearSchema } from "@/lib/validation";
 import { ConfirmSubmitButton } from "@/app/dashboard/_components/ConfirmSubmitButton";
+import { DashboardToast } from "@/app/dashboard/_components/DashboardToast";
 import styles from "./page.module.css";
 import {
   DashboardActions,
@@ -44,7 +45,7 @@ async function createHospital(formData: FormData) {
   });
 
   revalidatePath("/dashboard/hospitals");
-  redirect("/dashboard/hospitals");
+  redirectWithFlash("/dashboard/hospitals", { tone: "success", message: `Krankenhaus angelegt: ${name}` });
 }
 
 async function deleteHospital(formData: FormData) {
@@ -59,7 +60,7 @@ async function deleteHospital(formData: FormData) {
   await prisma.hospital.delete({ where: { id: hospitalId } });
 
   revalidatePath("/dashboard/hospitals");
-  redirect("/dashboard/hospitals");
+  redirectWithFlash("/dashboard/hospitals", { tone: "success", message: "Krankenhaus gelöscht." });
 }
 
 async function deleteHospitalYear(formData: FormData) {
@@ -132,13 +133,12 @@ export default async function HospitalsPage({ searchParams }: HospitalsPageProps
 
   const resolvedSearchParams = await searchParams;
   const flash = parseFlashMessage(resolvedSearchParams);
-  const flashTone = flash?.tone === "info" ? "neutral" : flash?.tone;
 
   return (
     <DashboardPage>
       <DashboardHeader title="Hospitalverwaltung" subtitle="Krankenhäuser anlegen und verwalten." />
 
-      {flash ? <DashboardNotice tone={flashTone}>{flash.message}</DashboardNotice> : null}
+      <DashboardToast flash={flash} />
 
       <DashboardGrid>
         <DashboardCard title="Neues Krankenhaus">

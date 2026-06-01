@@ -5,10 +5,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 import type { BackupAnalysis, RestoreMode } from "@/lib/dbBackups";
-import { useRouter, useSearchParams } from "next/navigation";
 
 import { dashboardUi } from "@/app/dashboard/_components/DashboardUi";
-import { clearFlashSearchParams, type FlashMessage } from "@/lib/actionResult";
 import styles from "./page.module.css";
 
 function useEstimatedProgress(pending: boolean) {
@@ -143,44 +141,6 @@ export function UploadBackupForm({ action }: UploadBackupFormProps) {
         </PendingActionButton>
       </div>
     </form>
-  );
-}
-
-type NoticeBannerProps = {
-  flash?: FlashMessage;
-};
-
-export function NoticeBanner({ flash }: NoticeBannerProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [visible, setVisible] = useState(Boolean(flash));
-
-  const dismiss = useCallback(() => {
-    setVisible(false);
-    const params = clearFlashSearchParams(searchParams);
-    const qs = params.toString();
-    router.replace(qs ? `/dashboard/backups?${qs}` : "/dashboard/backups");
-  }, [router, searchParams]);
-
-  useEffect(() => {
-    if (!flash) return;
-    const t = window.setTimeout(() => {
-      dismiss();
-    }, 8000);
-    return () => window.clearTimeout(t);
-  }, [flash, dismiss]);
-
-  if (!flash || !visible) return null;
-
-  return (
-    <div className={styles.notice} data-tone={flash.tone} role="status" aria-live="polite">
-      <div className={styles.noticeRow}>
-        <span className={styles.noticeText}>{flash.message}</span>
-        <button type="button" className={styles.noticeClose} onClick={dismiss} aria-label="Hinweis schließen">
-          ×
-        </button>
-      </div>
-    </div>
   );
 }
 

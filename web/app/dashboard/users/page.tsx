@@ -8,6 +8,7 @@ import { formString, roleSchema } from "@/lib/validation";
 import { Role } from "@/prisma/generated/enums";
 import styles from "./page.module.css";
 import { ConfirmSubmitButton } from "@/app/dashboard/_components/ConfirmSubmitButton";
+import { DashboardToast } from "@/app/dashboard/_components/DashboardToast";
 import { ResetPasswordButton } from "./ResetPasswordButton";
 import {
   DashboardActions,
@@ -16,7 +17,6 @@ import {
   DashboardField,
   DashboardGrid,
   DashboardHeader,
-  DashboardNotice,
   DashboardPage,
   dashboardUi,
 } from "@/app/dashboard/_components/DashboardUi";
@@ -55,6 +55,8 @@ async function createUser(formData: FormData) {
         role,
       },
     });
+
+    redirectWithFlash("/dashboard/users", { tone: "success", message: `Benutzer aktualisiert: ${email}` });
   } else {
     const passwordResult = passwordSchema.safeParse(passwordRaw);
     if (!passwordResult.success) {
@@ -71,9 +73,9 @@ async function createUser(formData: FormData) {
         role,
       },
     });
-  }
 
-  redirect("/dashboard/users");
+    redirectWithFlash("/dashboard/users", { tone: "success", message: `Benutzer angelegt: ${email}` });
+  }
 }
 
 async function setRole(formData: FormData) {
@@ -96,7 +98,7 @@ async function setRole(formData: FormData) {
     data: { role },
   });
 
-  redirect("/dashboard/users");
+  redirectWithFlash("/dashboard/users", { tone: "success", message: "Rolle aktualisiert." });
 }
 
 async function deleteUser(formData: FormData) {
@@ -113,7 +115,7 @@ async function deleteUser(formData: FormData) {
   }
 
   await prisma.user.delete({ where: { id: userId } });
-  redirect("/dashboard/users");
+  redirectWithFlash("/dashboard/users", { tone: "success", message: "Benutzer gelöscht." });
 }
 
 type UsersPageProps = {
@@ -124,7 +126,6 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
   await requireDashboardRouteAccess("/dashboard/users");
   const resolvedSearchParams = await searchParams;
   const flash = parseFlashMessage(resolvedSearchParams);
-  const flashTone = flash?.tone === "info" ? "neutral" : flash?.tone;
 
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
@@ -144,7 +145,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
         subtitle="Benutzer anlegen, Stammdaten pflegen, Rollen zuweisen, Passwörter zurücksetzen."
       />
 
-      {flash ? <DashboardNotice tone={flashTone}>{flash.message}</DashboardNotice> : null}
+      <DashboardToast flash={flash} />
 
       <DashboardGrid>
         <DashboardCard title="Benutzer anlegen oder aktualisieren">

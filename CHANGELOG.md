@@ -35,6 +35,7 @@ Das Projekt orientiert sich an [Semantic Versioning](https://semver.org/lang/de/
 - `SECURITY-AUDIT.md` ergänzt und aktuelle moderate npm-Audit-Findings bewusst triagiert.
 - Legal Pages auf eine gemeinsame Public Page Shell umgestellt.
 - Dashboard-Sidebar auf Mobile als kompaktere App-Shell mit einklappbarer Navigation überarbeitet.
+- Dashboard-Flash-Meldungen als einheitliche Toast-Benachrichtigungen rechts oben umgesetzt und weitere Admin-Aktionen mit direktem Erfolgsfeedback versehen.
 
 ### Removed
 

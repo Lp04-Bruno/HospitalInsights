@@ -7,14 +7,8 @@ import { requireAdmin } from "@/lib/access";
 import { formString, parseStatementType, yearSchema } from "@/lib/validation";
 import { StatementType } from "@/prisma/generated/enums";
 import { ConfirmSubmitButton } from "@/app/dashboard/_components/ConfirmSubmitButton";
-import {
-  DashboardButtonLink,
-  DashboardCard,
-  DashboardHeader,
-  DashboardNotice,
-  DashboardPage,
-  dashboardUi,
-} from "@/app/dashboard/_components/DashboardUi";
+import { DashboardToast } from "@/app/dashboard/_components/DashboardToast";
+import { DashboardButtonLink, DashboardCard, DashboardHeader, DashboardPage, dashboardUi } from "@/app/dashboard/_components/DashboardUi";
 
 import styles from "./page.module.css";
 
@@ -51,7 +45,7 @@ export default async function AuditManagePage({ searchParams }: AuditManagePageP
     if (!runId) redirect("/dashboard/audit/manage");
 
     await prisma.factChangeRun.delete({ where: { id: runId } });
-    redirect("/dashboard/audit/manage");
+    redirectWithFlash("/dashboard/audit/manage", { tone: "success", message: "Audit-Run gelöscht." });
   }
 
   async function deleteAll(formData: FormData) {
@@ -62,7 +56,7 @@ export default async function AuditManagePage({ searchParams }: AuditManagePageP
     if (confirmed !== "1") redirect("/dashboard/audit/manage");
 
     await prisma.factChangeRun.deleteMany({});
-    redirect("/dashboard/audit/manage");
+    redirectWithFlash("/dashboard/audit/manage", { tone: "success", message: "Audit Log komplett gelöscht." });
   }
 
   async function deleteByFilter(formData: FormData) {
@@ -144,7 +138,6 @@ export default async function AuditManagePage({ searchParams }: AuditManagePageP
   ]);
   const resolvedSearchParams = await searchParams;
   const flash = parseFlashMessage(resolvedSearchParams);
-  const flashTone = flash?.tone === "info" ? "neutral" : flash?.tone;
 
   return (
     <DashboardPage>
@@ -154,7 +147,7 @@ export default async function AuditManagePage({ searchParams }: AuditManagePageP
         actions={<DashboardButtonLink href="/dashboard/audit">Zurück zum Audit Log</DashboardButtonLink>}
       />
 
-      {flash ? <DashboardNotice tone={flashTone}>{flash.message}</DashboardNotice> : null}
+      <DashboardToast flash={flash} />
 
       <DashboardCard>
         <div className={styles.row}>
