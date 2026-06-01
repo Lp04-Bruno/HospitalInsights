@@ -78,7 +78,7 @@ Das Projekt orientiert sich an [Semantic Versioning](https://semver.org/lang/de/
 
 ### Verified
 
-- Production-Dump `backup_manual_2026-05-31T16-20-13-907Z.dump` erfolgreich in einem temporären `postgres:18.4-trixie` Container restored.
+- Production-kompatiblen Test-Dump erfolgreich in einem temporären `postgres:18.4-trixie` Container restored.
 - Restore-Test: Serverversion `18.4 (Debian 18.4-1.pgdg13+1)`, 5 Hospitals, 8 Prisma-Migrationen.
 - `docker compose config` für Dev und Prod erfolgreich.
 
