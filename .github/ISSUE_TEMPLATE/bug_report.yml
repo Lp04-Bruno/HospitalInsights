@@ -1,0 +1,92 @@
+name: Bug Report
+description: Melde einen reproduzierbaren Fehler in Hospitalinsights.
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Danke für den Report. Bitte teile keine Secrets, produktiven Dumps oder personenbezogenen Daten.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Zusammenfassung
+      description: Was ist kaputt oder verhält sich unerwartet?
+      placeholder: Kurze Beschreibung des Problems.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Bereich
+      options:
+        - Landing Page
+        - Dashboard
+        - Auth / Rollen
+        - Datenpflege
+        - Audit
+        - Backups / Restore
+        - Metabase Embedding
+        - Docker / Deployment
+        - CI / Tooling
+        - Sonstiges
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Schritte zum Reproduzieren
+      description: Liste die Schritte so konkret wie möglich auf.
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Erwartetes Verhalten
+      placeholder: Was sollte passieren?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Tatsächliches Verhalten
+      placeholder: Was passiert stattdessen?
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version / Commit
+      placeholder: z.B. v1.1.1 oder Commit-SHA
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Umgebung
+      placeholder: Browser, Betriebssystem, Node/Docker-Version, Deployment-Umgebung.
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs oder Screenshots
+      description: Bitte vorher Secrets und personenbezogene Daten entfernen.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Vor dem Absenden
+      options:
+        - label: Ich habe keine Secrets, Tokens, Passwörter, produktiven Dumps oder personenbezogenen Daten eingefügt.
+          required: true
+        - label: Ich habe geprüft, ob es bereits ein ähnliches Issue gibt.
+          required: true

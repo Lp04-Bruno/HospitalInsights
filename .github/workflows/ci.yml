@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: app
+        working-directory: web
     steps:
       - uses: actions/checkout@v6
 
@@ -25,7 +25,7 @@ jobs:
         with:
           node-version: 24.16.0
           cache: "npm"
-          cache-dependency-path: app/package-lock.json
+          cache-dependency-path: web/package-lock.json
 
       - name: Setup npm retry config
         run: |
@@ -49,7 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: app
+        working-directory: web
     steps:
       - uses: actions/checkout@v6
 
@@ -58,7 +58,7 @@ jobs:
         with:
           node-version: 24.16.0
           cache: "npm"
-          cache-dependency-path: app/package-lock.json
+          cache-dependency-path: web/package-lock.json
 
       - name: Setup npm retry config
         run: |
@@ -82,7 +82,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: app
+        working-directory: web
     steps:
       - uses: actions/checkout@v6
 
@@ -91,7 +91,7 @@ jobs:
         with:
           node-version: 24.16.0
           cache: "npm"
-          cache-dependency-path: app/package-lock.json
+          cache-dependency-path: web/package-lock.json
 
       - name: Setup npm retry config
         run: |
@@ -115,7 +115,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: app
+        working-directory: web
     steps:
       - uses: actions/checkout@v6
 
@@ -124,7 +124,7 @@ jobs:
         with:
           node-version: 24.16.0
           cache: "npm"
-          cache-dependency-path: app/package-lock.json
+          cache-dependency-path: web/package-lock.json
 
       - name: Setup npm retry config
         run: |
@@ -151,7 +151,7 @@ jobs:
       NEXTAUTH_SECRET: ci-build-secret
     defaults:
       run:
-        working-directory: app
+        working-directory: web
     steps:
       - uses: actions/checkout@v6
 
@@ -160,7 +160,7 @@ jobs:
         with:
           node-version: 24.16.0
           cache: "npm"
-          cache-dependency-path: app/package-lock.json
+          cache-dependency-path: web/package-lock.json
 
       - name: Setup npm retry config
         run: |
