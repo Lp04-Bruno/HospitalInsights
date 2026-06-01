@@ -30,6 +30,7 @@ Das Projekt orientiert sich an [Semantic Versioning](https://semver.org/lang/de/
 - Tests für Dashboard-Routen, Flash-Message-Parsing, Login-Rate-Limit-Keys und Security-Header ergänzt.
 - Security Headers inklusive vorsichtiger CSP mit Metabase-Frame-Ausnahme in `web/next.config.ts` ergänzt.
 - Redis-basiertes Rate Limiting für Credentials-Logins ergänzt und Compose um einen Redis-8.8-Alpine-Service erweitert.
+- Dev-Compose-Start robuster gemacht: gemountete `node_modules` werden beim App-Start synchronisiert, damit neue Dependencies wie Redis-Client-Pakete nach Branch-Wechseln verfügbar sind.
 - Serverseitige Passwortregeln für neue Benutzer und generierte temporäre Passwörter ergänzt.
 - Restore-Aktionen zusätzlich durch Eingabe des vollständigen Backup-Dateinamens abgesichert.
 - `SECURITY-AUDIT.md` ergänzt und aktuelle moderate npm-Audit-Findings bewusst triagiert.

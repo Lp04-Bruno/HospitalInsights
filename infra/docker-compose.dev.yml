@@ -75,7 +75,7 @@ services:
       - web_next_cache:/app/.next
       - web_turbo_cache:/app/.turbo
       - db_backups:/backups
-    command: npm run dev --no-turbo
+    command: sh -c "npm install && npm run dev -- --webpack"
 
 volumes:
   pg_data:
