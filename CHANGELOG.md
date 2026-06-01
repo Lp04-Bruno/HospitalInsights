@@ -27,6 +27,7 @@ Das Projekt orientiert sich an [Semantic Versioning](https://semver.org/lang/de/
 - Styling-Stack auf CSS Modules vereinfacht und README-Tech-Stack entsprechend angepasst.
 - Dashboard-Routen, Navigationslabels und Rollenanforderungen in `web/lib/dashboardRoutes.ts` zentralisiert und erste Zugriffspfade daraus abgeleitet.
 - Redirect-/Statusmeldungen für Dashboard-Aktionen über einen gemeinsamen Flash-Message-Helper gekapselt.
+- Tests für Dashboard-Routen und Flash-Message-Parsing ergänzt.
 
 ### Removed
 
