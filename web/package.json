@@ -43,8 +43,8 @@
     "next": "^16.2.6",
     "next-auth": "^4.24.14",
     "prisma": "^7.8.0",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -52,7 +52,7 @@
     "@next/eslint-plugin-next": "^16.2.7",
     "@types/bcrypt": "^6.0.0",
     "@types/node": "^24.12.4",
-    "@types/react": "^19.2.15",
+    "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "eslint": "^10.4.0",
     "eslint-config-prettier": "^10.1.8",
