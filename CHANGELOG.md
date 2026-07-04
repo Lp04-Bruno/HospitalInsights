@@ -2,7 +2,30 @@
 
 Das Projekt orientiert sich an [Semantic Versioning](https://semver.org/lang/de/).
 
-## [1.2.0] - Unreleased
+## [1.2.1] - 2026-07-04
+
+### Changed
+
+- App-Version und sichtbare Versionsanzeige auf `1.2.1` aktualisiert.
+- Node.js Runtime in Dockerfiles und GitHub Actions von `24.16.0` auf `24.18.0` aktualisiert.
+- GitHub Actions `actions/checkout` von `v6` auf `v7` aktualisiert.
+- Lockfile-Maintenance für aktualisierte transitive Abhängigkeiten eingespielt.
+
+### Upgraded
+
+- Metabase Docker Image auf `v0.62.3.5`.
+- Next.js und `@next/eslint-plugin-next` auf `^16.2.9`.
+- React und React DOM auf `^19.2.7`.
+- `lucide-react` auf `^1.22.0`.
+- `ioredis` auf `^5.11.1`.
+- ESLint auf `^10.6.0`.
+- Prettier auf `^3.9.4`.
+- `typescript-eslint` auf `^8.62.1`.
+- Vitest auf `^4.1.9`.
+- `@types/node` auf `^24.13.2`, `@types/react` auf `^19.2.17`.
+- Weitere Entwicklungswerkzeuge wie `globals` und `tsx` auf aktuelle Patch-/Minor-Versionen.
+
+## [1.2.0] - 2026-06-01
 
 ### Added
 

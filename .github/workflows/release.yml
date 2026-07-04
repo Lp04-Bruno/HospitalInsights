@@ -23,7 +23,7 @@ jobs:
       run:
         working-directory: web
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -36,7 +36,7 @@ jobs:
       - name: Use Node.js 24
         uses: actions/setup-node@v6
         with:
-          node-version: 24.16.0
+          node-version: 24.18.0
           cache: "npm"
           cache-dependency-path: web/package-lock.json
 
