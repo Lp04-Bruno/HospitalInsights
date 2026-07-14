@@ -39,7 +39,7 @@
     "dotenv": "^17.4.2",
     "ioredis": "^5.11.1",
     "jose": "^6.2.3",
-    "lucide-react": "^1.22.0",
+    "lucide-react": "^1.24.0",
     "next": "^16.2.10",
     "next-auth": "^4.24.14",
     "prisma": "^7.8.0",
