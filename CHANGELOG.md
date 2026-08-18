@@ -2,6 +2,44 @@
 
 Das Projekt orientiert sich an [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.2.2] - 2026-08-18
+
+### Security
+
+- Next.js auf `^16.3.1` aktualisiert, inklusive des Security-Releases `16.2.11`.
+- NextAuth auf `^4.24.15` aktualisiert (Security-Release).
+- Prisma auf `^7.9.1` aktualisiert. Damit entfallen die `hono`-Advisories an der Quelle, weil `@prisma/dev` nicht mehr von `hono` abhängt; zusätzlich sind `ajv`/`fast-uri` und `valibot` transitiv gepatcht.
+- `SECURITY-AUDIT.md` auf den aktuellen Stand von `npm audit` gebracht. Die offenen Findings sinken damit von neun auf vier.
+
+### Changed
+
+- App-Version und sichtbare Versionsanzeige auf `1.2.2` aktualisiert.
+- Node.js Runtime in Dockerfiles und GitHub Actions von `24.18.0` auf `24.19.0` aktualisiert.
+- GitHub Actions `actions/setup-node` von `v6` auf `v7` aktualisiert.
+- `ioredis` Major-Update auf v6 eingespielt. Die Rate-Limit-Anbindung in `web/lib/rateLimit.ts` benötigte keine Codeanpassung.
+
+### Fixed
+
+- Über das Prisma-Update behoben: Bei einem Timeout (`maxWait`) einer interaktiven Transaktion sendet der verworfene Vorgang jetzt ein explizites `ROLLBACK`, bevor die Verbindung in den Pool zurückgeht. Betraf `@prisma/adapter-pg` und damit die Transaktionen in `web/lib/facts/saveFacts.ts` sowie im Audit-Rollback.
+- Über das Prisma-Update behoben: TypeScript-Performance-Regression aus Prisma 7, die `tsc` auf größeren Schemas deutlich verlangsamt hat.
+
+### Upgraded
+
+- Prisma, `@prisma/client` und `@prisma/adapter-pg` auf `^7.9.1`.
+- Metabase Docker Image auf `v0.63.5.2`.
+- Redis Docker Image auf `8.10-alpine`.
+- `@next/eslint-plugin-next` auf `^16.3.1`.
+- React und React DOM auf `^19.2.8`.
+- `ioredis` auf `^6.0.0`.
+- `jose` auf `^6.2.8`.
+- `lucide-react` auf `^1.31.0`.
+- ESLint auf `^10.8.1`.
+- Prettier auf `^3.9.6`.
+- `typescript-eslint` auf `^8.67.0`.
+- Vitest auf `^4.1.10`.
+- `@types/node` auf `^24.13.3`, `@types/react` auf `^19.2.18`, `@types/react-dom` auf `^19.2.4`.
+- Weitere Entwicklungswerkzeuge wie `globals` und `tsx` auf aktuelle Minor-/Patch-Versionen.
+
 ## [1.2.1] - 2026-07-04
 
 ### Changed
