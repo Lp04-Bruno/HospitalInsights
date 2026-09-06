@@ -5,6 +5,7 @@ import bcrypt from "bcrypt";
 
 import { assertLoginAllowed, clearLoginRateLimit } from "@/lib/loginRateLimit";
 import { prisma } from "@/lib/prisma";
+import { SIGN_IN_ERROR } from "@/lib/signIn";
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
@@ -21,9 +22,9 @@ export const authOptions: NextAuthOptions = {
 
         const allowed = await assertLoginAllowed(email, req).catch((err) => {
           console.error("[auth] Login rate limit check failed:", err);
-          return false;
+          throw new Error(SIGN_IN_ERROR.SERVICE_UNAVAILABLE);
         });
-        if (!allowed) return null;
+        if (!allowed) throw new Error(SIGN_IN_ERROR.RATE_LIMITED);
 
         const user = await prisma.user.findUnique({
           where: { email },
