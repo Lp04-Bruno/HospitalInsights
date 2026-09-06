@@ -1,26 +1,25 @@
 # Security Audit Notes
 
-Letzte Prüfung: 2026-08-18 (Stand Release 1.2.2)
+Letzte Prüfung: 2026-09-06 (Stand Release 1.2.3)
 
 Dieses Dokument hält bewusst akzeptierte oder transitive Findings fest, damit öffentliche Leserinnen und Leser nachvollziehen können, warum ein Advisory nicht blind per `npm audit fix --force` behandelt wurde.
 
 ## Aktuelle npm-Audit-Findings
 
-Stand `npm --prefix web audit --audit-level=moderate` (4 Findings, alle high):
+Stand `npm --prefix web audit --audit-level=moderate` (vier high Findings; ausschließlich transitive Prisma-CLI-Pfade):
 
-| Advisory                                 | Paket             | Pfad                                       | Status                  | Bewertung                                                                                                                                                                                                         |
-| ---------------------------------------- | ----------------- | ------------------------------------------ | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GHSA-mh99-v99m-4gvg, GHSA-rgw5-rvv9-x895 | `brace-expansion` | transitiv über `eslint` → `minimatch`      | akzeptiert / beobachten | Reines Lint-Tooling, läuft nur lokal und in CI über repo-eigene Glob-Muster. Kein Laufzeitpfad der Anwendung. Ein Fix ist innerhalb der Semver-Range verfügbar und kommt über Renovate.                           |
-| GHSA-ggr8-5vv4-36mx                      | `deepmerge-ts`    | transitiv über `prisma` → `@prisma/config` | akzeptiert / beobachten | Wird beim Einlesen von `prisma.config.ts` verwendet, also repo-eigene Konfiguration ohne externe Eingaben. `npm audit fix --force` würde auf `prisma@6.12.0` downgraden und damit einen Breaking Change auslösen. |
+| Advisory                                 | Paket          | Pfad                                       | Status                  | Bewertung                                                                                                                                                                                                                                                               |
+| ---------------------------------------- | -------------- | ------------------------------------------ | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GHSA-ggr8-5vv4-36mx                      | `deepmerge-ts` | transitiv über `prisma` → `@prisma/config` | akzeptiert / beobachten | Wird beim Einlesen von `prisma.config.ts` verwendet, also repo-eigene Konfiguration ohne externe Eingaben. `npm audit fix --force` würde auf `prisma@6.19.3` downgraden und damit einen Breaking Change auslösen.                                                       |
+| GHSA-3f6p-5ww8-9rcr, GHSA-rgwj-5xj2-c3m3 | `mysql2`       | transitiv über `prisma`                    | akzeptiert / beobachten | Das Projekt nutzt PostgreSQL über `@prisma/adapter-pg`; `mysql2` ist hier kein Anwendungslaufzeitpfad. Die Abhängigkeit kommt über Prisma-CLI-Tooling. `npm audit fix --force` würde ebenfalls auf `prisma@6.19.3` downgraden und damit einen Breaking Change auslösen. |
 
 ## Entscheidung
 
-Die Findings liegen ausschließlich in Entwicklungs- und CLI-Tooling
-(`eslint`, `@prisma/config`) und nicht im Laufzeitpfad der ausgelieferten Anwendung.
-Das `deepmerge-ts`-Finding ist nur über einen Prisma-Downgrade auf 6.x auflösbar und
-wird deshalb bewusst offen gehalten, bis Prisma eine gepatchte Version nachzieht.
-Lockfile-Updates für `brace-expansion` werden über Renovate eingespielt und nicht mit
-Release-Commits vermischt.
+Die Findings liegen ausschließlich in Prisma-CLI-Tooling und nicht im Laufzeitpfad
+der ausgelieferten Anwendung. HospitalInsights nutzt PostgreSQL, nicht MySQL.
+Die Findings sind per `npm audit fix --force` nur über einen Prisma-Downgrade auf
+6.x auflösbar und werden offen gehalten, bis Prisma eine
+gepatchte 7.x-Version nachzieht.
 
 ## Erledigte Findings
 
