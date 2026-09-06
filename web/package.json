@@ -1,6 +1,6 @@
 {
   "name": "hospitalinsights-web",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "private": true,
   "license": "SEE LICENSE IN ../LICENSE",
   "repository": {
@@ -33,35 +33,35 @@
     "postinstall": "node scripts/postinstall.mjs"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.9.1",
-    "@prisma/client": "^7.9.1",
+    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/client": "^7.10.0",
     "bcrypt": "^6.0.0",
     "dotenv": "^17.4.2",
     "ioredis": "^6.0.0",
-    "jose": "^6.2.8",
-    "lucide-react": "^1.31.0",
-    "next": "^16.3.1",
+    "jose": "^6.2.10",
+    "lucide-react": "^1.40.0",
+    "next": "^16.3.4",
     "next-auth": "^4.24.15",
-    "prisma": "^7.9.1",
+    "prisma": "^7.10.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "zod": "^4.4.3"
+    "zod": "^4.5.4"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@next/eslint-plugin-next": "^16.3.1",
+    "@next/eslint-plugin-next": "^16.3.4",
     "@types/bcrypt": "^6.0.0",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.4",
-    "eslint": "^10.8.1",
+    "@types/react-dom": "^19.2.7",
+    "eslint": "^10.9.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "globals": "^17.11.0",
+    "globals": "^17.12.0",
     "prettier": "^3.9.6",
-    "tsx": "^4.23.12",
+    "tsx": "^4.23.13",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.67.0",
-    "vitest": "^4.1.10"
+    "typescript-eslint": "^8.69.0",
+    "vitest": "^4.1.11"
   }
 }

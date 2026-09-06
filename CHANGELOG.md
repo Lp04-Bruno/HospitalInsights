@@ -2,6 +2,33 @@
 
 Das Projekt orientiert sich an [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.2.3] - 2026-09-06
+
+### Security
+
+- `SECURITY-AUDIT.md` auf den aktuellen Stand von `npm audit` gebracht.
+
+### Changed
+
+- App-Version und sichtbare Versionsanzeige auf `1.2.3` aktualisiert.
+- Node.js Runtime in Dockerfiles und GitHub Actions von `24.19.0` auf `24.20.0` aktualisiert.
+- Lockfile-Maintenance für aktualisierte transitive Abhängigkeiten eingespielt.
+
+### Upgraded
+
+- Prisma, `@prisma/client` und `@prisma/adapter-pg` auf `^7.10.0`.
+- Metabase Docker Image auf `v0.63.16.2`.
+- PostgreSQL Docker Image auf `18.6-trixie`.
+- Next.js und `@next/eslint-plugin-next` auf `^16.3.4`.
+- `jose` auf `^6.2.10`.
+- `lucide-react` auf `^1.40.0`.
+- `zod` auf `^4.5.4`.
+- ESLint auf `^10.9.1`.
+- `typescript-eslint` auf `^8.69.0`.
+- Vitest auf `^4.1.11`.
+- `@types/react-dom` auf `^19.2.7`.
+- Weitere Entwicklungswerkzeuge wie `globals` und `tsx` auf aktuelle Minor-/Patch-Versionen.
+
 ## [1.2.2] - 2026-08-18
 
 ### Security

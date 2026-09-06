@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:18.4-trixie
+    image: postgres:18.6-trixie
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -17,7 +17,7 @@ services:
       retries: 10
 
   metabase:
-    image: metabase/metabase:v0.63.5.2
+    image: metabase/metabase:v0.63.16.2
     restart: unless-stopped
     depends_on:
       db:
