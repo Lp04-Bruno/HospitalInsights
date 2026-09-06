@@ -38,14 +38,14 @@
     "bcrypt": "^6.0.0",
     "dotenv": "^17.4.2",
     "ioredis": "^6.0.0",
-    "jose": "^6.2.8",
-    "lucide-react": "^1.31.0",
+    "jose": "^6.2.10",
+    "lucide-react": "^1.40.0",
     "next": "^16.3.1",
     "next-auth": "^4.24.15",
     "prisma": "^7.9.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "zod": "^4.4.3"
+    "zod": "^4.5.4"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
