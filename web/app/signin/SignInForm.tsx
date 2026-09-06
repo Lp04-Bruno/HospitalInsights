@@ -1,18 +1,22 @@
 "use client";
 
 import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import styles from "./sign-in-form.module.css";
+import { SIGN_IN_ERROR, SIGN_IN_FALLBACK_MESSAGE, signInErrorMessage } from "@/lib/signIn";
 
 type SignInFormProps = {
   callbackUrl: string;
+  initialError?: string;
 };
 
-export function SignInForm({ callbackUrl }: SignInFormProps) {
+export function SignInForm({ callbackUrl, initialError }: SignInFormProps) {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(() => signInErrorMessage(initialError) ?? null);
   const [isLoading, setIsLoading] = useState(false);
 
   return (
@@ -37,13 +41,20 @@ export function SignInForm({ callbackUrl }: SignInFormProps) {
             const res = await signIn("credentials", {
               email,
               password,
-              redirect: true,
+              redirect: false,
               callbackUrl,
             });
 
-            // Wenn redirect=true, kommt man i. d. R. nicht hier an
-            if (res?.error) setError(res.error);
-          } finally {
+            if (!res || res.error) {
+              setError(signInErrorMessage(res?.error) ?? SIGN_IN_FALLBACK_MESSAGE);
+              setIsLoading(false);
+              return;
+            }
+
+            router.push(res.url ?? callbackUrl);
+            router.refresh();
+          } catch {
+            setError(signInErrorMessage(SIGN_IN_ERROR.SERVICE_UNAVAILABLE) ?? SIGN_IN_FALLBACK_MESSAGE);
             setIsLoading(false);
           }
         }}
@@ -62,6 +73,7 @@ export function SignInForm({ callbackUrl }: SignInFormProps) {
             autoCorrect="off"
             spellCheck={false}
             className={styles.input}
+            disabled={isLoading}
           />
         </label>
 
@@ -75,6 +87,7 @@ export function SignInForm({ callbackUrl }: SignInFormProps) {
             required
             autoComplete="current-password"
             className={styles.input}
+            disabled={isLoading}
           />
         </label>
 
@@ -88,8 +101,8 @@ export function SignInForm({ callbackUrl }: SignInFormProps) {
         </button>
 
         {error && (
-          <p className={styles.error} role="alert" aria-live="polite">
-            {error === "CredentialsSignin" ? "Email oder Passwort ist falsch." : error}
+          <p className={styles.error} role="alert" aria-live="assertive">
+            {error}
           </p>
         )}
       </form>

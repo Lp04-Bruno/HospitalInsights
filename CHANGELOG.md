@@ -2,6 +2,17 @@
 
 Das Projekt orientiert sich an [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.2.4] - Unreleased
+
+### Fixed
+
+- Ein fehlgeschlagener Login zeigt wieder eine Meldung. Das Formular meldete sich über `signIn` mit `redirect: true` an, wodurch NextAuth die Seite neu lud und der Fehlerzweig im Formular nie erreicht wurde; der angehängte `?error=`-Parameter wurde auf der Sign-in-Seite nicht ausgewertet. Der Login läuft jetzt über `redirect: false` und wertet die Antwort direkt aus.
+- Eine aktive Rate-Limit-Sperre ist nicht mehr von falschen Zugangsdaten zu unterscheiden gewesen. `authorize` wirft für Sperre und für eine gestörte Rate-Limit-Prüfung jetzt eigene Fehlercodes, die als getrennte Meldungen im Formular ankommen. Das Verhalten bleibt fail-closed.
+
+### Security
+
+- `callbackUrl` wird auf der Sign-in-Seite auf anwendungsinterne Pfade eingegrenzt. Da das Formular nach erfolgreichem Login selbst navigiert, hätte ein präparierter Parameter sonst auf eine fremde Origin zeigen können.
+
 ## [1.2.3] - 2026-09-06
 
 ### Security
