@@ -31,3 +31,6 @@ yarn-error.log*
 
 # hosting
 .vercel/
+
+# vitest report output
+.vitest

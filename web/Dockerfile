@@ -3,6 +3,7 @@ FROM node:24.20.0-alpine AS builder
 WORKDIR /app
 
 ENV DATABASE_URL=postgresql://hospitalinsights:hospitalinsights_pw@localhost:5432/hospitalinsights?schema=public
+ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN apk add --no-cache ca-certificates openssl
 
@@ -13,7 +14,8 @@ COPY prisma ./prisma
 RUN npm ci
 
 COPY . .
-RUN npm run build && npm prune --omit=dev
+
+RUN timeout 900 npm run build && npm prune --omit=dev
 
 FROM node:24.20.0-alpine AS runner
 

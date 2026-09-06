@@ -1,7 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -13,9 +13,10 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    exclude: ["node_modules", ".next", "prisma/generated"],
+    exclude: [...configDefaults.exclude, "**/.next/**", "**/prisma/generated/**"],
     include: ["**/*.test.ts"],
     restoreMocks: true,
+    fsModuleCache: true,
     unstubEnvs: true,
   },
 });

@@ -2,16 +2,23 @@
 
 Das Projekt orientiert sich an [Semantic Versioning](https://semver.org/lang/de/).
 
-## [1.2.4] - Unreleased
+## [1.3.0] - Unreleased
 
 ### Fixed
 
 - Ein fehlgeschlagener Login zeigt wieder eine Meldung. Das Formular meldete sich über `signIn` mit `redirect: true` an, wodurch NextAuth die Seite neu lud und der Fehlerzweig im Formular nie erreicht wurde; der angehängte `?error=`-Parameter wurde auf der Sign-in-Seite nicht ausgewertet. Der Login läuft jetzt über `redirect: false` und wertet die Antwort direkt aus.
 - Eine aktive Rate-Limit-Sperre ist nicht mehr von falschen Zugangsdaten zu unterscheiden gewesen. `authorize` wirft für Sperre und für eine gestörte Rate-Limit-Prüfung jetzt eigene Fehlercodes, die als getrennte Meldungen im Formular ankommen. Das Verhalten bleibt fail-closed.
+- Der Production-Build hängt nicht mehr unbegrenzt am Schritt „Creating an optimized production build". Ursache war die Schrifteinbindung über `next/font/google`: Next lädt die Geist-Fonts zur Buildzeit von Google, und der zuständige HTTPS-Request läuft im Production-Build ohne Timeout (`isDev ? 3000 : undefined`). Ist der ausgehende Zugriff auf `fonts.googleapis.com` gefiltert, wartet der Build endlos und gibt dabei nichts aus. Die Fonts kommen jetzt selbstgehostet über das offizielle `geist`-Paket, der Build braucht dafür kein Netzwerk mehr.
 
 ### Security
 
 - `callbackUrl` wird auf der Sign-in-Seite auf anwendungsinterne Pfade eingegrenzt. Da das Formular nach erfolgreichem Login selbst navigiert, hätte ein präparierter Parameter sonst auf eine fremde Origin zeigen können.
+
+### Changed
+
+- Der Docker-Build setzt `NEXT_TELEMETRY_DISABLED=1` und braucht damit auch für die Next-Telemetrie keine ausgehende Verbindung mehr.
+- Der Build-Schritt im Dockerfile läuft unter einem 15-Minuten-Watchdog. Ein hängender Build scheitert dadurch sichtbar, statt den Deploy unbegrenzt zu blockieren.
+- Die Vitest-Konfiguration übernimmt `configDefaults.exclude`, statt die eingebauten Ausschlüsse zu ersetzen, und aktiviert `fsModuleCache` aus Vitest 5. Der Transform-Anteil der Testlaufzeit sinkt damit von rund der Hälfte auf gut ein Zehntel.
 
 ## [1.2.3] - 2026-09-06
 
