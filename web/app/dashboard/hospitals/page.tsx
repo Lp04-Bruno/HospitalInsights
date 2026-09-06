@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireDashboardRouteAccess } from "@/lib/access";
 import { parseFlashMessage, redirectWithFlash } from "@/lib/actionResult";
+import { deleteHospitalPeriod } from "@/lib/facts/deleteHospitalPeriod";
 import { formString, yearSchema } from "@/lib/validation";
 import { ConfirmSubmitButton } from "@/app/dashboard/_components/ConfirmSubmitButton";
 import { DashboardToast } from "@/app/dashboard/_components/DashboardToast";
@@ -78,29 +79,19 @@ async function deleteHospitalYear(formData: FormData) {
   const period = await prisma.period.findUnique({ where: { year: year.data } });
   if (!period) redirect("/dashboard/hospitals");
 
-  await prisma.factChangeRun.deleteMany({
-    where: {
-      hospitalId,
-      periodId: period.id,
-    },
-  });
-
-  const res = await prisma.factValue.deleteMany({
-    where: {
-      hospitalId,
-      periodId: period.id,
-    },
-  });
-
-  await prisma.hospitalPeriod.deleteMany({
-    where: {
-      hospitalId,
-      periodId: period.id,
-    },
-  });
+  let removedValues: number;
+  try {
+    removedValues = await deleteHospitalPeriod({ hospitalId, periodId: period.id });
+  } catch (err) {
+    console.error("deleteHospitalYear failed", { hospitalId, periodId: period.id, year: year.data }, err);
+    redirectWithFlash("/dashboard/hospitals", {
+      tone: "danger",
+      message: `Jahr ${year.data} konnte nicht gelöscht werden. Es wurde nichts entfernt.`,
+    });
+  }
 
   revalidatePath("/dashboard/hospitals");
-  redirectWithFlash("/dashboard/hospitals", { tone: "success", message: `Jahr ${year.data} gelöscht (${res.count} Werte entfernt).` });
+  redirectWithFlash("/dashboard/hospitals", { tone: "success", message: `Jahr ${year.data} gelöscht (${removedValues} Werte entfernt).` });
 }
 
 type HospitalsPageProps = {
