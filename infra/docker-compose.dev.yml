@@ -13,7 +13,7 @@ services:
       - pg_data:/var/lib/postgresql/data
 
   metabase:
-    image: metabase/metabase:v0.63.16.2
+    image: metabase/metabase:v0.65.7.1
     container_name: hospitalinsights-metabase
     depends_on:
       - db
@@ -31,7 +31,7 @@ services:
       - ./nginx.metabase.dev.conf:/etc/nginx/conf.d/default.conf:ro
 
   redis:
-    image: redis:8.10-alpine
+    image: redis:8.12-alpine
     container_name: hospitalinsights-redis
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
